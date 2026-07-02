@@ -108,6 +108,29 @@ wrangler d1 migrations apply users-db --env prod --remote
 
 ### Deployment
 
+This project uses **Workers Builds** (Cloudflare's native CI/CD) for deployment.
+
+```
+Push to sit:      Auto-deploy to SIT
+Push to uat:      Auto-deploy to UAT
+Push to prod:     Auto-deploy to PROD
+```
+
+Each service and app is configured as a separate Workers Builds project in the Cloudflare dashboard.
+
+**Setup Guide:** See `docs/workers-builds-setup.md` for detailed configuration instructions.
+
+### Environment Configuration
+
+Each service has environment-specific configs in `wrangler.toml`:
+- `[env.sit]` — SIT environment
+- `[env.uat]` — UAT environment
+- `[env.prod]` — Production environment
+
+Environment variables and secrets are managed via the Cloudflare dashboard (Settings → Variables & Secrets).
+
+### Manual Deployment (if needed)
+
 ```bash
 # Deploy to specific environment
 pnpm deploy:services:sit    # Deploy all services to SIT
@@ -118,27 +141,3 @@ pnpm deploy:apps:sit        # Deploy frontend apps to SIT
 pnpm deploy:services:uat
 pnpm deploy:services:prod
 ```
-
-### CI/CD Pipeline
-
-```
-PR → development: CI (typecheck + build + test)
-Push to sit:      Auto-deploy to SIT
-Push to uat:      Auto-deploy to UAT
-Push to prod:     Manual approval → Deploy to PROD
-```
-
-GitHub Actions workflows:
-- `.github/workflows/ci.yml` — Runs on PRs and pushes to development
-- `.github/workflows/deploy-sit.yml` — Deploys to SIT on push to sit
-- `.github/workflows/deploy-uat.yml` — Deploys to UAT on push to uat
-- `.github/workflows/deploy-prod.yml` — Deploys to PROD on push to prod (requires approval)
-
-### Environment Configuration
-
-Each service has environment-specific configs in `wrangler.toml`:
-- `[env.sit]` — SIT environment
-- `[env.uat]` — UAT environment
-- `[env.prod]` — Production environment
-
-Secrets are managed via Cloudflare dashboard or `.dev.vars` for local development.
