@@ -1,0 +1,159 @@
+name: Deploy to UAT
+
+on:
+  push:
+    branches:
+      - uat
+
+concurrency:
+  group: deploy-uat
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "20"
+  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm turbo typecheck
+
+      - name: Build
+        run: pnpm turbo build
+
+  migrate-d1:
+    name: Migrate D1
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Apply D1 Migrations
+        run: |
+          for service in users properties bookings payments reviews; do
+            cd services/$service
+            wrangler d1 migrations apply ${{ env.DB_NAME }} --env uat --remote
+            cd ../..
+          done
+
+  deploy-services:
+    name: Deploy Services
+    needs: migrate-d1
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Deploy Services
+        run: |
+          for service in auth users properties bookings payments reviews; do
+            cd services/$service
+            wrangler deploy --env uat
+            cd ../..
+          done
+
+  deploy-gateway:
+    name: Deploy Gateway
+    needs: deploy-services
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Deploy Gateway
+        run: |
+          cd gateway
+          wrangler deploy --env uat
+
+  deploy-apps:
+    name: Deploy Apps
+    needs: deploy-gateway
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Apps
+        run: pnpm turbo build
+
+      - name: Deploy to Cloudflare Pages
+        run: |
+          for app in apps/*/; do
+            if [ -d "$app/dist" ] || [ -d "$app/build" ]; then
+              appName=$(basename $app)
+              npx wrangler pages deploy ${app}dist --project-name="${appName}-uat"
+            fi
+          done
+
+  notify:
+    name: Deployment Status
+    needs: [build, migrate-d1, deploy-services, deploy-gateway, deploy-apps]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Report status
+        run: |
+          echo "=== Deployment Summary ==="
+          echo "Build: ${{ needs.build.result }}"
+          echo "D1 Migrations: ${{ needs.migrate-d1.result }}"
+          echo "Services: ${{ needs.deploy-services.result }}"
+          echo "Gateway: ${{ needs.deploy-gateway.result }}"
+          echo "Apps: ${{ needs.deploy-apps.result }}"
+          if [ "${{ needs.deploy-apps.result }}" = "success" ]; then
+            echo "Deployment to UAT completed successfully."
+          else
+            echo "Deployment to UAT failed."
+            exit 1
+          fi

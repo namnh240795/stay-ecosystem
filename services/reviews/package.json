@@ -7,6 +7,9 @@
     "dev": "wrangler dev",
     "build": "wrangler deploy --dry-run --outdir=dist",
     "deploy": "wrangler deploy",
+    "deploy:sit": "wrangler deploy --env sit",
+    "deploy:uat": "wrangler deploy --env uat",
+    "deploy:prod": "wrangler deploy --env prod",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },

@@ -6,3 +6,21 @@ compatibility_flags = ["nodejs_compat"]
 [vars]
 AUTH0_DOMAIN = ""
 AUTH0_CLIENT_ID = ""
+
+[env.sit]
+name = "auth-service-sit"
+[env.sit.vars]
+AUTH0_DOMAIN = "sit-xxx.auth0.com"
+AUTH0_CLIENT_ID = "sit-client-id"
+
+[env.uat]
+name = "auth-service-uat"
+[env.uat.vars]
+AUTH0_DOMAIN = "uat-xxx.auth0.com"
+AUTH0_CLIENT_ID = "uat-client-id"
+
+[env.prod]
+name = "auth-service-prod"
+[env.prod.vars]
+AUTH0_DOMAIN = "prod-xxx.auth0.com"
+AUTH0_CLIENT_ID = "prod-client-id"

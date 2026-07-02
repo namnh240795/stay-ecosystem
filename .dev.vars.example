@@ -1,0 +1,18 @@
+# Environment variables for local development with wrangler dev
+# Copy this file to .dev.vars and fill in the values
+
+# Auth Service
+AUTH0_DOMAIN=your-tenant.auth0.com
+AUTH0_CLIENT_ID=your-auth0-client-id
+
+# Gateway Service URLs (point to local wrangler dev ports)
+AUTH_SERVICE_URL=http://localhost:8787
+USERS_SERVICE_URL=http://localhost:8788
+PROPERTIES_SERVICE_URL=http://localhost:8789
+BOOKINGS_SERVICE_URL=http://localhost:8790
+PAYMENTS_SERVICE_URL=http://localhost:8791
+REVIEWS_SERVICE_URL=http://localhost:8792
+
+# Frontend Apps (Auth0 config)
+VITE_AUTH0_DOMAIN=your-tenant.auth0.com
+VITE_AUTH0_CLIENT_ID=your-auth0-client-id

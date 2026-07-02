@@ -7,3 +7,24 @@ compatibility_flags = ["nodejs_compat"]
 binding = "BOOKINGS_DB"
 database_name = "bookings-db"
 database_id = "placeholder-replace-with-actual-id"
+
+[env.sit]
+name = "bookings-service-sit"
+[[env.sit.d1_databases]]
+binding = "BOOKINGS_DB"
+database_name = "bookings-db-sit"
+database_id = "placeholder-sit-bookings-db-id"
+
+[env.uat]
+name = "bookings-service-uat"
+[[env.uat.d1_databases]]
+binding = "BOOKINGS_DB"
+database_name = "bookings-db-uat"
+database_id = "placeholder-uat-bookings-db-id"
+
+[env.prod]
+name = "bookings-service-prod"
+[[env.prod.d1_databases]]
+binding = "BOOKINGS_DB"
+database_name = "bookings-db-prod"
+database_id = "placeholder-prod-bookings-db-id"

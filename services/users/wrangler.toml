@@ -7,3 +7,24 @@ compatibility_flags = ["nodejs_compat"]
 binding = "USERS_DB"
 database_name = "users-db"
 database_id = "placeholder-replace-with-actual-id"
+
+[env.sit]
+name = "users-service-sit"
+[[env.sit.d1_databases]]
+binding = "USERS_DB"
+database_name = "users-db-sit"
+database_id = "placeholder-sit-users-db-id"
+
+[env.uat]
+name = "users-service-uat"
+[[env.uat.d1_databases]]
+binding = "USERS_DB"
+database_name = "users-db-uat"
+database_id = "placeholder-uat-users-db-id"
+
+[env.prod]
+name = "users-service-prod"
+[[env.prod.d1_databases]]
+binding = "USERS_DB"
+database_name = "users-db-prod"
+database_id = "placeholder-prod-users-db-id"

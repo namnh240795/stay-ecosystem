@@ -7,3 +7,24 @@ compatibility_flags = ["nodejs_compat"]
 binding = "REVIEWS_DB"
 database_name = "reviews-db"
 database_id = "placeholder-replace-with-actual-id"
+
+[env.sit]
+name = "reviews-service-sit"
+[[env.sit.d1_databases]]
+binding = "REVIEWS_DB"
+database_name = "reviews-db-sit"
+database_id = "placeholder-sit-reviews-db-id"
+
+[env.uat]
+name = "reviews-service-uat"
+[[env.uat.d1_databases]]
+binding = "REVIEWS_DB"
+database_name = "reviews-db-uat"
+database_id = "placeholder-uat-reviews-db-id"
+
+[env.prod]
+name = "reviews-service-prod"
+[[env.prod.d1_databases]]
+binding = "REVIEWS_DB"
+database_name = "reviews-db-prod"
+database_id = "placeholder-prod-reviews-db-id"

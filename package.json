@@ -8,7 +8,19 @@
     "typecheck": "turbo typecheck",
     "lint": "turbo lint",
     "db:generate": "turbo db:generate",
-    "db:migrate": "turbo db:migrate"
+    "db:migrate": "turbo db:migrate",
+    "db:migrate:sit": "pnpm --filter @booking/db exec drizzle-kit migrate",
+    "db:migrate:uat": "pnpm --filter @booking/db exec drizzle-kit migrate",
+    "db:migrate:prod": "pnpm --filter @booking/db exec drizzle-kit migrate",
+    "deploy:services:sit": "pnpm --filter './services/*' exec wrangler deploy --env sit",
+    "deploy:services:uat": "pnpm --filter './services/*' exec wrangler deploy --env uat",
+    "deploy:services:prod": "pnpm --filter './services/*' exec wrangler deploy --env prod",
+    "deploy:gateway:sit": "pnpm --filter @booking/gateway exec wrangler deploy --env sit",
+    "deploy:gateway:uat": "pnpm --filter @booking/gateway exec wrangler deploy --env uat",
+    "deploy:gateway:prod": "pnpm --filter @booking/gateway exec wrangler deploy --env prod",
+    "deploy:apps:sit": "pnpm --filter './apps/*' exec wrangler pages deploy dist --project-name=stay-sit",
+    "deploy:apps:uat": "pnpm --filter './apps/*' exec wrangler pages deploy dist --project-name=stay-uat",
+    "deploy:apps:prod": "pnpm --filter './apps/*' exec wrangler pages deploy dist --project-name=stay-prod"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.0.0",

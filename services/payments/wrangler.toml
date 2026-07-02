@@ -7,3 +7,24 @@ compatibility_flags = ["nodejs_compat"]
 binding = "PAYMENTS_DB"
 database_name = "payments-db"
 database_id = "placeholder-replace-with-actual-id"
+
+[env.sit]
+name = "payments-service-sit"
+[[env.sit.d1_databases]]
+binding = "PAYMENTS_DB"
+database_name = "payments-db-sit"
+database_id = "placeholder-sit-payments-db-id"
+
+[env.uat]
+name = "payments-service-uat"
+[[env.uat.d1_databases]]
+binding = "PAYMENTS_DB"
+database_name = "payments-db-uat"
+database_id = "placeholder-uat-payments-db-id"
+
+[env.prod]
+name = "payments-service-prod"
+[[env.prod.d1_databases]]
+binding = "PAYMENTS_DB"
+database_name = "payments-db-prod"
+database_id = "placeholder-prod-payments-db-id"

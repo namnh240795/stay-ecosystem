@@ -76,19 +76,69 @@ Monorepo with pnpm workspaces + Turborepo:
 
 ```bash
 pnpm install          # Install dependencies
+cp .dev.vars.example .dev.vars  # Set up local env vars
 pnpm turbo dev        # Start all services
 pnpm turbo typecheck  # Type check
 pnpm turbo build      # Build all
 pnpm turbo test       # Run tests
 ```
 
-### Deployment
+### Database Migrations (Safe SQLite)
 
-Each service deploys independently:
+Drizzle ORM generates migrations from schema changes. For SQLite/D1:
+
 ```bash
-cd services/auth && wrangler deploy
-cd services/users && wrangler deploy
-# ... etc
+# Generate migration files after schema changes
+pnpm db:generate
+
+# Review generated SQL in packages/db/drizzle/ before applying
+# NEVER apply migrations directly to production without review
+
+# Apply migrations per environment
+wrangler d1 migrations apply users-db --env sit --remote
+wrangler d1 migrations apply users-db --env uat --remote
+wrangler d1 migrations apply users-db --env prod --remote
 ```
 
-Frontend apps deploy to Cloudflare Pages.
+**SQLite Safety Rules:**
+- Never `DROP COLUMN` — mark columns deprecated, ignore in code
+- Never rename columns — add new, migrate data, drop old later
+- Always use `IF NOT EXISTS` for tables/indexes
+- Review generated SQL before applying to any environment
+
+### Deployment
+
+```bash
+# Deploy to specific environment
+pnpm deploy:services:sit    # Deploy all services to SIT
+pnpm deploy:gateway:sit     # Deploy gateway to SIT
+pnpm deploy:apps:sit        # Deploy frontend apps to SIT
+
+# Same for uat and prod
+pnpm deploy:services:uat
+pnpm deploy:services:prod
+```
+
+### CI/CD Pipeline
+
+```
+PR → development: CI (typecheck + build + test)
+Push to sit:      Auto-deploy to SIT
+Push to uat:      Auto-deploy to UAT
+Push to prod:     Manual approval → Deploy to PROD
+```
+
+GitHub Actions workflows:
+- `.github/workflows/ci.yml` — Runs on PRs and pushes to development
+- `.github/workflows/deploy-sit.yml` — Deploys to SIT on push to sit
+- `.github/workflows/deploy-uat.yml` — Deploys to UAT on push to uat
+- `.github/workflows/deploy-prod.yml` — Deploys to PROD on push to prod (requires approval)
+
+### Environment Configuration
+
+Each service has environment-specific configs in `wrangler.toml`:
+- `[env.sit]` — SIT environment
+- `[env.uat]` — UAT environment
+- `[env.prod]` — Production environment
+
+Secrets are managed via Cloudflare dashboard or `.dev.vars` for local development.

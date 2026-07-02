@@ -10,3 +10,33 @@ PROPERTIES_SERVICE_URL = ""
 BOOKINGS_SERVICE_URL = ""
 PAYMENTS_SERVICE_URL = ""
 REVIEWS_SERVICE_URL = ""
+
+[env.sit]
+name = "gateway-sit"
+[env.sit.vars]
+AUTH_SERVICE_URL = "https://auth-service-sit.example.workers.dev"
+USERS_SERVICE_URL = "https://users-service-sit.example.workers.dev"
+PROPERTIES_SERVICE_URL = "https://properties-service-sit.example.workers.dev"
+BOOKINGS_SERVICE_URL = "https://bookings-service-sit.example.workers.dev"
+PAYMENTS_SERVICE_URL = "https://payments-service-sit.example.workers.dev"
+REVIEWS_SERVICE_URL = "https://reviews-service-sit.example.workers.dev"
+
+[env.uat]
+name = "gateway-uat"
+[env.uat.vars]
+AUTH_SERVICE_URL = "https://auth-service-uat.example.workers.dev"
+USERS_SERVICE_URL = "https://users-service-uat.example.workers.dev"
+PROPERTIES_SERVICE_URL = "https://properties-service-uat.example.workers.dev"
+BOOKINGS_SERVICE_URL = "https://bookings-service-uat.example.workers.dev"
+PAYMENTS_SERVICE_URL = "https://payments-service-uat.example.workers.dev"
+REVIEWS_SERVICE_URL = "https://reviews-service-uat.example.workers.dev"
+
+[env.prod]
+name = "gateway-prod"
+[env.prod.vars]
+AUTH_SERVICE_URL = "https://auth-service-prod.example.workers.dev"
+USERS_SERVICE_URL = "https://users-service-prod.example.workers.dev"
+PROPERTIES_SERVICE_URL = "https://properties-service-prod.example.workers.dev"
+BOOKINGS_SERVICE_URL = "https://bookings-service-prod.example.workers.dev"
+PAYMENTS_SERVICE_URL = "https://payments-service-prod.example.workers.dev"
+REVIEWS_SERVICE_URL = "https://reviews-service-prod.example.workers.dev"
