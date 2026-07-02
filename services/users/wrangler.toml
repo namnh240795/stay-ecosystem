@@ -1,0 +1,9 @@
+name = "users-service"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "USERS_DB"
+database_name = "users-db"
+database_id = "placeholder-replace-with-actual-id"

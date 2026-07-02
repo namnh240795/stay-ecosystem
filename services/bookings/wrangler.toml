@@ -1,0 +1,9 @@
+name = "bookings-service"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "BOOKINGS_DB"
+database_name = "bookings-db"
+database_id = "placeholder-replace-with-actual-id"

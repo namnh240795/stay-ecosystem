@@ -1,0 +1,12 @@
+name = "gateway"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+AUTH_SERVICE_URL = ""
+USERS_SERVICE_URL = ""
+PROPERTIES_SERVICE_URL = ""
+BOOKINGS_SERVICE_URL = ""
+PAYMENTS_SERVICE_URL = ""
+REVIEWS_SERVICE_URL = ""
