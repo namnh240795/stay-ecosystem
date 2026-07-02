@@ -8,7 +8,8 @@ This project uses **git worktrees** to work on different branches simultaneously
 
 | Branch | Purpose | Worktree Path |
 |--------|---------|---------------|
-| `main` | Development | `/Users/namnguyen/Documents/stay-ecosystem` (root) |
+| `development` | Active development | `/Users/namnguyen/Documents/cloudflare-booking-apartment-system` (root) |
+| `sit` | System Integration Testing | `/Users/namnguyen/Documents/stay-ecosystem-sit` |
 | `uat` | User Acceptance Testing | `/Users/namnguyen/Documents/stay-ecosystem-uat` |
 | `prod` | Production | `/Users/namnguyen/Documents/stay-ecosystem-prod` |
 
@@ -16,26 +17,31 @@ This project uses **git worktrees** to work on different branches simultaneously
 
 1. **Always use worktrees** — Never `git checkout` to switch branches in the main worktree. Create or switch to the appropriate worktree instead.
 
-2. **New features** → Work in `main` worktree (root directory)
+2. **New features** → Work in `development` worktree (root directory)
 
-3. **Bug fixes for testing** → Create a branch from `uat` in the UAT worktree:
+3. **Integration testing** → Create a branch from `sit` in the SIT worktree:
+   ```
+   git worktree add /Users/namnguyen/Documents/stay-ecosystem-sit -b feature/xxx sit
+   ```
+
+4. **Bug fixes for UAT** → Create a branch from `uat` in the UAT worktree:
    ```
    git worktree add /Users/namnguyen/Documents/stay-ecosystem-uat -b fix/xxx uat
    ```
 
-4. **Hotfixes for production** → Create a branch from `prod` in the PROD worktree:
+5. **Hotfixes for production** → Create a branch from `prod` in the PROD worktree:
    ```
    git worktree add /Users/namnguyen/Documents/stay-ecosystem-prod -b hotfix/xxx prod
    ```
 
-5. **Promote code** between environments using merge or cherry-pick from the appropriate worktree — never commit directly to `uat` or `prod` from the main worktree.
+6. **Promote code** between environments using merge or cherry-pick — never commit directly to `sit`, `uat`, or `prod` from the development worktree.
 
-6. **List worktrees** before starting work:
+7. **List worktrees** before starting work:
    ```
    git worktree list
    ```
 
-7. **Each worktree has its own `node_modules`** — run `pnpm install` in each worktree after creating it.
+8. **Each worktree has its own `node_modules`** — run `pnpm install` in each worktree after creating it.
 
 ### Commit Message Convention
 
