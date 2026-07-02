@@ -6,25 +6,25 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding = "USERS_DB"
 database_name = "users-db"
-database_id = "placeholder-replace-with-actual-id"
+database_id = "9d0bce6c-bd8d-4223-9ceb-c79557ce66b9"
 
 [env.sit]
 name = "users-service-sit"
 [[env.sit.d1_databases]]
 binding = "USERS_DB"
 database_name = "users-db-sit"
-database_id = "placeholder-sit-users-db-id"
+database_id = "9d0bce6c-bd8d-4223-9ceb-c79557ce66b9"
 
 [env.uat]
 name = "users-service-uat"
 [[env.uat.d1_databases]]
 binding = "USERS_DB"
 database_name = "users-db-uat"
-database_id = "placeholder-uat-users-db-id"
+database_id = "c6aa0fc5-a772-4340-b391-72c0cc2f1982"
 
 [env.prod]
 name = "users-service-prod"
 [[env.prod.d1_databases]]
 binding = "USERS_DB"
 database_name = "users-db-prod"
-database_id = "placeholder-prod-users-db-id"
+database_id = "8909eb50-af8f-4bcf-938a-0f0a57708e5d"

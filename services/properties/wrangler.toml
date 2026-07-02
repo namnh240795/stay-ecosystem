@@ -6,25 +6,25 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding = "PROPERTIES_DB"
 database_name = "properties-db"
-database_id = "placeholder-replace-with-actual-id"
+database_id = "adc5cdda-d51a-447f-9322-99ce38d821d8"
 
 [env.sit]
 name = "properties-service-sit"
 [[env.sit.d1_databases]]
 binding = "PROPERTIES_DB"
 database_name = "properties-db-sit"
-database_id = "placeholder-sit-properties-db-id"
+database_id = "adc5cdda-d51a-447f-9322-99ce38d821d8"
 
 [env.uat]
 name = "properties-service-uat"
 [[env.uat.d1_databases]]
 binding = "PROPERTIES_DB"
 database_name = "properties-db-uat"
-database_id = "placeholder-uat-properties-db-id"
+database_id = "df6c00f0-01d7-43f5-9c27-4ebf436d06d9"
 
 [env.prod]
 name = "properties-service-prod"
 [[env.prod.d1_databases]]
 binding = "PROPERTIES_DB"
 database_name = "properties-db-prod"
-database_id = "placeholder-prod-properties-db-id"
+database_id = "718c4109-6045-43ef-9add-e4990a9a5fe1"

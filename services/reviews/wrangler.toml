@@ -6,25 +6,25 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding = "REVIEWS_DB"
 database_name = "reviews-db"
-database_id = "placeholder-replace-with-actual-id"
+database_id = "39a719c8-49d9-4521-a812-03a21dd897d5"
 
 [env.sit]
 name = "reviews-service-sit"
 [[env.sit.d1_databases]]
 binding = "REVIEWS_DB"
 database_name = "reviews-db-sit"
-database_id = "placeholder-sit-reviews-db-id"
+database_id = "39a719c8-49d9-4521-a812-03a21dd897d5"
 
 [env.uat]
 name = "reviews-service-uat"
 [[env.uat.d1_databases]]
 binding = "REVIEWS_DB"
 database_name = "reviews-db-uat"
-database_id = "placeholder-uat-reviews-db-id"
+database_id = "2df15853-ff16-4382-8a15-96483d4e166b"
 
 [env.prod]
 name = "reviews-service-prod"
 [[env.prod.d1_databases]]
 binding = "REVIEWS_DB"
 database_name = "reviews-db-prod"
-database_id = "placeholder-prod-reviews-db-id"
+database_id = "53cde851-9af1-4dc6-b6cd-451114ffee2e"

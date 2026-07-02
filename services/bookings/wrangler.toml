@@ -6,25 +6,25 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding = "BOOKINGS_DB"
 database_name = "bookings-db"
-database_id = "placeholder-replace-with-actual-id"
+database_id = "39a328b0-935f-4a8f-84da-9d69ca6b6e8a"
 
 [env.sit]
 name = "bookings-service-sit"
 [[env.sit.d1_databases]]
 binding = "BOOKINGS_DB"
 database_name = "bookings-db-sit"
-database_id = "placeholder-sit-bookings-db-id"
+database_id = "39a328b0-935f-4a8f-84da-9d69ca6b6e8a"
 
 [env.uat]
 name = "bookings-service-uat"
 [[env.uat.d1_databases]]
 binding = "BOOKINGS_DB"
 database_name = "bookings-db-uat"
-database_id = "placeholder-uat-bookings-db-id"
+database_id = "ae25de13-be78-44e3-a109-2144f1194387"
 
 [env.prod]
 name = "bookings-service-prod"
 [[env.prod.d1_databases]]
 binding = "BOOKINGS_DB"
 database_name = "bookings-db-prod"
-database_id = "placeholder-prod-bookings-db-id"
+database_id = "b4deccf5-9db7-43c1-9c5f-0effd01623e7"

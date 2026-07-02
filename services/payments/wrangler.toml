@@ -6,25 +6,25 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding = "PAYMENTS_DB"
 database_name = "payments-db"
-database_id = "placeholder-replace-with-actual-id"
+database_id = "2a92b8c2-23c1-44cc-91b4-dea2c4673a12"
 
 [env.sit]
 name = "payments-service-sit"
 [[env.sit.d1_databases]]
 binding = "PAYMENTS_DB"
 database_name = "payments-db-sit"
-database_id = "placeholder-sit-payments-db-id"
+database_id = "2a92b8c2-23c1-44cc-91b4-dea2c4673a12"
 
 [env.uat]
 name = "payments-service-uat"
 [[env.uat.d1_databases]]
 binding = "PAYMENTS_DB"
 database_name = "payments-db-uat"
-database_id = "placeholder-uat-payments-db-id"
+database_id = "b41e337d-b5ba-4e7e-b79b-e78ad8825389"
 
 [env.prod]
 name = "payments-service-prod"
 [[env.prod.d1_databases]]
 binding = "PAYMENTS_DB"
 database_name = "payments-db-prod"
-database_id = "placeholder-prod-payments-db-id"
+database_id = "ccbe8d00-4063-463b-9e28-0632845f3fe8"
