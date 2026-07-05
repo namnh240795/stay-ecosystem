@@ -1,30 +1,77 @@
-import { BrowserRouter, Routes, Route, Link, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useState } from "react";
 import AuthProvider from "./auth/provider";
-import Users from "./pages/Users";
-import Applications from "./pages/Applications";
-import Properties from "./pages/Properties";
-import Bookings from "./pages/Bookings";
-import Reports from "./pages/Reports";
+import AdminPortal from "./components/AdminPortal";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
+import { MOCK_BRANCHES, MOCK_APARTMENTS } from "./data/mockData";
+import { MOCK_USERS } from "./mockUsers";
+import { Branch, Apartment, UserSim } from "./types";
 
-function NavBar() {
+const defaultUser: UserSim = {
+  id: 'admin-1',
+  name: 'Nguyễn Văn Quyết',
+  email: 'quyet.nv@grandstay.com',
+  phone: '0912345678',
+  role: 'role-1',
+  roleName: 'Giám Đốc Vận Hành',
+  avatarInitials: 'VQ',
+  tier: 'Root Admin',
+  loyaltyPoints: 0,
+};
+
+function AdminView() {
+  const [branches, setBranches] = useState<Branch[]>(MOCK_BRANCHES);
+  const [apartments, setApartments] = useState<Apartment[]>(MOCK_APARTMENTS);
+  const [currentUser] = useState<UserSim>(defaultUser);
+
   return (
-    <nav style={styles.nav}>
-      <Link to="/users" style={styles.navLink}>
-        Users
-      </Link>
-      <Link to="/applications" style={styles.navLink}>
-        Applications
-      </Link>
-      <Link to="/properties" style={styles.navLink}>
-        Properties
-      </Link>
-      <Link to="/bookings" style={styles.navLink}>
-        Bookings
-      </Link>
-      <Link to="/reports" style={styles.navLink}>
-        Reports
-      </Link>
-    </nav>
+    <AdminPortal
+      branches={branches}
+      setBranches={setBranches}
+      apartments={apartments}
+      setApartments={setApartments}
+      currentUser={currentUser}
+      onBackToHome={() => {}}
+    />
+  );
+}
+
+function Layout() {
+  const [currentUser, setCurrentUser] = useState<UserSim>(defaultUser);
+  const [usersList] = useState<UserSim[]>(MOCK_USERS);
+  const [bookedList] = useState<Branch[]>([]);
+
+  const handleSetCurrentView = (view: 'home' | 'member' | 'admin') => {};
+
+  return (
+    <div className="min-h-screen flex flex-col justify-between bg-[#fdfdfd] text-slate-800 antialiased">
+      <Header
+        onSearchClick={() => {}}
+        activeBranchCount={bookedList.length}
+        currentView="admin"
+        setCurrentView={handleSetCurrentView}
+        currentUser={currentUser}
+        setCurrentUser={setCurrentUser}
+        usersList={usersList}
+        onOpenLogin={() => {}}
+      />
+
+      <main className="flex-grow">
+        <Routes>
+          {/* Admin portal with nested routing */}
+          <Route path="/admin/*" element={<AdminView />} />
+
+          {/* Redirect root to admin dashboard */}
+          <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
+
+          {/* Catch-all */}
+          <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
+        </Routes>
+      </main>
+
+      <Footer />
+    </div>
   );
 }
 
@@ -32,31 +79,8 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <NavBar />
-        <Routes>
-          <Route path="/" element={<Navigate to="/users" replace />} />
-          <Route path="/users" element={<Users />} />
-          <Route path="/applications" element={<Applications />} />
-          <Route path="/properties" element={<Properties />} />
-          <Route path="/bookings" element={<Bookings />} />
-          <Route path="/reports" element={<Reports />} />
-        </Routes>
+        <Layout />
       </AuthProvider>
     </BrowserRouter>
   );
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  nav: {
-    display: "flex",
-    gap: "1.5rem",
-    padding: "0.75rem 2rem",
-    background: "#7f1d1d",
-  },
-  navLink: {
-    color: "#fecaca",
-    textDecoration: "none",
-    fontSize: "0.9rem",
-    fontWeight: 500,
-  },
-};
