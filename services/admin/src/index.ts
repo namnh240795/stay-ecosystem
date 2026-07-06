@@ -1,5 +1,9 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import longtermRoutes from "./routes/longterm";
+import operationsRoutes from "./routes/operations";
+import staffRoutes from "./routes/staff";
+import toursRoutes from "./routes/tours";
 
 type Bindings = {
   USERS_DB: D1Database;
@@ -33,6 +37,18 @@ app.post("/api/admin/seed", async (c) => {
     `CREATE TABLE IF NOT EXISTS bookings (id TEXT PRIMARY KEY, property_id TEXT NOT NULL, guest_id TEXT NOT NULL, partner_id TEXT NOT NULL, check_in TEXT NOT NULL, check_out TEXT NOT NULL, nights INTEGER NOT NULL, guests INTEGER NOT NULL DEFAULT 1, total_price REAL NOT NULL, status TEXT NOT NULL DEFAULT 'pending', special_requests TEXT, cancellation_reason TEXT, cancelled_at TEXT, confirmed_at TEXT, completed_at TEXT, created_at TEXT NOT NULL DEFAULT '', updated_at TEXT NOT NULL DEFAULT '')`,
     `CREATE TABLE IF NOT EXISTS payments (id TEXT PRIMARY KEY, booking_id TEXT NOT NULL, partner_id TEXT NOT NULL, amount REAL NOT NULL, currency TEXT NOT NULL DEFAULT 'VND', status TEXT NOT NULL DEFAULT 'pending', payment_method TEXT, transaction_id TEXT, metadata TEXT, created_at TEXT NOT NULL DEFAULT '', updated_at TEXT NOT NULL DEFAULT '')`,
     `CREATE TABLE IF NOT EXISTS reviews (id TEXT PRIMARY KEY, property_id TEXT NOT NULL, booking_id TEXT, guest_id TEXT NOT NULL, partner_id TEXT, rating INTEGER NOT NULL, comment TEXT, partner_reply TEXT, created_at TEXT NOT NULL DEFAULT '', updated_at TEXT NOT NULL DEFAULT '')`,
+    `CREATE TABLE IF NOT EXISTS longterm_apartments (id TEXT PRIMARY KEY, partner_id TEXT, name TEXT NOT NULL, location TEXT, type TEXT, area REAL, bedrooms INTEGER, bathrooms INTEGER, monthly_price REAL, description TEXT, amenities TEXT, available_from TEXT, has_virtual_tour INTEGER DEFAULT 0, virtual_tour_url TEXT, pet_friendly INTEGER DEFAULT 0, maintenance_status TEXT DEFAULT 'Clean', estimated_repair_cost REAL, maintenance_notes TEXT, status TEXT DEFAULT 'active', created_at TEXT, updated_at TEXT)`,
+    `CREATE TABLE IF NOT EXISTS longterm_contracts (id TEXT PRIMARY KEY, apt_id TEXT, apt_name TEXT, location TEXT, monthly_price REAL, lease_term INTEGER, tenant_name TEXT, tenant_phone TEXT, tenant_email TEXT, signed_date TEXT, status TEXT DEFAULT 'active', created_at TEXT, updated_at TEXT)`,
+    `CREATE TABLE IF NOT EXISTS staff (id TEXT PRIMARY KEY, user_id TEXT, role_id TEXT, status TEXT DEFAULT 'Active', joined_at TEXT, created_at TEXT, updated_at TEXT)`,
+    `CREATE TABLE IF NOT EXISTS roles (id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE, description TEXT, permissions TEXT, created_at TEXT, updated_at TEXT)`,
+    `CREATE TABLE IF NOT EXISTS leave_requests (id TEXT PRIMARY KEY, type TEXT, staff_name TEXT, role_name TEXT, reason TEXT, start_date TEXT, end_date TEXT, status TEXT DEFAULT 'Pending', response_notes TEXT, reviewed_at TEXT, created_at TEXT, updated_at TEXT)`,
+    `CREATE TABLE IF NOT EXISTS tours (id TEXT PRIMARY KEY, name TEXT NOT NULL, region TEXT, image TEXT, price_per_slot INTEGER, max_slots INTEGER, booked_slots INTEGER DEFAULT 0, duration TEXT, rating REAL, description TEXT, highlights TEXT, tour_type TEXT, itinerary TEXT, created_at TEXT, updated_at TEXT)`,
+    `CREATE TABLE IF NOT EXISTS tour_bookings (id TEXT PRIMARY KEY, tour_id TEXT, tour_name TEXT, guest_name TEXT, guest_phone TEXT, guest_email TEXT, slots INTEGER, total_price INTEGER, booking_code TEXT, status TEXT, is_group_tour INTEGER DEFAULT 0, group_id TEXT, date TEXT, payment_method TEXT, created_at TEXT, updated_at TEXT)`,
+    `CREATE TABLE IF NOT EXISTS group_tours (id TEXT PRIMARY KEY, tour_id TEXT, tour_name TEXT, creator_name TEXT, creator_email TEXT, current_members INTEGER DEFAULT 0, required_members INTEGER, status TEXT DEFAULT 'matching', members TEXT, date TEXT, created_at TEXT, updated_at TEXT)`,
+    `CREATE TABLE IF NOT EXISTS site_config (key TEXT PRIMARY KEY, value TEXT, updated_at TEXT)`,
+    `CREATE TABLE IF NOT EXISTS service_requests (id TEXT PRIMARY KEY, room_name TEXT, guest_name TEXT, type TEXT, detail TEXT, assigned_staff TEXT, status TEXT DEFAULT 'Pending', time TEXT, created_at TEXT, updated_at TEXT)`,
+    `CREATE TABLE IF NOT EXISTS complaints (id TEXT PRIMARY KEY, guest_name TEXT, room_name TEXT, title TEXT, detail TEXT, priority TEXT, status TEXT DEFAULT 'Open', notes TEXT, time TEXT, created_at TEXT, updated_at TEXT)`,
+    `CREATE TABLE IF NOT EXISTS daily_logs (id TEXT PRIMARY KEY, author TEXT, shift TEXT, content TEXT, issues TEXT, date TEXT, time TEXT, created_at TEXT, updated_at TEXT)`,
   ];
 
   for (const sql of createTables) {
@@ -344,6 +360,12 @@ app.patch("/api/admin/users/:id/role", async (c) => {
   const updated = await usersDb.prepare("SELECT * FROM users WHERE id = ?").bind(id).first();
   return c.json(updated);
 });
+
+// ==================== MOUNT ROUTES ====================
+app.route("/", longtermRoutes);
+app.route("/", operationsRoutes);
+app.route("/", staffRoutes);
+app.route("/", toursRoutes);
 
 // ==================== ERROR HANDLER ====================
 app.onError((err, c) => {
