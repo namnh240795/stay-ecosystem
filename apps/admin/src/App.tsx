@@ -4,6 +4,7 @@ import AuthProvider from "./auth/provider";
 import AdminPortal from "./components/AdminPortal";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import ScrollToTop from "./components/ScrollToTop";
 import { MOCK_BRANCHES, MOCK_APARTMENTS } from "./data/mockData";
 import { MOCK_USERS } from "./mockUsers";
 import { Branch, Apartment, UserSim } from "./types";
@@ -46,6 +47,7 @@ function Layout() {
 
   return (
     <div className="min-h-screen flex flex-col justify-between bg-[#fdfdfd] text-slate-800 antialiased">
+      <ScrollToTop />
       <Header
         onSearchClick={() => {}}
         activeBranchCount={bookedList.length}

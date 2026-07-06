@@ -10,6 +10,7 @@ import MemberPage from './pages/MemberPage';
 import BookingModal from './components/BookingModal';
 import LoginPortal from './components/LoginPortal';
 import AuthCallback from './components/AuthCallback';
+import ScrollToTop from './components/ScrollToTop';
 import { BRANCHES, APARTMENTS } from './data';
 
 export default function App() {
@@ -280,7 +281,8 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col justify-between bg-[#fdfdfd] text-slate-800 antialiased selection:bg-blue-500 selection:text-white">
-      
+      <ScrollToTop />
+
       {/* Premium Header - Persistent and displays profile state */}
       <Header 
         onSearchClick={scrollToSearch} 
