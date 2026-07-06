@@ -6,21 +6,29 @@ compatibility_flags = ["nodejs_compat"]
 [vars]
 AUTH0_DOMAIN = ""
 AUTH0_CLIENT_ID = ""
+AUTH0_M2M_CLIENT_ID = ""
+AUTH0_M2M_CLIENT_SECRET = ""
 
 [env.sit]
 name = "auth-service-sit"
 [env.sit.vars]
 AUTH0_DOMAIN = "sit-xxx.auth0.com"
 AUTH0_CLIENT_ID = "sit-client-id"
+AUTH0_M2M_CLIENT_ID = "sit-m2m-client-id"
+AUTH0_M2M_CLIENT_SECRET = ""
 
 [env.uat]
 name = "auth-service-uat"
 [env.uat.vars]
 AUTH0_DOMAIN = "uat-xxx.auth0.com"
 AUTH0_CLIENT_ID = "uat-client-id"
+AUTH0_M2M_CLIENT_ID = "uat-m2m-client-id"
+AUTH0_M2M_CLIENT_SECRET = ""
 
 [env.prod]
 name = "auth-service-prod"
 [env.prod.vars]
 AUTH0_DOMAIN = "prod-xxx.auth0.com"
 AUTH0_CLIENT_ID = "prod-client-id"
+AUTH0_M2M_CLIENT_ID = "prod-m2m-client-id"
+AUTH0_M2M_CLIENT_SECRET = ""
