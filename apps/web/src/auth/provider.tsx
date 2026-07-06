@@ -9,10 +9,9 @@ export default function AuthProvider({ children }: AuthProviderProps) {
   const domain = import.meta.env.VITE_AUTH0_DOMAIN;
   const clientId = import.meta.env.VITE_AUTH0_CLIENT_ID;
 
+  // If Auth0 env vars are not configured, render children directly (mock mode)
   if (!domain || !clientId) {
-    throw new Error(
-      "Missing VITE_AUTH0_DOMAIN or VITE_AUTH0_CLIENT_ID environment variables",
-    );
+    return <>{children}</>;
   }
 
   return (
