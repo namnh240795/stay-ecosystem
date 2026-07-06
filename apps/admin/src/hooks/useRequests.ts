@@ -29,7 +29,8 @@ export function useCreateRequest() {
 export function useUpdateRequestStatus() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: updateRequestStatus,
+    mutationFn: ({ id, ...data }: { id: string; status: string; assignedTo?: string; notes?: string }) =>
+      updateRequestStatus(id, data),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ['requests'] }),
   });

@@ -316,81 +316,6 @@ const INITIAL_CONTRACTS = [
   { id: 'HD-D4509', aptName: 'My Khe Beachfront Panoramic 2BR Apartment', location: 'Da Nang', monthlyPrice: 36250000, leaseTerm: 3, tenantName: 'Nguyễn Minh Anh', tenantPhone: '0909090909', tenantEmail: 'minhanh.ng@hotmail.com', signedDate: '2026-06-26', status: 'Approved' }
 ];
 
-// Chart mock data
-const WEEKLY_REVENUE = [
-  { label: 'T2', hotel: 45000000, apt: 30000000, total: 75000000 },
-  { label: 'T3', hotel: 52000000, apt: 35000000, total: 87000000 },
-  { label: 'T4', hotel: 39000000, apt: 42000000, total: 81000000 },
-  { label: 'T5', hotel: 68000000, apt: 38000000, total: 106000000 },
-  { label: 'T6', hotel: 85000000, apt: 55000000, total: 140000000 },
-  { label: 'T7', hotel: 120000000, apt: 60000000, total: 180000000 },
-  { label: 'CN', hotel: 110000000, apt: 50000000, total: 160000000 }
-];
-
-const MONTHLY_REVENUE = [
-  { label: 'Tuần 1', hotel: 280000000, apt: 180000000, total: 460000000 },
-  { label: 'Tuần 2', hotel: 320000000, apt: 195000000, total: 515000000 },
-  { label: 'Tuần 3', hotel: 410000000, apt: 220000000, total: 630000000 },
-  { label: 'Tuần 4', hotel: 490000000, apt: 240000000, total: 730000000 }
-];
-
-const YEARLY_REVENUE = [
-  { label: 'Thg 1', hotel: 1200000000, apt: 750000000, total: 1950000000 },
-  { label: 'Thg 2', hotel: 1400000000, apt: 810000000, total: 2210000000 },
-  { label: 'Thg 3', hotel: 1350000000, apt: 800000000, total: 2150000000 },
-  { label: 'Thg 4', hotel: 1600000000, apt: 920000000, total: 2520000000 },
-  { label: 'Thg 5', hotel: 1850000000, apt: 1100000000, total: 2950000000 },
-  { label: 'Thg 6', hotel: 2200000000, apt: 1250000000, total: 3450000000 },
-  { label: 'Thg 7', hotel: 2400000000, apt: 1300000000, total: 3700000000 },
-  { label: 'Thg 8', hotel: 2100000000, apt: 1200000000, total: 3300000000 },
-  { label: 'Thg 9', hotel: 1750000000, apt: 1050000000, total: 2800000000 },
-  { label: 'Thg 10', hotel: 1900000000, apt: 1150000000, total: 3050000000 },
-  { label: 'Thg 11', hotel: 2050000000, apt: 1200000000, total: 3250000000 },
-  { label: 'Thg 12', hotel: 2600000000, apt: 1450000000, total: 4050000000 }
-];
-
-export interface DayData {
-  date: string;
-  bookings: number;
-  hotelRevenue: number;
-  aptRevenue: number;
-  totalRevenue: number;
-  occupancy: number;
-}
-
-const LAST_30_DAYS_DATA: DayData[] = [
-  { date: '01/06', bookings: 18, hotelRevenue: 48000000, aptRevenue: 25000000, totalRevenue: 73000000, occupancy: 72 },
-  { date: '02/06', bookings: 15, hotelRevenue: 42000000, aptRevenue: 25000000, totalRevenue: 67000000, occupancy: 68 },
-  { date: '03/06', bookings: 22, hotelRevenue: 59000000, aptRevenue: 25000000, totalRevenue: 84000000, occupancy: 75 },
-  { date: '04/06', bookings: 25, hotelRevenue: 68000000, aptRevenue: 30000000, totalRevenue: 98000000, occupancy: 80 },
-  { date: '05/06', bookings: 32, hotelRevenue: 85000000, aptRevenue: 35000000, totalRevenue: 120000000, occupancy: 88 },
-  { date: '06/06', bookings: 38, hotelRevenue: 110000000, aptRevenue: 40000000, totalRevenue: 150000000, occupancy: 95 },
-  { date: '07/06', bookings: 35, hotelRevenue: 105000000, aptRevenue: 35000000, totalRevenue: 140000000, occupancy: 92 },
-  { date: '08/06', bookings: 19, hotelRevenue: 51000000, aptRevenue: 25000000, totalRevenue: 76000000, occupancy: 71 },
-  { date: '09/06', bookings: 16, hotelRevenue: 44000000, aptRevenue: 25000000, totalRevenue: 69000000, occupancy: 66 },
-  { date: '10/06', bookings: 21, hotelRevenue: 58000000, aptRevenue: 25000000, totalRevenue: 83000000, occupancy: 74 },
-  { date: '11/06', bookings: 24, hotelRevenue: 65000000, aptRevenue: 30000000, totalRevenue: 95000000, occupancy: 79 },
-  { date: '12/06', bookings: 31, hotelRevenue: 88000000, aptRevenue: 35000000, totalRevenue: 123000000, occupancy: 89 },
-  { date: '13/06', bookings: 40, hotelRevenue: 120000000, aptRevenue: 40000000, totalRevenue: 160000000, occupancy: 98 },
-  { date: '14/06', bookings: 36, hotelRevenue: 108000000, aptRevenue: 35000000, totalRevenue: 143000000, occupancy: 94 },
-  { date: '15/06', bookings: 20, hotelRevenue: 53000000, aptRevenue: 25000000, totalRevenue: 78000000, occupancy: 73 },
-  { date: '16/06', bookings: 17, hotelRevenue: 46000000, aptRevenue: 25000000, totalRevenue: 71000000, occupancy: 69 },
-  { date: '17/06', bookings: 23, hotelRevenue: 61000000, aptRevenue: 25000000, totalRevenue: 86000000, occupancy: 76 },
-  { date: '18/06', bookings: 26, hotelRevenue: 70000000, aptRevenue: 30000000, totalRevenue: 100000000, occupancy: 82 },
-  { date: '19/06', bookings: 34, hotelRevenue: 92000000, aptRevenue: 35000000, totalRevenue: 127000000, occupancy: 90 },
-  { date: '20/06', bookings: 42, hotelRevenue: 125000000, aptRevenue: 40000000, totalRevenue: 165000000, occupancy: 99 },
-  { date: '21/06', bookings: 38, hotelRevenue: 112000000, aptRevenue: 35000000, totalRevenue: 147000000, occupancy: 95 },
-  { date: '22/06', bookings: 22, hotelRevenue: 56000000, aptRevenue: 25000000, totalRevenue: 81000000, occupancy: 75 },
-  { date: '23/06', bookings: 19, hotelRevenue: 49000000, aptRevenue: 25000000, totalRevenue: 74000000, occupancy: 70 },
-  { date: '24/06', bookings: 25, hotelRevenue: 64000000, aptRevenue: 25000000, totalRevenue: 89000000, occupancy: 78 },
-  { date: '25/06', bookings: 28, hotelRevenue: 74000000, aptRevenue: 30000000, totalRevenue: 104000000, occupancy: 84 },
-  { date: '26/06', bookings: 36, hotelRevenue: 98000000, aptRevenue: 35000000, totalRevenue: 133000000, occupancy: 92 },
-  { date: '27/06', bookings: 45, hotelRevenue: 130000000, aptRevenue: 40000000, totalRevenue: 170000000, occupancy: 100 },
-  { date: '28/06', bookings: 41, hotelRevenue: 118000000, aptRevenue: 35000000, totalRevenue: 153000000, occupancy: 96 },
-  { date: '29/06', bookings: 24, hotelRevenue: 59000000, aptRevenue: 25000000, totalRevenue: 84000000, occupancy: 76 },
-  { date: '30/06', bookings: 23, hotelRevenue: 57000000, aptRevenue: 25000000, totalRevenue: 82000000, occupancy: 74 }
-];
-
 // Initial states for hotel operations
 const INITIAL_ROOMS = [
   { id: 'rm-tn-101', name: 'Phòng 101 (Deluxe Double)', branchId: 'thai-nguyen', branchName: 'GrandStay Premier Thai Nguyen', status: 'Clean', occupancy: 'Vacant', housekeeper: 'Nguyễn Thị Hoa' },
@@ -495,7 +420,7 @@ export default function AdminPortal({
     navigate(`/admin/${tab}`);
   };
 
-  const [dashboardSubTab, setDashboardSubTab] = useState<'overview' | 'trends' | 'revenue' | 'occupancy'>('overview');
+  // dashboardSubTab and revenueFilter are now managed internally by AdminDashboardTab
   const [housekeepingViewMode, setHousekeepingViewMode] = useState<'hotels' | 'apartments'>('hotels');
   const [filterPaymentMethod, setFilterPaymentMethod] = useState<'all' | 'sepay' | 'stripe'>('all');
 
@@ -694,8 +619,6 @@ export default function AdminPortal({
     }
   }, [currentUser, userPermissions, activeTab]);
 
-  // Revenue chart filter state
-  const [revenueFilter, setRevenueFilter] = useState<'week' | 'month' | 'year'>('month');
   const [hoveredBarIndex, setHoveredBarIndex] = useState<number | null>(null);
 
   // Leave Management States
@@ -941,15 +864,6 @@ export default function AdminPortal({
   
   const activeContractsCount = contracts.filter((c: any) => c.status === 'Approved').length;
   const pendingContractsCount = contracts.filter((c: any) => c.status === 'Pending').length;
-
-  // Chart configs based on toggled filter
-  const currentChartData = revenueFilter === 'week' 
-    ? WEEKLY_REVENUE 
-    : revenueFilter === 'month' 
-      ? MONTHLY_REVENUE 
-      : YEARLY_REVENUE;
-
-  const maxTotal = Math.max(...currentChartData.map(d => d.total));
 
   // Handle image upload and base64 conversion
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, isApt: boolean) => {
@@ -1973,34 +1887,12 @@ export default function AdminPortal({
                   <Route path="/" element={<Navigate to="dashboard" replace />} />
                   {/* ==================== TAB 1: REVENUE DASHBOARD ==================== */}
                   <Route path="dashboard" element={
-                    <AdminDashboardTab
-                      grandTotalRevenue={grandTotalRevenue}
-                      totalHotelRevenue={totalHotelRevenue}
-                      totalAptRevenue={totalAptRevenue}
-                      pendingContractsCount={pendingContractsCount}
-                      dashboardSubTab={dashboardSubTab}
-                      setDashboardSubTab={setDashboardSubTab}
-                      revenueFilter={revenueFilter}
-                      setRevenueFilter={setRevenueFilter}
-                      sepayTotalCount={sepayTotalCount}
-                      sepayTotalAmount={sepayTotalAmount}
-                      sepayPercent={sepayPercent}
-                      stripeTotalCount={stripeTotalCount}
-                      stripeTotalAmount={stripeTotalAmount}
-                      stripePercent={stripePercent}
-                    />
+                    <AdminDashboardTab />
                   } />
 
                   {/* ==================== TAB 2: HOTEL MANAGEMENT ==================== */}
                   <Route path="hotels" element={
-                    <AdminHotelsTab
-                      branches={branches}
-                      searchTerm={searchTerm}
-                      setBranches={setBranches}
-                      setEditingHotel={setEditingHotel}
-                      setHotelForm={setHotelForm}
-                      setShowHotelModal={setShowHotelModal}
-                    />
+                    <AdminHotelsTab />
                   } />
 
                   {/* ==================== TAB 3: APARTMENT MANAGEMENT ==================== */}
