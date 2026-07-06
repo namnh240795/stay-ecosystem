@@ -406,8 +406,11 @@ export default function AdminPortal({
   const location = useLocation();
 
   const activeTab = (() => {
-    // pathname can be "/admin/dashboard", "/admin/hotels", etc.
-    const parts = location.pathname.split('/');
+    // With HashRouter, use hash instead of pathname
+    // Hash format: "#/admin/dashboard", "#/admin/hotels", etc.
+    const hash = location.hash || '';
+    const hashPath = hash.replace('#', '');
+    const parts = hashPath.split('/');
     const tab = parts[2];
     const validTabs = ['dashboard', 'hotels', 'apartments', 'contracts', 'roles', 'staff', 'operations', 'leaves', 'tours', 'footer', 'banners', 'policies'];
     if (validTabs.includes(tab)) {
