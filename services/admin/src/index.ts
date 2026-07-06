@@ -20,6 +20,82 @@ app.use("*", cors());
 // ==================== HEALTH ====================
 app.get("/health", (c) => c.json({ status: "ok", service: "admin" }));
 
+// ==================== SEED (Local Dev Only) ====================
+app.post("/api/admin/seed", async (c) => {
+  const usersDb = c.env.USERS_DB;
+  const propertiesDb = c.env.PROPERTIES_DB;
+  const bookingsDb = c.env.BOOKINGS_DB;
+  const paymentsDb = c.env.PAYMENTS_DB;
+
+  const createTables = [
+    `CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, email TEXT NOT NULL UNIQUE, name TEXT, phone TEXT, avatar_url TEXT, role TEXT NOT NULL DEFAULT 'guest', auth0_sub TEXT UNIQUE, partner_id TEXT, created_at TEXT NOT NULL DEFAULT '', updated_at TEXT NOT NULL DEFAULT '')`,
+    `CREATE TABLE IF NOT EXISTS properties (id TEXT PRIMARY KEY, partner_id TEXT NOT NULL, title TEXT NOT NULL, description TEXT NOT NULL, address TEXT NOT NULL, city TEXT NOT NULL, country TEXT NOT NULL, latitude REAL, longitude REAL, price_per_night REAL NOT NULL, max_guests INTEGER NOT NULL DEFAULT 2, bedrooms INTEGER NOT NULL DEFAULT 1, bathrooms INTEGER NOT NULL DEFAULT 1, property_type TEXT NOT NULL DEFAULT 'apartment', status TEXT NOT NULL DEFAULT 'active', images TEXT, rules TEXT, created_at TEXT NOT NULL DEFAULT '', updated_at TEXT NOT NULL DEFAULT '')`,
+    `CREATE TABLE IF NOT EXISTS bookings (id TEXT PRIMARY KEY, property_id TEXT NOT NULL, guest_id TEXT NOT NULL, partner_id TEXT NOT NULL, check_in TEXT NOT NULL, check_out TEXT NOT NULL, nights INTEGER NOT NULL, guests INTEGER NOT NULL DEFAULT 1, total_price REAL NOT NULL, status TEXT NOT NULL DEFAULT 'pending', special_requests TEXT, cancellation_reason TEXT, cancelled_at TEXT, confirmed_at TEXT, completed_at TEXT, created_at TEXT NOT NULL DEFAULT '', updated_at TEXT NOT NULL DEFAULT '')`,
+    `CREATE TABLE IF NOT EXISTS payments (id TEXT PRIMARY KEY, booking_id TEXT NOT NULL, partner_id TEXT NOT NULL, amount REAL NOT NULL, currency TEXT NOT NULL DEFAULT 'VND', status TEXT NOT NULL DEFAULT 'pending', payment_method TEXT, transaction_id TEXT, metadata TEXT, created_at TEXT NOT NULL DEFAULT '', updated_at TEXT NOT NULL DEFAULT '')`,
+    `CREATE TABLE IF NOT EXISTS reviews (id TEXT PRIMARY KEY, property_id TEXT NOT NULL, booking_id TEXT, guest_id TEXT NOT NULL, partner_id TEXT, rating INTEGER NOT NULL, comment TEXT, partner_reply TEXT, created_at TEXT NOT NULL DEFAULT '', updated_at TEXT NOT NULL DEFAULT '')`,
+  ];
+
+  for (const sql of createTables) {
+    await usersDb.prepare(sql).run();
+    await propertiesDb.prepare(sql).run();
+    await bookingsDb.prepare(sql).run();
+    await paymentsDb.prepare(sql).run();
+  }
+
+  // Seed users
+  const seedUsers = [
+    { id: 'usr-001', email: 'namnh240795+grandstayadmin@gmail.com', name: 'Admin User', phone: '0912345678', role: 'admin', auth0_sub: 'auth0|6a4b3698e68cc397a48bdfc4' },
+    { id: 'usr-002', email: 'namnh240795+grandstaypartner@gmail.com', name: 'Partner User', phone: '0987654321', role: 'partner', auth0_sub: 'auth0|6a4b36a724b21a5abef8a385' },
+    { id: 'usr-003', email: 'namnh240795+grandstayguest@gmail.com', name: 'Guest User', phone: '0905123456', role: 'guest', auth0_sub: 'auth0|6a4b36a8281483a678fbfa66' },
+    { id: 'usr-004', email: 'nguyenvanA@gmail.com', name: 'Nguyen Van A', phone: '0911111111', role: 'guest' },
+    { id: 'usr-005', email: 'tranthib@gmail.com', name: 'Tran Thi B', phone: '0922222222', role: 'partner' },
+    { id: 'usr-006', email: 'phamhoang@gmail.com', name: 'Pham Hoang C', phone: '0933333333', role: 'guest' },
+  ];
+  for (const u of seedUsers) {
+    await usersDb.prepare("INSERT OR IGNORE INTO users (id, email, name, phone, role, auth0_sub, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, '', '')").bind(u.id, u.email, u.name, u.phone, u.role, u.auth0_sub || null).run();
+  }
+
+  // Seed properties
+  const seedProps = [
+    { id: 'prop-001', partnerId: 'usr-002', title: 'Metropolitan Luxury Studio - Saigon Central', desc: 'Căn hộ Studio cao cấp sở hữu ban công kính nhìn trực diện Landmark 81.', address: '123 Nguyen Hue, District 1', city: 'Ho Chi Minh City', price: 2375000, type: 'apartment' },
+    { id: 'prop-002', partnerId: 'usr-002', title: 'Indochine Heritage 1BR Suite - Hoan Kiem', desc: 'Căn hộ kết hợp tinh tế giữa nét đẹp Indochine truyền thống.', address: '45 Hang Bai, Hoan Kiem', city: 'Hanoi', price: 2750000, type: 'apartment' },
+    { id: 'prop-003', partnerId: 'usr-002', title: 'My Khe Beachfront Panoramic 2BR', desc: 'Thức dậy cùng bình minh rực rỡ trên biển Mỹ Khê.', address: '78 Vo Nguyen Giap, Son Tra', city: 'Da Nang', price: 3625000, type: 'apartment' },
+    { id: 'prop-004', partnerId: 'usr-005', title: 'Sunset Horizon Pool Villa', desc: 'Trải nghiệm phong cách sống sang trọng tại căn Penthouse.', address: '12 Tran Hung Dao, Duong Dong', city: 'Phu Quoc', price: 7000000, type: 'villa' },
+    { id: 'prop-005', partnerId: 'usr-005', title: 'Misty Valley Cozy Chalet', desc: 'Tận hưởng kỳ nghỉ trốn bụi mịn tại căn hộ gỗ.', address: '88 Fansipan, Sa Pa', city: 'Lao Cai', price: 2000000, type: 'apartment' },
+    { id: 'prop-006', partnerId: 'usr-002', title: 'Zen Garden Tea-view Suite', desc: 'Căn hộ dịch vụ cao cấp hướng đồi chè.', address: '15 Dong Tam, Thai Nguyen', city: 'Thai Nguyen', price: 1875000, type: 'apartment' },
+  ];
+  for (const p of seedProps) {
+    await propertiesDb.prepare("INSERT OR IGNORE INTO properties (id, partner_id, title, description, address, city, country, price_per_night, property_type, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 'Vietnam', ?, ?, 'active', '', '')").bind(p.id, p.partnerId, p.title, p.desc, p.address, p.city, p.price, p.type).run();
+  }
+
+  // Seed bookings
+  const seedBookings = [
+    { id: 'bk-001', propertyId: 'prop-001', guestId: 'usr-003', partnerId: 'usr-002', checkIn: '2026-07-01', checkOut: '2026-07-04', nights: 3, guests: 2, price: 7125000, status: 'confirmed' },
+    { id: 'bk-002', propertyId: 'prop-002', guestId: 'usr-004', partnerId: 'usr-002', checkIn: '2026-07-05', checkOut: '2026-07-08', nights: 3, guests: 2, price: 8250000, status: 'pending' },
+    { id: 'bk-003', propertyId: 'prop-003', guestId: 'usr-006', partnerId: 'usr-002', checkIn: '2026-07-10', checkOut: '2026-07-15', nights: 5, guests: 3, price: 18125000, status: 'confirmed' },
+    { id: 'bk-004', propertyId: 'prop-004', guestId: 'usr-003', partnerId: 'usr-005', checkIn: '2026-07-01', checkOut: '2026-07-03', nights: 2, guests: 4, price: 14000000, status: 'completed' },
+    { id: 'bk-005', propertyId: 'prop-005', guestId: 'usr-004', partnerId: 'usr-005', checkIn: '2026-07-20', checkOut: '2026-07-25', nights: 5, guests: 2, price: 10000000, status: 'pending' },
+    { id: 'bk-006', propertyId: 'prop-001', guestId: 'usr-006', partnerId: 'usr-002', checkIn: '2026-06-25', checkOut: '2026-06-28', nights: 3, guests: 2, price: 7125000, status: 'cancelled' },
+  ];
+  for (const b of seedBookings) {
+    await bookingsDb.prepare("INSERT OR IGNORE INTO bookings (id, property_id, guest_id, partner_id, check_in, check_out, nights, guests, total_price, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '', '')").bind(b.id, b.propertyId, b.guestId, b.partnerId, b.checkIn, b.checkOut, b.nights, b.guests, b.price, b.status).run();
+  }
+
+  // Seed payments
+  const seedPayments = [
+    { id: 'pay-001', bookingId: 'bk-001', partnerId: 'usr-002', amount: 7125000, status: 'completed', method: 'sepay' },
+    { id: 'pay-002', bookingId: 'bk-003', partnerId: 'usr-002', amount: 18125000, status: 'completed', method: 'stripe' },
+    { id: 'pay-003', bookingId: 'bk-004', partnerId: 'usr-005', amount: 14000000, status: 'completed', method: 'sepay' },
+    { id: 'pay-004', bookingId: 'bk-002', partnerId: 'usr-002', amount: 8250000, status: 'pending', method: 'sepay' },
+    { id: 'pay-005', bookingId: 'bk-005', partnerId: 'usr-005', amount: 10000000, status: 'pending', method: 'stripe' },
+  ];
+  for (const p of seedPayments) {
+    await paymentsDb.prepare("INSERT OR IGNORE INTO payments (id, booking_id, partner_id, amount, currency, status, payment_method, created_at, updated_at) VALUES (?, ?, ?, ?, 'VND', ?, ?, '', '')").bind(p.id, p.bookingId, p.partnerId, p.amount, p.status, p.method).run();
+  }
+
+  return c.json({ success: true, message: "Database seeded with test data" });
+});
+
 // ==================== DASHBOARD ====================
 app.get("/api/admin/dashboard/stats", async (c) => {
   const usersDb = c.env.USERS_DB;
