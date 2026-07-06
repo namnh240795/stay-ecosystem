@@ -1,0 +1,21 @@
+{
+  "name": "@booking/admin-service",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy:sit": "wrangler deploy --env sit",
+    "deploy:uat": "wrangler deploy --env uat",
+    "deploy:prod": "wrangler deploy --env prod",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "hono": "^4.6.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241230.0",
+    "typescript": "^5.7.0",
+    "wrangler": "^3.100.0"
+  }
+}
