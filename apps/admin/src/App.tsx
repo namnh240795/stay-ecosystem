@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { useState } from "react";
 import AuthProvider from "./auth/provider";
 import AdminPortal from "./components/AdminPortal";
@@ -22,6 +22,7 @@ const defaultUser: UserSim = {
 };
 
 function AdminView() {
+  // Mock data as fallback - in production these come from the API via React Query
   const [branches, setBranches] = useState<Branch[]>(MOCK_BRANCHES);
   const [apartments, setApartments] = useState<Apartment[]>(MOCK_APARTMENTS);
   const [currentUser] = useState<UserSim>(defaultUser);
@@ -61,13 +62,8 @@ function Layout() {
 
       <main className="flex-grow">
         <Routes>
-          {/* Admin portal with nested routing */}
           <Route path="/admin/*" element={<AdminView />} />
-
-          {/* Redirect root to admin dashboard */}
           <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
-
-          {/* Catch-all */}
           <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
         </Routes>
       </main>
@@ -79,10 +75,8 @@ function Layout() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <Layout />
-      </AuthProvider>
-    </BrowserRouter>
+    <AuthProvider>
+      <Layout />
+    </AuthProvider>
   );
 }
