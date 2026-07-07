@@ -17,7 +17,7 @@ const defaultUser: UserSim = {
   name: 'Nguyễn Văn Quyết',
   email: 'quyet.nv@grandstay.com',
   phone: '0912345678',
-  role: 'role-1',
+  role: 'admin',
   roleName: 'Giám Đốc Vận Hành',
   avatarInitials: 'VQ',
   tier: 'Root Admin',

@@ -18,28 +18,28 @@ import {
   Pie,
   Cell
 } from 'recharts';
-import { 
-  X, 
-  TrendingUp, 
-  Building, 
-  Home, 
-  FileText, 
-  Users, 
-  ShieldAlert, 
-  Plus, 
-  Edit2, 
-  Trash2, 
-  DollarSign, 
-  Calendar, 
-  Briefcase, 
-  CheckCircle, 
-  XCircle, 
-  Eye, 
-  Check, 
-  User, 
-  Search, 
-  Lock, 
-  Layers, 
+import {
+  X,
+  TrendingUp,
+  Building,
+  Home,
+  FileText,
+  Users,
+  ShieldAlert,
+  Plus,
+  Edit2,
+  Trash2,
+  DollarSign,
+  Calendar,
+  Briefcase,
+  CheckCircle,
+  XCircle,
+  Eye,
+  Check,
+  User,
+  Search,
+  Lock,
+  Layers,
   Sparkles,
   RefreshCw,
   Phone,
@@ -75,6 +75,17 @@ import AdminDashboardTab from './admin/AdminDashboardTab';
 import AdminHotelsTab from './admin/AdminHotelsTab';
 import AdminApartmentsTab from './admin/AdminApartmentsTab';
 import Pagination from './admin/Pagination';
+import { useRooms } from '../hooks/useRooms';
+import { useRequests, useCreateRequest, useUpdateRequestStatus } from '../hooks/useRequests';
+import { useComplaints, useCreateComplaint, useUpdateComplaintStatus } from '../hooks/useComplaints';
+import { useDailyLogs, useCreateDailyLog } from '../hooks/useDailyLogs';
+import { useReservations, useCreateReservation, useUpdateReservationStatus } from '../hooks/useReservations';
+import { useLeaveRequests, useCreateLeaveRequest, useUpdateLeaveRequestStatus } from '../hooks/useLeaveRequests';
+import { useContracts } from '../hooks/useContracts';
+import { useRoles } from '../hooks/useRoles';
+import { useStaff } from '../hooks/useStaff';
+import { useTours } from '../hooks/useTours';
+import { useConfig } from '../hooks/useConfig';
 
 interface AdminPortalProps {
   branches: Branch[];
@@ -92,272 +103,6 @@ const SYSTEM_PERMISSIONS = [
   { id: 'manage_apartments', name: 'Quản lý căn hộ', desc: 'Cập nhật danh mục căn hộ dài hạn, giá thuê và trạng thái.' },
   { id: 'manage_contracts', name: 'Quản lý hợp đồng', desc: 'Xét duyệt hợp đồng thuê trực tuyến, hủy hoặc gia hạn hợp đồng.' },
   { id: 'manage_roles_staff', name: 'Tạo vai trò & phân quyền', desc: 'Thiết lập vai trò nhân sự, tích chọn gán quyền và quản lý nhân viên.' }
-];
-
-// Initial Roles
-const INITIAL_ROLES = [
-  { id: 'role-1', name: 'Giám Đốc Vận Hành', desc: 'Toàn quyền kiểm soát hệ thống, phê duyệt báo cáo tài chính cao cấp.', permissions: ['view_dashboard', 'manage_hotels', 'manage_apartments', 'manage_contracts', 'manage_roles_staff'] },
-  { id: 'role-2', name: 'Quản Lý Dự Án', desc: 'Quản lý quỹ phòng, khách sạn, căn hộ và tương tác trực tiếp với khách thuê.', permissions: ['view_dashboard', 'manage_hotels', 'manage_apartments', 'manage_contracts'] },
-  { id: 'role-3', name: 'Kế Toán Trưởng', desc: 'Chuyên trách báo cáo doanh thu, lập hóa đơn và rà soát pháp lý hợp đồng.', permissions: ['view_dashboard', 'manage_contracts'] },
-  { id: 'role-4', name: 'Nhân Viên Lễ Tân', desc: 'Tiếp đón khách hàng, cập nhật tình trạng phòng ngủ và tạo yêu cầu dịch vụ.', permissions: ['manage_contracts'] },
-  { id: 'role-5', name: 'Nhân Viên Buồng Phòng', desc: 'Chăm sóc buồng phòng dọn dẹp sạch sẽ, quản lý trang thiết bị buồng phòng, xin nghỉ phép & xin đổi ca.', permissions: [] }
-];
-
-// Initial Staff
-const INITIAL_STAFF = [
-  { id: 'staff-1', name: 'Nguyễn Văn Quyết', email: 'quyet.nv@grandstay.com', phone: '0912345678', roleId: 'role-1', status: 'Active' },
-  { id: 'staff-2', name: 'Lê Thị Khánh Mai', email: 'mai.ltk@grandstay.com', phone: '0987654321', roleId: 'role-3', status: 'Active' },
-  { id: 'staff-3', name: 'Trần Minh Tuấn', email: 'tuan.tm@grandstay.com', phone: '0905123456', roleId: 'role-2', status: 'Active' },
-  { id: 'staff-4', name: 'Phạm Hồng Nhung', email: 'nhung.ph@grandstay.com', phone: '0934567890', roleId: 'role-4', status: 'Active' },
-  { id: 'staff-5', name: 'Hoàng Quốc Việt', email: 'viet.hq@grandstay.com', phone: '0977889900', roleId: 'role-4', status: 'Suspended' },
-  { id: 'staff-6', name: 'Nguyễn Thị Hoa', email: 'hoa.nt@grandstay.com', phone: '0966555444', roleId: 'role-5', status: 'Active' }
-];
-
-// Initial Schedule / Leave / Swap requests
-const INITIAL_SCHEDULE_REQUESTS = [
-  {
-    id: 'req-sch-1',
-    type: 'leave', // 'leave' | 'swap'
-    staffName: 'Nguyễn Thị Hoa',
-    roleName: 'Nhân Viên Buồng Phòng',
-    branchName: 'GrandStay Premier Thai Nguyen',
-    leaveStartDate: '2026-07-01',
-    leaveEndDate: '2026-07-03',
-    leaveType: 'annual', // 'annual' | 'sick' | 'unpaid'
-    reason: 'Xin nghỉ phép thường niên về quê ăn giỗ gia đình',
-    status: 'Pending',
-    createdAt: '2026-06-27'
-  },
-  {
-    id: 'req-sch-2',
-    type: 'swap',
-    staffName: 'Phạm Hồng Nhung',
-    roleName: 'Nhân Viên Lễ Tân',
-    branchName: 'GrandStay Premier Thai Nguyen',
-    originalShiftDate: '2026-06-29',
-    originalShiftName: 'Ca Sáng (06:00 - 14:00)',
-    targetShiftDate: '2026-06-29',
-    targetShiftName: 'Ca Đêm (22:00 - 06:00)',
-    targetStaffName: 'Hoàng Quốc Việt',
-    reason: 'Trùng lịch khám sức khoẻ định kì buổi sáng, muốn đổi ca với đồng nghiệp',
-    status: 'Pending',
-    createdAt: '2026-06-28'
-  },
-  {
-    id: 'req-sch-3',
-    type: 'leave',
-    staffName: 'Trần Minh Tuấn',
-    roleName: 'Quản Lý Dự Án',
-    branchName: 'GrandStay Premier Thai Nguyen',
-    leaveStartDate: '2026-06-25',
-    leaveEndDate: '2026-06-25',
-    leaveType: 'sick',
-    reason: 'Xin nghỉ ốm đột xuất do bị sốt siêu vi',
-    status: 'Approved',
-    approvedBy: 'Nguyễn Văn Quyết',
-    responseNotes: 'Đã duyệt nghỉ đột xuất. Đã giao Tuấn Anh bàn giao ca.',
-    createdAt: '2026-06-25'
-  }
-];
-
-// Initial Staff Weekly Shift Roster
-const INITIAL_ROSTER = [
-  {
-    staffId: 'staff-1',
-    staffName: 'Nguyễn Văn Quyết',
-    roleName: 'Giám Đốc Vận Hành',
-    branchName: 'Tất Cả Chi Nhánh',
-    shifts: {
-      '2026-06-25': 'Hành chính (08:00 - 17:00)',
-      '2026-06-26': 'Hành chính (08:00 - 17:00)',
-      '2026-06-27': 'Hành chính (08:00 - 17:00)',
-      '2026-06-28': 'OFF',
-      '2026-06-29': 'Hành chính (08:00 - 17:00)',
-      '2026-06-30': 'Hành chính (08:00 - 17:00)',
-      '2026-07-01': 'Hành chính (08:00 - 17:00)'
-    }
-  },
-  {
-    staffId: 'staff-3',
-    staffName: 'Trần Minh Tuấn',
-    roleName: 'Quản Lý Dự Án',
-    branchName: 'GrandStay Premier Thai Nguyen',
-    shifts: {
-      '2026-06-25': 'OFF (Nghỉ ốm)',
-      '2026-06-26': 'Ca Sáng (06:00 - 14:00)',
-      '2026-06-27': 'Ca Chiều (14:00 - 22:00)',
-      '2026-06-28': 'OFF',
-      '2026-06-29': 'Ca Sáng (06:00 - 14:00)',
-      '2026-06-30': 'Ca Sáng (06:00 - 14:00)',
-      '2026-07-01': 'Ca Chiều (14:00 - 22:00)'
-    }
-  },
-  {
-    staffId: 'staff-4',
-    staffName: 'Phạm Hồng Nhung',
-    roleName: 'Nhân Viên Lễ Tân',
-    branchName: 'GrandStay Premier Thai Nguyen',
-    shifts: {
-      '2026-06-25': 'Ca Chiều (14:00 - 22:00)',
-      '2026-06-26': 'Ca Đêm (22:00 - 06:00)',
-      '2026-06-27': 'OFF',
-      '2026-06-28': 'Ca Sáng (06:00 - 14:00)',
-      '2026-06-29': 'Ca Sáng (06:00 - 14:00)',
-      '2026-06-30': 'Ca Chiều (14:00 - 22:00)',
-      '2026-07-01': 'Ca Chiều (14:00 - 22:00)'
-    }
-  },
-  {
-    staffId: 'staff-5',
-    staffName: 'Hoàng Quốc Việt',
-    roleName: 'Nhân Viên Lễ Tân',
-    branchName: 'GrandStay Premier Thai Nguyen',
-    shifts: {
-      '2026-06-25': 'Ca Sáng (06:00 - 14:00)',
-      '2026-06-26': 'Ca Chiều (14:00 - 22:00)',
-      '2026-06-27': 'Ca Chiều (14:00 - 22:00)',
-      '2026-06-28': 'Ca Đêm (22:00 - 06:00)',
-      '2026-06-29': 'Ca Đêm (22:00 - 06:00)',
-      '2026-06-30': 'OFF',
-      '2026-07-01': 'Ca Đêm (22:00 - 06:00)'
-    }
-  },
-  {
-    staffId: 'staff-6',
-    staffName: 'Nguyễn Thị Hoa',
-    roleName: 'Nhân Viên Buồng Phòng',
-    branchName: 'GrandStay Premier Thai Nguyen',
-    shifts: {
-      '2026-06-25': 'Ca Chiều (14:00 - 22:00)',
-      '2026-06-26': 'Ca Sáng (06:00 - 14:00)',
-      '2026-06-27': 'Ca Sáng (06:00 - 14:00)',
-      '2026-06-28': 'OFF',
-      '2026-06-29': 'Ca Sáng (06:00 - 14:00)',
-      '2026-06-30': 'Ca Chiều (14:00 - 22:00)',
-      '2026-07-01': 'OFF (Xin nghỉ phép)'
-    }
-  },
-  {
-    staffId: 'staff-7',
-    staffName: 'Lê Văn Nam',
-    roleName: 'Nhân Viên Buồng Phòng',
-    branchName: 'GrandStay Premier Thai Nguyen',
-    shifts: {
-      '2026-06-25': 'Ca Sáng (06:00 - 14:00)',
-      '2026-06-26': 'Ca Chiều (14:00 - 22:00)',
-      '2026-06-27': 'Ca Đêm (22:00 - 06:00)',
-      '2026-06-28': 'OFF',
-      '2026-06-29': 'Ca Chiều (14:00 - 22:00)',
-      '2026-06-30': 'Ca Sáng (06:00 - 14:00)',
-      '2026-07-01': 'Ca Sáng (06:00 - 14:00)'
-    }
-  }
-];
-
-// Initial Hotel Room Supplies Checklist & Damage logs
-const INITIAL_ROOM_AUDITS = [
-  {
-    id: 'audit-1',
-    roomName: 'Phòng 102 (Deluxe Twin)',
-    branchName: 'GrandStay Premier Thai Nguyen',
-    shift: 'Ca Sáng (06:00 - 14:00)',
-    auditor: 'Nguyễn Thị Hoa',
-    auditDate: '2026-06-28',
-    status: 'Deficit', // 'Full' | 'Deficit' | 'Damaged'
-    items: [
-      { name: 'Khăn tắm lớn', standard: 2, actual: 1, status: 'Missing', notes: 'Khách mang đi/làm mất', cost: 150000 },
-      { name: 'Bàn chải & Kem đánh răng', standard: 2, actual: 2, status: 'Good', notes: '', cost: 0 },
-      { name: 'Ly thủy tinh', standard: 2, actual: 1, status: 'Broken', notes: 'Khách làm vỡ ly nước', cost: 50000 },
-      { name: 'Nước suối miễn phí', standard: 2, actual: 0, status: 'Used', notes: 'Khách đã uống (bổ sung mới)', cost: 0 },
-      { name: 'Chăn ga gối', standard: 2, actual: 2, status: 'Good', notes: '', cost: 0 }
-    ],
-    totalDamageCost: 200000,
-    notes: 'Khách làm vỡ 1 ly nước và mang đi 1 khăn tắm lớn. Đã lập biên bản bồi thường lúc check-out.'
-  },
-  {
-    id: 'audit-2',
-    roomName: 'Phòng 202 (Presidential Suite)',
-    branchName: 'GrandStay Premier Thai Nguyen',
-    shift: 'Ca Chiều (14:00 - 22:00)',
-    auditor: 'Trần Minh Quân',
-    auditDate: '2026-06-27',
-    status: 'Damaged',
-    items: [
-      { name: 'Máy sấy tóc', standard: 1, actual: 1, status: 'Broken', notes: 'Cháy cuộn dây động cơ máy sấy', cost: 350000 },
-      { name: 'Ấm siêu tốc', standard: 1, actual: 1, status: 'Good', notes: '', cost: 0 },
-      { name: 'Khăn tắm lớn', standard: 4, actual: 4, status: 'Good', notes: '', cost: 0 },
-      { name: 'Dép đi trong phòng', standard: 4, actual: 4, status: 'Good', notes: '', cost: 0 }
-    ],
-    totalDamageCost: 350000,
-    notes: 'Máy sấy tóc bị hỏng cuộn nhiệt bên trong, cần đem đi sửa chữa hoặc thay thế mới.'
-  },
-  {
-    id: 'audit-3',
-    roomName: 'Villa 102 (Two-Bedroom Villa)',
-    branchName: 'GrandStay Beachfront Resort Phu Quoc',
-    shift: 'Ca Sáng (06:00 - 14:00)',
-    auditor: 'Phạm Hồng Ánh',
-    auditDate: '2026-06-28',
-    status: 'Full',
-    items: [
-      { name: 'Chăn ga gối', standard: 4, actual: 4, status: 'Good', notes: '', cost: 0 },
-      { name: 'Khăn tắm lớn', standard: 4, actual: 4, status: 'Good', notes: '', cost: 0 },
-      { name: 'Nước suối miễn phí', standard: 4, actual: 2, status: 'Used', notes: 'Bổ sung đầy đủ', cost: 0 }
-    ],
-    totalDamageCost: 0,
-    notes: 'Vật tư buồng phòng đầy đủ, không hư hại hỏng hóc.'
-  }
-];
-
-// Initial Mock Contracts
-const INITIAL_CONTRACTS = [
-  { id: 'HD-A8972', aptName: 'Metropolitan Luxury Studio - Saigon Central', location: 'Saigon', monthlyPrice: 23750000, leaseTerm: 12, tenantName: 'Trần Hoàng Long', tenantPhone: '0911223344', tenantEmail: 'long.th@gmail.com', signedDate: '2026-06-15', status: 'Approved' },
-  { id: 'HD-C2341', aptName: 'Indochine Heritage 1BR Suite - Hoan Kiem', location: 'Hanoi', monthlyPrice: 27500000, leaseTerm: 6, tenantName: 'Lê Thuỳ Trang', tenantPhone: '0988776655', tenantEmail: 'trang.lt@yahoo.com', signedDate: '2026-06-20', status: 'Pending' },
-  { id: 'HD-D4509', aptName: 'My Khe Beachfront Panoramic 2BR Apartment', location: 'Da Nang', monthlyPrice: 36250000, leaseTerm: 3, tenantName: 'Nguyễn Minh Anh', tenantPhone: '0909090909', tenantEmail: 'minhanh.ng@hotmail.com', signedDate: '2026-06-26', status: 'Approved' }
-];
-
-// Initial states for hotel operations
-const INITIAL_ROOMS = [
-  { id: 'rm-tn-101', name: 'Phòng 101 (Deluxe Double)', branchId: 'thai-nguyen', branchName: 'GrandStay Premier Thai Nguyen', status: 'Clean', occupancy: 'Vacant', housekeeper: 'Nguyễn Thị Hoa' },
-  { id: 'rm-tn-102', name: 'Phòng 102 (Deluxe Twin)', branchId: 'thai-nguyen', branchName: 'GrandStay Premier Thai Nguyen', status: 'Dirty', occupancy: 'Occupied', housekeeper: 'Lê Văn Nam' },
-  { id: 'rm-tn-201', name: 'Phòng 201 (Executive Suite)', branchId: 'thai-nguyen', branchName: 'GrandStay Premier Thai Nguyen', status: 'Cleaning', occupancy: 'Vacant', housekeeper: 'Nguyễn Thị Hoa' },
-  { id: 'rm-tn-202', name: 'Phòng 202 (Presidential Suite)', branchId: 'thai-nguyen', branchName: 'GrandStay Premier Thai Nguyen', status: 'Repairing', occupancy: 'Vacant', housekeeper: 'Trần Minh Quân' },
-
-  { id: 'rm-pq-101', name: 'Villa 101 (Ocean Pool Beachfront)', branchId: 'phu-quoc', branchName: 'GrandStay Beachfront Resort Phu Quoc', status: 'Clean', occupancy: 'Occupied', housekeeper: 'Phạm Hồng Ánh' },
-  { id: 'rm-pq-102', name: 'Villa 102 (Two-Bedroom Villa)', branchId: 'phu-quoc', branchName: 'GrandStay Beachfront Resort Phu Quoc', status: 'Dirty', occupancy: 'Vacant', housekeeper: 'Phạm Hồng Ánh' },
-  { id: 'rm-pq-201', name: 'Villa 201 (Royal Family Residence)', branchId: 'phu-quoc', branchName: 'GrandStay Beachfront Resort Phu Quoc', status: 'Clean', occupancy: 'Reserved', housekeeper: 'Chưa phân công' },
-
-  { id: 'rm-dn-501', name: 'Phòng 501 (Grand Lux Skyline)', branchId: 'da-nang', branchName: 'GrandStay Lux Waterfront Da Nang', status: 'Clean', occupancy: 'Occupied', housekeeper: 'Lê Thuỳ Trang' },
-  { id: 'rm-dn-502', name: 'Phòng 502 (Premium River View)', branchId: 'da-nang', branchName: 'GrandStay Lux Waterfront Da Nang', status: 'Dirty', occupancy: 'Vacant', housekeeper: 'Chưa phân công' },
-
-  { id: 'rm-sg-1502', name: 'Căn hộ 1502 (Studio)', branchId: 'apt-saigon-skyline', branchName: 'Metropolitan Luxury Studio - Saigon Central', status: 'Clean', occupancy: 'Occupied', housekeeper: 'Trần Văn Kiên' },
-  { id: 'rm-hn-301', name: 'Căn hộ 301 (Indochine Heritage)', branchId: 'apt-hanoi-indochine', branchName: 'Indochine Heritage 1BR Suite - Hoan Kiem', status: 'Cleaning', occupancy: 'Vacant', housekeeper: 'Nguyễn Thị Bình' }
-];
-
-const INITIAL_REQUESTS = [
-  { id: 'req-1', roomName: 'Phòng 102', guestName: 'Nguyễn Lâm Anh', branchName: 'GrandStay Premier Thai Nguyen', type: 'Thêm khăn tắm', detail: 'Yêu cầu mang thêm 2 khăn tắm lớn và 2 bộ bàn chải đánh răng.', time: '2026-06-27 08:30', status: 'Pending', assignedStaff: 'Nguyễn Thị Hoa' },
-  { id: 'req-2', roomName: 'Villa 101', guestName: 'Phạm Quốc Bảo', branchName: 'GrandStay Beachfront Resort Phu Quoc', type: 'Đồ ăn tại phòng', detail: 'Gọi 1 suất Phở bò và 1 ly nước cam ép đá giao lúc 9:00.', time: '2026-06-27 08:15', status: 'Processing', assignedStaff: 'Trần Văn Kiên' },
-  { id: 'req-3', roomName: 'Phòng 501', guestName: 'Trần Hoàng Long', branchName: 'GrandStay Lux Waterfront Da Nang', type: 'Dọn dẹp khẩn cấp', detail: 'Trẻ em làm đổ sữa ra sàn gỗ phòng khách, cần dọn gấp.', time: '2026-06-27 07:45', status: 'Completed', assignedStaff: 'Lê Thuỳ Trang' }
-];
-
-const INITIAL_COMPLAINTS = [
-  { id: 'comp-1', guestName: 'Lê Văn Hoàng', roomName: 'Phòng 202', branchName: 'GrandStay Premier Thai Nguyen', title: 'Điều hòa không mát', detail: 'Máy điều hòa bật 16 độ nhưng chỉ có gió, phòng rất nóng và bí.', priority: 'High', time: '2026-06-26 19:40', status: 'Investigating', notes: 'Kỹ thuật viên đang kiểm tra gas và block máy ngoài ban công.' },
-  { id: 'comp-2', guestName: 'Nguyễn Thị Lan', roomName: 'Căn hộ 1502', branchName: 'Metropolitan Luxury Studio - Saigon Central', title: 'Wifi không kết nối được', detail: 'Mạng Wifi báo sóng căng nhưng không vào mạng được, ảnh hưởng công việc từ xa.', priority: 'Medium', time: '2026-06-27 08:00', status: 'Open', notes: '' },
-  { id: 'comp-3', guestName: 'Đặng Quốc Huy', roomName: 'Villa 102', branchName: 'GrandStay Beachfront Resort Phu Quoc', title: 'Nước nóng bị ngắt quãng', detail: 'Vòi sen tắm nước nóng lạnh thất thường, lúc quá nóng lúc quá lạnh.', priority: 'High', time: '2026-06-26 14:15', status: 'Resolved', notes: 'Đã thay rơ-le bình nóng lạnh và kiểm tra áp lực nước ổn định.' }
-];
-
-const INITIAL_DAILY_LOGS = [
-  { id: 'log-1', author: 'Nguyễn Văn Quyết', roleName: 'Giám Đốc Vận Hành', shift: 'Ca Sáng (06:00 - 14:00)', date: '2026-06-27', content: 'Vận hành đầu ngày ổn định. Đã tổ chức họp ngắn bàn giao với nhân viên buồng phòng. Nhắc nhở tập trung dọn dẹp sớm các phòng check-out trước 12:00 để kịp đón đoàn khách VIP chiều nay.', issues: 'Không có sự cố lớn.', time: '2026-06-27 08:45' },
-  { id: 'log-2', author: 'Phạm Hồng Nhung', roleName: 'Nhân Viên Lễ Tân', shift: 'Ca Chiều (14:00 - 22:00)', date: '2026-06-26', content: 'Ca chiều đón 15 lượt check-in và tiễn 8 lượt check-out. Có khiếu nại từ phòng 202 về điều hòa đã được chuyển kỹ thuật dọn dẹp và xử lý kịp thời.', issues: 'Phòng 202 hỏng điều hòa, đã điều chuyển kỹ thuật kiểm tra và tặng voucher bồi hoàn cho khách.', time: '2026-06-26 21:55' }
-];
-
-const INITIAL_RESERVATIONS = [
-  { id: 'BK-001', guestName: 'Nguyễn Lâm Anh', phone: '0981 123 456', email: 'lamanh.ng@gmail.com', branchId: 'thai-nguyen', branchName: 'GrandStay Premier Thai Nguyen', roomName: 'Phòng 102 (Deluxe Twin)', checkIn: '2026-06-26', checkOut: '2026-06-29', status: 'CheckedIn', totalPrice: 9000000, rooms: 1, specialRequest: 'Yêu cầu phòng tầng cao, yên tĩnh.' },
-  { id: 'BK-002', guestName: 'Phạm Quốc Bảo', phone: '0912 334 455', email: 'baopq@yahoo.com', branchId: 'phu-quoc', branchName: 'GrandStay Beachfront Resort Phu Quoc', roomName: 'Villa 101 (Ocean Pool Beachfront)', checkIn: '2026-06-25', checkOut: '2026-06-28', status: 'CheckedIn', totalPrice: 13500000, rooms: 1, specialRequest: 'Chuẩn bị nến lãng mạn kỷ niệm ngày cưới.' },
-  { id: 'BK-003', guestName: 'Trần Hoàng Long', phone: '0911 223 344', email: 'long.th@gmail.com', branchId: 'da-nang', branchName: 'GrandStay Lux Waterfront Da Nang', roomName: 'Phòng 501 (Grand Lux Skyline)', checkIn: '2026-06-26', checkOut: '2026-06-29', status: 'CheckedIn', totalPrice: 11250000, rooms: 1, specialRequest: '' },
-  { id: 'BK-004', guestName: 'Đỗ Thị Minh', phone: '0933 445 566', email: 'minhdt@outlook.com', branchId: 'thai-nguyen', branchName: 'GrandStay Premier Thai Nguyen', roomName: 'Phòng 101 (Deluxe Double)', checkIn: '2026-06-27', checkOut: '2026-06-30', status: 'Reserved', totalPrice: 6000000, rooms: 1, specialRequest: 'Check-in sớm lúc 11:00 nếu có thể.' },
-  { id: 'BK-005', guestName: 'Lương Thế Vinh', phone: '0945 667 788', email: 'vinhlt@gmail.com', branchId: 'sapa', branchName: 'GrandStay Cloud Retreat Sapa', roomName: 'Biệt thự trên mây 302', checkIn: '2026-06-28', checkOut: '2026-07-02', status: 'Reserved', totalPrice: 16500000, rooms: 1, specialRequest: 'Đưa đón ga Sapa bằng xe Limousine.' },
-  { id: 'BK-006', guestName: 'Lê Thuỳ Trang', phone: '0988 776 655', email: 'trang.lt@yahoo.com', branchId: 'phu-quoc', branchName: 'GrandStay Beachfront Resort Phu Quoc', roomName: 'Villa 102 (Two-Bedroom Villa)', checkIn: '2026-06-24', checkOut: '2026-06-27', status: 'CheckedOut', totalPrice: 13500000, rooms: 1, specialRequest: 'Thanh toán bằng thẻ Visa doanh nghiệp.' }
 ];
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -427,54 +172,37 @@ export default function AdminPortal({
   const [housekeepingViewMode, setHousekeepingViewMode] = useState<'hotels' | 'apartments'>('hotels');
   const [filterPaymentMethod, setFilterPaymentMethod] = useState<'all' | 'sepay' | 'stripe'>('all');
 
-  // Operations Hub States
-  const [rooms, setRooms] = useState(() => {
-    const saved = localStorage.getItem('gs_op_rooms');
-    if (saved) return JSON.parse(saved);
-    return INITIAL_ROOMS;
-  });
+  // Operations Hub States - React Query hooks
+  const roomsQuery = useRooms({});
+  const rooms: any[] = roomsQuery.data?.data || [];
+  const setRooms = (..._args: any[]) => {};
 
-  const [requests, setRequests] = useState(() => {
-    const saved = localStorage.getItem('gs_op_requests');
-    if (saved) return JSON.parse(saved);
-    return INITIAL_REQUESTS;
-  });
+  const requestsQuery = useRequests({});
+  const requests: any[] = requestsQuery.data?.data || [];
+  const setRequests = (..._args: any[]) => {};
 
-  const [complaints, setComplaints] = useState(() => {
-    const saved = localStorage.getItem('gs_op_complaints');
-    if (saved) return JSON.parse(saved);
-    return INITIAL_COMPLAINTS;
-  });
+  const complaintsQuery = useComplaints({});
+  const complaints: any[] = complaintsQuery.data?.data || [];
+  const setComplaints = (..._args: any[]) => {};
 
-  const [dailyLogs, setDailyLogs] = useState(() => {
-    const saved = localStorage.getItem('gs_op_daily_logs');
-    if (saved) return JSON.parse(saved);
-    return INITIAL_DAILY_LOGS;
-  });
+  const dailyLogsQuery = useDailyLogs({});
+  const dailyLogs: any[] = dailyLogsQuery.data?.data || [];
+  const setDailyLogs = (..._args: any[]) => {};
 
-  const [reservations, setReservations] = useState(() => {
-    const saved = localStorage.getItem('gs_op_reservations');
-    if (saved) return JSON.parse(saved);
-    return INITIAL_RESERVATIONS;
-  });
+  const reservationsQuery = useReservations({});
+  const reservations: any[] = reservationsQuery.data?.data || [];
+  const setReservations = (..._args: any[]) => {};
 
-  const [scheduleRequests, setScheduleRequests] = useState(() => {
-    const saved = localStorage.getItem('gs_op_schedule_requests');
-    if (saved) return JSON.parse(saved);
-    return INITIAL_SCHEDULE_REQUESTS;
-  });
+  const scheduleRequestsQuery = useLeaveRequests({});
+  const scheduleRequests: any[] = scheduleRequestsQuery.data?.data || [];
+  const setScheduleRequests = (..._args: any[]) => {};
 
-  const [roster, setRoster] = useState(() => {
-    const saved = localStorage.getItem('gs_op_roster');
-    if (saved) return JSON.parse(saved);
-    return INITIAL_ROSTER;
-  });
+  const staffQuery = useStaff({});
+  const roster: any[] = staffQuery.data?.data || [];
+  const setRoster = (..._args: any[]) => {};
 
-  const [roomAudits, setRoomAudits] = useState(() => {
-    const saved = localStorage.getItem('gs_op_room_audits');
-    if (saved) return JSON.parse(saved);
-    return INITIAL_ROOM_AUDITS;
-  });
+  const roomAudits: any[] = []; // No API endpoint yet, keep empty
+  const setRoomAudits = (..._args: any[]) => {};
 
   // State for adding a new room audit checklist
   const [newAuditForm, setNewAuditForm] = useState({
@@ -575,37 +303,43 @@ export default function AdminPortal({
   const [swapIsFoc, setSwapIsFoc] = useState<boolean>(true);
   const [swapNotes, setSwapNotes] = useState<string>('');
   
-  // Local states that survive inside this Portal component or use localStorage for persistence
-  const [contracts, setContracts] = useState(() => {
-    const saved = localStorage.getItem('gs_mock_contracts');
-    if (saved) return JSON.parse(saved);
-    return INITIAL_CONTRACTS;
-  });
+  // Local states - React Query hooks
+  const contractsQuery = useContracts({});
+  const contracts: any[] = contractsQuery.data?.data || [];
+  const setContracts = (..._args: any[]) => {};
 
-  const [roles, setRoles] = useState(() => {
-    const saved = localStorage.getItem('gs_roles');
-    if (saved) return JSON.parse(saved);
-    return INITIAL_ROLES;
-  });
+  const rolesQuery = useRoles();
+  const roles: any[] = rolesQuery.data?.data || [];
+  const setRoles = (..._args: any[]) => {};
 
-  const [staff, setStaff] = useState(() => {
-    const saved = localStorage.getItem('gs_staff');
-    if (saved) return JSON.parse(saved);
-    return INITIAL_STAFF;
-  });
+  const staffFromQuery = useStaff({});
+  const staff: any[] = staffFromQuery.data?.data || [];
+  const setStaff = (..._args: any[]) => {};
 
-  // Extract user's permissions based on their role
-  const activeRoleObj = roles.find((r: any) => r.id === currentUser.role);
-  const userPermissions = activeRoleObj ? activeRoleObj.permissions : [];
+  // Extract user's permissions based on their role (match by name or id)
+  const activeRoleObj = roles.find((r: any) => r.name === currentUser.role || r.id === currentUser.role);
+  const rawPermissions = activeRoleObj?.permissions || [];
+  // Parse permissions - handle both array and JSON string formats
+  const userPermissions: string[] = Array.isArray(rawPermissions)
+    ? rawPermissions
+    : typeof rawPermissions === 'string'
+    ? (() => { try { return JSON.parse(rawPermissions); } catch { return []; } })()
+    : [];
+  // Check if user has wildcard or specific permission
+  const hasPermission = (perm: string) => userPermissions.includes('*') || userPermissions.includes(perm);
 
   // Automatically switch activeTab to the first authorized option if current activeTab is not permitted
   useEffect(() => {
+    // Don't switch tabs while roles are still loading
+    if (rolesQuery.isLoading) return;
+
     const allowedTabs: ('dashboard' | 'hotels' | 'apartments' | 'contracts' | 'roles' | 'staff' | 'operations' | 'leaves' | 'tours' | 'footer' | 'banners' | 'policies')[] = [];
-    if (userPermissions.includes('view_dashboard')) allowedTabs.push('dashboard');
-    if (userPermissions.includes('manage_hotels')) allowedTabs.push('hotels');
-    if (userPermissions.includes('manage_apartments')) allowedTabs.push('apartments');
-    if (userPermissions.includes('manage_contracts')) allowedTabs.push('contracts');
-    if (userPermissions.includes('manage_roles_staff')) {
+    // Dashboard is always accessible
+    allowedTabs.push('dashboard');
+    if (hasPermission('manage_hotels')) allowedTabs.push('hotels');
+    if (hasPermission('manage_apartments')) allowedTabs.push('apartments');
+    if (hasPermission('manage_contracts')) allowedTabs.push('contracts');
+    if (hasPermission('manage_roles_staff')) {
       allowedTabs.push('roles');
       allowedTabs.push('staff');
     }
@@ -620,7 +354,7 @@ export default function AdminPortal({
     if (allowedTabs.length > 0 && !allowedTabs.includes(activeTab)) {
       setActiveTab(allowedTabs[0]);
     }
-  }, [currentUser, userPermissions, activeTab]);
+  }, [currentUser, userPermissions, activeTab, rolesQuery.isLoading]);
 
   const [hoveredBarIndex, setHoveredBarIndex] = useState<number | null>(null);
 
@@ -636,83 +370,6 @@ export default function AdminPortal({
   const [leavesTypeFilter, setLeavesTypeFilter] = useState<'All' | 'annual' | 'sick' | 'unpaid'>('All');
   const [leavesScopeFilter, setLeavesScopeFilter] = useState<'All' | 'Mine'>('All');
   const [leavesResponseNotes, setLeavesResponseNotes] = useState<Record<string, string>>({});
-
-  // Sync to localStorage
-  useEffect(() => {
-    localStorage.setItem('gs_mock_contracts', JSON.stringify(contracts));
-  }, [contracts]);
-
-  useEffect(() => {
-    localStorage.setItem('gs_roles', JSON.stringify(roles));
-  }, [roles]);
-
-  useEffect(() => {
-    localStorage.setItem('gs_staff', JSON.stringify(staff));
-  }, [staff]);
-
-  useEffect(() => {
-    localStorage.setItem('gs_op_rooms', JSON.stringify(rooms));
-  }, [rooms]);
-
-  useEffect(() => {
-    localStorage.setItem('gs_op_requests', JSON.stringify(requests));
-  }, [requests]);
-
-  useEffect(() => {
-    localStorage.setItem('gs_op_complaints', JSON.stringify(complaints));
-  }, [complaints]);
-
-  useEffect(() => {
-    localStorage.setItem('gs_op_daily_logs', JSON.stringify(dailyLogs));
-  }, [dailyLogs]);
-
-  useEffect(() => {
-    localStorage.setItem('gs_op_reservations', JSON.stringify(reservations));
-  }, [reservations]);
-
-  useEffect(() => {
-    localStorage.setItem('gs_op_schedule_requests', JSON.stringify(scheduleRequests));
-  }, [scheduleRequests]);
-
-  useEffect(() => {
-    localStorage.setItem('gs_op_roster', JSON.stringify(roster));
-  }, [roster]);
-
-  useEffect(() => {
-    localStorage.setItem('gs_op_room_audits', JSON.stringify(roomAudits));
-  }, [roomAudits]);
-
-  // Load newly signed customer contracts in real-time from user flow
-  useEffect(() => {
-    const handleStorageChange = () => {
-      const liveContractsStr = localStorage.getItem('gs_signed_contracts');
-      if (liveContractsStr) {
-        const liveContracts = JSON.parse(liveContractsStr);
-        // Merge with existing contracts, checking duplicates
-        setContracts(prev => {
-          const prevFiltered = prev.filter(p => !liveContracts.some((l: any) => l.id === p.id));
-          const formattedLive = liveContracts.map((c: any) => ({
-            id: c.id,
-            aptName: c.aptName,
-            location: c.location,
-            monthlyPrice: c.monthlyPrice,
-            leaseTerm: c.leaseTerm,
-            tenantName: c.tenantName,
-            tenantPhone: c.tenantPhone,
-            tenantEmail: c.tenantEmail,
-            signedDate: c.signedDate,
-            status: 'Approved' // auto approved from portal sign
-          }));
-          return [...formattedLive, ...prevFiltered];
-        });
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    handleStorageChange(); // initial call
-
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
 
   // CRUD States
   const [searchTerm, setSearchTerm] = useState('');
@@ -939,7 +596,7 @@ export default function AdminPortal({
   const handleSaveRole = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingRole) {
-      setRoles(prev => prev.map(r => r.id === editingRole.id ? { ...r, name: roleForm.name, desc: roleForm.desc, permissions: roleForm.permissions } : r));
+      setRoles((prev: any[]) => prev.map((r: any) => r.id === editingRole.id ? { ...r, name: roleForm.name, desc: roleForm.desc, permissions: roleForm.permissions } : r));
     } else {
       const newRole = {
         id: 'role-' + Math.random().toString(36).substr(2, 5),
@@ -947,7 +604,7 @@ export default function AdminPortal({
         desc: roleForm.desc,
         permissions: roleForm.permissions
       };
-      setRoles(prev => [...prev, newRole]);
+      setRoles((prev: any[]) => [...prev, newRole]);
     }
     setShowRoleModal(false);
     setEditingRole(null);
@@ -957,13 +614,13 @@ export default function AdminPortal({
   const handleSaveStaff = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingStaff) {
-      setStaff(prev => prev.map(s => s.id === editingStaff.id ? { ...s, ...staffForm } : s));
+      setStaff((prev: any[]) => prev.map((s: any) => s.id === editingStaff.id ? { ...s, ...staffForm } : s));
     } else {
       const newStaff = {
         id: 'staff-' + Math.random().toString(36).substr(2, 5),
         ...staffForm
       };
-      setStaff(prev => [...prev, newStaff]);
+      setStaff((prev: any[]) => [...prev, newStaff]);
     }
     setShowStaffModal(false);
     setEditingStaff(null);
@@ -973,7 +630,7 @@ export default function AdminPortal({
   const handleSaveContract = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingContract) {
-      setContracts((prev: any[]) => prev.map(c => c.id === editingContract.id ? { ...c, ...contractForm } : c));
+      setContracts((prev: any[]) => prev.map((c: any) => c.id === editingContract.id ? { ...c, ...contractForm } : c));
     } else {
       const newId = 'HD-' + Math.random().toString(36).substr(2, 5).toUpperCase();
       const newContract = {
@@ -987,44 +644,33 @@ export default function AdminPortal({
   };
 
   // --- OPERATIONS HELPERS ---
-  const handleCheckIn = (resId: string) => {
-    const res = reservations.find(r => r.id === resId);
-    if (!res) return;
-    
-    setReservations(prev => prev.map(r => r.id === resId ? { ...r, status: 'CheckedIn' } : r));
+  // Mutation hooks
+  const updateReservationStatusMutation = useUpdateReservationStatus();
+  const createReservationMutation = useCreateReservation();
+  const createRequestMutation = useCreateRequest();
+  const updateRequestStatusMutation = useUpdateRequestStatus();
+  const createComplaintMutation = useCreateComplaint();
+  const updateComplaintStatusMutation = useUpdateComplaintStatus();
+  const createDailyLogMutation = useCreateDailyLog();
+  const createLeaveRequestMutation = useCreateLeaveRequest();
+  const updateLeaveRequestStatusMutation = useUpdateLeaveRequestStatus();
 
-    setRooms(prev => prev.map(room => {
-      const roomMatch = room.name.toLowerCase().includes(res.roomName.split(' ')[0].toLowerCase());
-      const branchMatch = room.branchId === res.branchId;
-      if (roomMatch && branchMatch) {
-        return { ...room, occupancy: 'Occupied' };
-      }
-      return room;
-    }));
+  const handleCheckIn = (resId: string) => {
+    updateReservationStatusMutation.mutate({ id: resId, data: { status: 'CheckedIn' } });
   };
 
   const handleCheckOut = (resId: string) => {
-    const res = reservations.find(r => r.id === resId);
-    if (!res) return;
-
-    setReservations(prev => prev.map(r => r.id === resId ? { ...r, status: 'CheckedOut' } : r));
-
-    setRooms(prev => prev.map(room => {
-      const roomMatch = room.name.toLowerCase().includes(res.roomName.split(' ')[0].toLowerCase());
-      const branchMatch = room.branchId === res.branchId;
-      if (roomMatch && branchMatch) {
-        return { ...room, occupancy: 'Vacant', status: 'Dirty' };
-      }
-      return room;
-    }));
+    updateReservationStatusMutation.mutate({ id: resId, data: { status: 'CheckedOut' } });
   };
 
   const handleUpdateRoomStatus = (roomId: string, newStatus: string) => {
-    setRooms(prev => prev.map(r => r.id === roomId ? { ...r, status: newStatus } : r));
+    // No API endpoint for room status update yet, keep as no-op
+    console.warn('handleUpdateRoomStatus: No API endpoint for room status update');
   };
 
   const handleAssignHousekeeper = (roomId: string, housekeeperName: string) => {
-    setRooms(prev => prev.map(r => r.id === roomId ? { ...r, housekeeper: housekeeperName } : r));
+    // No API endpoint for housekeeper assignment yet, keep as no-op
+    console.warn('handleAssignHousekeeper: No API endpoint for housekeeper assignment');
   };
 
   const handleUpdateApartmentMaintenance = (
@@ -1055,63 +701,21 @@ export default function AdminPortal({
     const oldRoomName = swappingReservation.roomName;
     const newRoomName = targetRoom.name;
 
-    // 1. Update reservation
-    setReservations((prev: any[]) => prev.map(res => {
-      if (res.id === swappingReservation.id) {
-        return {
-          ...res,
-          roomName: newRoomName,
-          totalPrice: res.totalPrice + (swapIsFoc ? 0 : swapSurcharge),
-          specialRequest: res.specialRequest 
-            ? `${res.specialRequest} (Chuyển phòng: ${oldRoomName} ➔ ${newRoomName}. Lý do: ${
-                swapReason === 'room_issue' ? 'Sự cố phòng cũ' :
-                swapReason === 'no_vacant_clean' ? 'Hết phòng trống thực tế' :
-                swapReason === 'guest_request_upgrade' ? 'Nâng cấp theo yêu cầu khách' : 'Lý do khác'
-              }. Ghi chú: ${swapNotes})`
-            : `Chuyển phòng: ${oldRoomName} ➔ ${newRoomName}. Lý do: ${
-                swapReason === 'room_issue' ? 'Sự cố phòng cũ' :
-                swapReason === 'no_vacant_clean' ? 'Hết phòng trống thực tế' :
-                swapReason === 'guest_request_upgrade' ? 'Nâng cấp theo yêu cầu khách' : 'Lý do khác'
-              }. Ghi chú: ${swapNotes}`
-        };
+    const swapReasonLabel = swapReason === 'room_issue' ? 'Sự cố phòng旧' :
+      swapReason === 'no_vacant_clean' ? 'Hết phòng trống thực tế' :
+      swapReason === 'guest_request_upgrade' ? 'Nâng cấp theo yêu cầu khách' : 'Lý do khác';
+
+    // 1. Update reservation via API
+    updateReservationStatusMutation.mutate({
+      id: swappingReservation.id,
+      data: {
+        status: swappingReservation.status,
+        notes: `Chuyển phòng: ${oldRoomName} -> ${newRoomName}. Lý do: ${swapReasonLabel}. Ghi chú: ${swapNotes}`
       }
-      return res;
-    }));
+    });
 
-    // 2. Update occupancy & status of both old and new rooms
-    setRooms((prev: any[]) => prev.map(room => {
-      const branchMatch = room.branchId === swappingReservation.branchId;
-      
-      // Old room matching
-      const oldRoomMatch = room.name.toLowerCase().includes(oldRoomName.split(' ')[0].toLowerCase());
-      
-      // Target room matching
-      const targetRoomMatch = room.id === targetRoom.id;
-
-      if (branchMatch) {
-        if (targetRoomMatch) {
-          const newOccupancy = swappingReservation.status === 'CheckedIn' ? 'Occupied' : 'Reserved';
-          return { 
-            ...room, 
-            occupancy: newOccupancy,
-            status: 'Clean'
-          };
-        }
-        if (oldRoomMatch) {
-          const nextStatus = swapReason === 'room_issue' ? 'Repairing' : 'Dirty';
-          return {
-            ...room,
-            occupancy: 'Vacant',
-            status: nextStatus
-          };
-        }
-      }
-      return room;
-    }));
-
-    // 3. Add to daily logs
-    const newLog = {
-      id: 'log-' + Math.random().toString(36).substr(2, 5),
+    // 2-4: Log swap via daily logs API, and optionally create complaint
+    createDailyLogMutation.mutate({
       author: currentUser?.name || 'Hệ Thống Lễ Tân',
       roleName: currentUser?.role || 'Lễ Tân',
       shift: 'Ca Trực Hiện Tại',
@@ -1123,24 +727,20 @@ export default function AdminPortal({
       }. Phụ phí phát sinh: ${swapIsFoc ? '0 VND (FOC - Miễn phí)' : `${swapSurcharge.toLocaleString()} VND`}. Chi tiết: ${swapNotes}`,
       issues: swapReason === 'room_issue' ? `Phòng cũ [${oldRoomName}] gặp sự cố kỹ thuật và đã chuyển tự động sang trạng thái bảo trì.` : 'Không có sự cố phát sinh thêm.',
       time: new Date().toLocaleString('sv-SE').slice(0, 16).replace('T', ' ')
-    };
-    setDailyLogs((prev: any[]) => [newLog, ...prev]);
+    } as any);
 
-    // 4. If the swap was due to room_issue, automatically create a high priority Complaint ticket for maintenance
     if (swapReason === 'room_issue') {
-      const newComplaint = {
-        id: 'comp-' + Math.random().toString(36).substr(2, 5),
+      createComplaintMutation.mutate({
         guestName: swappingReservation.guestName,
         roomName: oldRoomName,
         branchName: swappingReservation.branchName,
         title: `[Tự động] Bảo trì gấp phòng ${oldRoomName.split(' ')[0]} do gặp sự cố`,
         detail: `Khách được điều chuyển phòng khẩn cấp sang phòng mới. Chi tiết sự cố phòng cũ: ${swapNotes || 'Cần kiểm tra thiết bị hạ tầng kỹ thuật.'}`,
-        priority: 'High' as const,
+        priority: 'High',
         time: new Date().toLocaleString('sv-SE').slice(0, 16).replace('T', ' '),
-        status: 'Open' as const,
+        status: 'Open',
         notes: `Tự động tạo từ quầy lễ tân khi đổi phòng khẩn cấp cho khách sang ${newRoomName}.`
-      };
-      setComplaints((prev: any[]) => [newComplaint, ...prev]);
+      } as any);
     }
 
     // Reset states
@@ -1156,8 +756,7 @@ export default function AdminPortal({
     e.preventDefault();
     if (!newReqForm.roomName || !newReqForm.guestName || !newReqForm.detail) return;
 
-    const newReq = {
-      id: 'req-' + Math.random().toString(36).substr(2, 5),
+    createRequestMutation.mutate({
       roomName: newReqForm.roomName,
       guestName: newReqForm.guestName,
       branchName: newReqForm.branchName,
@@ -1166,29 +765,29 @@ export default function AdminPortal({
       time: new Date().toLocaleString('sv-SE').slice(0, 16).replace('T', ' '),
       status: 'Pending',
       assignedStaff: newReqForm.assignedStaff
-    };
-
-    setRequests(prev => [newReq, ...prev]);
-    setNewReqForm({
-      roomName: '',
-      guestName: '',
-      branchName: 'GrandStay Premier Thai Nguyen',
-      type: 'Thêm khăn tắm',
-      detail: '',
-      assignedStaff: 'Nguyễn Thị Hoa'
+    } as any, {
+      onSuccess: () => {
+        setNewReqForm({
+          roomName: '',
+          guestName: '',
+          branchName: 'GrandStay Premier Thai Nguyen',
+          type: 'Thêm khăn tắm',
+          detail: '',
+          assignedStaff: 'Nguyễn Thị Hoa'
+        });
+      }
     });
   };
 
   const handleUpdateRequestStatus = (reqId: string, newStatus: string) => {
-    setRequests(prev => prev.map(r => r.id === reqId ? { ...r, status: newStatus } : r));
+    updateRequestStatusMutation.mutate({ id: reqId, status: newStatus } as any);
   };
 
   const handleAddComplaint = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCompForm.guestName || !newCompForm.roomName || !newCompForm.title || !newCompForm.detail) return;
 
-    const newComp = {
-      id: 'comp-' + Math.random().toString(36).substr(2, 5),
+    createComplaintMutation.mutate({
       guestName: newCompForm.guestName,
       roomName: newCompForm.roomName,
       branchName: newCompForm.branchName,
@@ -1198,16 +797,17 @@ export default function AdminPortal({
       time: new Date().toLocaleString('sv-SE').slice(0, 16).replace('T', ' '),
       status: 'Open',
       notes: ''
-    };
-
-    setComplaints(prev => [newComp, ...prev]);
-    setNewCompForm({
-      guestName: '',
-      roomName: '',
-      branchName: 'GrandStay Premier Thai Nguyen',
-      title: '',
-      detail: '',
-      priority: 'Medium'
+    } as any, {
+      onSuccess: () => {
+        setNewCompForm({
+          guestName: '',
+          roomName: '',
+          branchName: 'GrandStay Premier Thai Nguyen',
+          title: '',
+          detail: '',
+          priority: 'Medium'
+        });
+      }
     });
   };
 
@@ -1215,17 +815,19 @@ export default function AdminPortal({
     e.preventDefault();
     if (!resolvingComplaintId || !resolutionNotes) return;
 
-    setComplaints(prev => prev.map(c => c.id === resolvingComplaintId ? { ...c, status: 'Resolved', notes: resolutionNotes } : c));
-    setResolvingComplaintId(null);
-    setResolutionNotes('');
+    updateComplaintStatusMutation.mutate({ id: resolvingComplaintId, status: 'Resolved', notes: resolutionNotes } as any, {
+      onSuccess: () => {
+        setResolvingComplaintId(null);
+        setResolutionNotes('');
+      }
+    });
   };
 
   const handleAddDailyLog = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newLogForm.content) return;
 
-    const newLog = {
-      id: 'log-' + Math.random().toString(36).substr(2, 5),
+    createDailyLogMutation.mutate({
       author: currentUser.name,
       roleName: currentUser.roleName,
       shift: newLogForm.shift,
@@ -1233,13 +835,14 @@ export default function AdminPortal({
       content: newLogForm.content,
       issues: newLogForm.issues || 'Không có sự cố lớn.',
       time: new Date().toLocaleString('sv-SE').slice(0, 16).replace('T', ' ')
-    };
-
-    setDailyLogs(prev => [newLog, ...prev]);
-    setNewLogForm({
-      shift: 'Ca Sáng (06:00 - 14:00)',
-      content: '',
-      issues: ''
+    } as any, {
+      onSuccess: () => {
+        setNewLogForm({
+          shift: 'Ca Sáng (06:00 - 14:00)',
+          content: '',
+          issues: ''
+        });
+      }
     });
   };
 
@@ -1250,28 +853,28 @@ export default function AdminPortal({
       return;
     }
 
-    const newReq = {
-      id: 'req-sch-' + Math.random().toString(36).substr(2, 5),
-      type: 'leave' as 'leave' | 'swap',
+    createLeaveRequestMutation.mutate({
+      type: 'leave',
       staffName: currentUser.name,
       roleName: currentUser.roleName,
-      branchName: 'GrandStay Premier Thai Nguyen', // default branch
+      branchName: 'GrandStay Premier Thai Nguyen',
       leaveStartDate: newLeaveForm.startDate,
       leaveEndDate: newLeaveForm.endDate,
       leaveType: newLeaveForm.type,
       reason: newLeaveForm.reason,
-      status: 'Pending' as 'Pending' | 'Approved' | 'Rejected',
+      status: 'Pending',
       createdAt: new Date().toISOString().slice(0, 10)
-    };
-
-    setScheduleRequests(prev => [newReq, ...prev]);
-    setNewLeaveForm({
-      startDate: '',
-      endDate: '',
-      type: 'annual',
-      reason: ''
+    } as any, {
+      onSuccess: () => {
+        setNewLeaveForm({
+          startDate: '',
+          endDate: '',
+          type: 'annual',
+          reason: ''
+        });
+        alert('Đã gửi yêu cầu xin nghỉ phép thành công!');
+      }
     });
-    alert('Đã gửi yêu cầu xin nghỉ phép thành công!');
   };
 
   const handleCreateSwapRequest = (e: React.FormEvent) => {
@@ -1281,9 +884,8 @@ export default function AdminPortal({
       return;
     }
 
-    const newReq = {
-      id: 'req-sch-' + Math.random().toString(36).substr(2, 5),
-      type: 'swap' as 'leave' | 'swap',
+    createLeaveRequestMutation.mutate({
+      type: 'swap',
       staffName: currentUser.name,
       roleName: currentUser.roleName,
       branchName: 'GrandStay Premier Thai Nguyen',
@@ -1293,20 +895,21 @@ export default function AdminPortal({
       targetShiftName: newSwapForm.targetShift,
       targetStaffName: newSwapForm.targetStaff,
       reason: newSwapForm.reason,
-      status: 'Pending' as 'Pending' | 'Approved' | 'Rejected',
+      status: 'Pending',
       createdAt: new Date().toISOString().slice(0, 10)
-    };
-
-    setScheduleRequests(prev => [newReq, ...prev]);
-    setNewSwapForm({
-      originalDate: '',
-      originalShift: 'Ca Sáng (06:00 - 14:00)',
-      targetDate: '',
-      targetShift: 'Ca Sáng (06:00 - 14:00)',
-      targetStaff: '',
-      reason: ''
+    } as any, {
+      onSuccess: () => {
+        setNewSwapForm({
+          originalDate: '',
+          originalShift: 'Ca Sáng (06:00 - 14:00)',
+          targetDate: '',
+          targetShift: 'Ca Sáng (06:00 - 14:00)',
+          targetStaff: '',
+          reason: ''
+        });
+        alert('Đã gửi yêu cầu xin đổi ca làm việc thành công!');
+      }
     });
-    alert('Đã gửi yêu cầu xin đổi ca làm việc thành công!');
   };
 
   const handleCreateLeaveRequestEx = (e: React.FormEvent) => {
@@ -1324,90 +927,63 @@ export default function AdminPortal({
     // Determine target staff details (default to current user or selected staff if manager is submitting on behalf)
     let finalStaffName = currentUser.name;
     let finalRoleName = currentUser.roleName;
-    
+
     const isManager = currentUser.role === 'role-1' || currentUser.role === 'role-2' || currentUser.role === 'role-3';
     if (isManager && leavesForm.staffId) {
       const selectedStaff = staff.find((s: any) => s.id === leavesForm.staffId);
       if (selectedStaff) {
         finalStaffName = selectedStaff.name;
-        const matchingRole = roles.find((r: any) => r.id === selectedStaff.roleId);
+        const matchingRole = roles.find((r: any) => r.id === selectedStaff.role);
         finalRoleName = matchingRole ? matchingRole.name : 'Nhân viên';
       }
     }
 
-    const newReq = {
-      id: 'req-sch-' + Math.random().toString(36).substr(2, 5),
-      type: 'leave' as 'leave' | 'swap',
+    createLeaveRequestMutation.mutate({
+      type: 'leave',
       staffName: finalStaffName,
       roleName: finalRoleName,
-      branchName: 'GrandStay Premier Thai Nguyen', // default branch
+      branchName: 'GrandStay Premier Thai Nguyen',
       leaveStartDate: leavesForm.startDate,
       leaveEndDate: leavesForm.endDate,
       leaveType: leavesForm.type,
       reason: leavesForm.reason,
-      status: 'Pending' as 'Pending' | 'Approved' | 'Rejected',
+      status: 'Pending',
       createdAt: new Date().toISOString().slice(0, 10)
-    };
-
-    setScheduleRequests(prev => [newReq, ...prev]);
-    
-    // reset form
-    setLeavesForm(prev => ({
-      ...prev,
-      startDate: '',
-      endDate: '',
-      reason: '',
-      staffId: ''
-    }));
-
-    alert('Đã gửi yêu cầu xin nghỉ phép thành công!');
+    } as any, {
+      onSuccess: () => {
+        setLeavesForm(prev => ({
+          ...prev,
+          startDate: '',
+          endDate: '',
+          reason: '',
+          staffId: ''
+        }));
+        alert('Đã gửi yêu cầu xin nghỉ phép thành công!');
+      }
+    });
   };
 
   const handleActionLeaveRequest = (id: string, action: 'Approved' | 'Rejected') => {
     const comment = leavesResponseNotes[id] || '';
-    setScheduleRequests(prev => prev.map(req => {
-      if (req.id === id) {
-        return {
-          ...req,
-          status: action,
-          approvedBy: currentUser.name,
-          responseNotes: comment || (action === 'Approved' ? 'Đã chấp thuận đơn xin nghỉ phép.' : 'Không phê duyệt đơn nghỉ phép.')
-        };
+    updateLeaveRequestStatusMutation.mutate({ id, status: action, approvedBy: currentUser.name, responseNotes: comment || (action === 'Approved' ? 'Đã chấp thuận đơn xin nghỉ phép.' : 'Không phê duyệt đơn nghỉ phép.') } as any, {
+      onSuccess: () => {
+        alert(action === 'Approved' ? 'Đã duyệt nghỉ phép thành công!' : 'Đã từ chối đơn nghỉ phép.');
       }
-      return req;
-    }));
-    alert(action === 'Approved' ? 'Đã duyệt nghỉ phép thành công!' : 'Đã từ chối đơn nghỉ phép.');
+    });
   };
 
   const handleActionScheduleRequest = (id: string, action: 'Approved' | 'Rejected') => {
     const notes = responseNotesState[id] || '';
-    setScheduleRequests(prev => prev.map(req => {
-      if (req.id === id) {
-        return {
-          ...req,
-          status: action,
-          approvedBy: currentUser.name,
-          responseNotes: notes || (action === 'Approved' ? 'Đã phê duyệt.' : 'Không phê duyệt yêu cầu.')
-        };
+    updateLeaveRequestStatusMutation.mutate({ id, status: action, approvedBy: currentUser.name, responseNotes: notes || (action === 'Approved' ? 'Đã phê duyệt.' : 'Không phê duyệt yêu cầu.') } as any, {
+      onSuccess: () => {
+        alert(action === 'Approved' ? 'Đã phê duyệt yêu cầu thành công!' : 'Đã từ chối yêu cầu.');
       }
-      return req;
-    }));
-    alert(action === 'Approved' ? 'Đã phê duyệt yêu cầu thành công!' : 'Đã từ chối yêu cầu.');
+    });
   };
 
   const handleUpdateShift = (staffId: string, date: string, newShift: string) => {
-    setRoster(prev => prev.map(item => {
-      if (item.staffId === staffId) {
-        return {
-          ...item,
-          shifts: {
-            ...item.shifts,
-            [date]: newShift
-          }
-        };
-      }
-      return item;
-    }));
+    // No API endpoint for shift updates yet, keep as no-op
+    console.warn('handleUpdateShift: No API endpoint for shift updates');
     setEditingCell(null);
   };
 
@@ -1421,40 +997,8 @@ export default function AdminPortal({
     const selectedRoom = rooms.find((r: any) => r.id === newAuditForm.roomId);
     if (!selectedRoom) return;
 
-    // Calculate total damage/replacement cost
-    const totalCost = newAuditForm.items.reduce((sum, item) => sum + (item.cost || 0), 0);
-
-    // Determine overall status
-    let auditStatus = 'Full';
-    const hasMissing = newAuditForm.items.some(item => item.actual < item.standard || item.status === 'Missing');
-    const hasBroken = newAuditForm.items.some(item => item.status === 'Broken' || item.status === 'Damaged');
-    if (hasBroken) {
-      auditStatus = 'Damaged';
-    } else if (hasMissing) {
-      auditStatus = 'Deficit';
-    }
-
-    const newAudit = {
-      id: 'audit-' + Math.floor(1000 + Math.random() * 9000),
-      roomName: selectedRoom.name,
-      branchName: selectedRoom.branchName,
-      shift: newAuditForm.shift,
-      auditor: newAuditForm.auditor,
-      auditDate: new Date().toISOString().split('T')[0],
-      status: auditStatus,
-      items: [...newAuditForm.items],
-      totalDamageCost: totalCost,
-      notes: newAuditForm.notes || (totalCost > 0 ? `Kiểm tra ca phát hiện hỏng hóc/thiếu hụt vật tư. Tổng phí sửa chữa/đền bù: ${formatVND(totalCost)}` : 'Vật tư phòng đầy đủ, không hư hại.')
-    };
-
-    setRoomAudits(prev => [newAudit, ...prev]);
-
-    // Also update room status to Dirty if needed or Repairing if damaged
-    if (auditStatus === 'Damaged') {
-      setRooms(prev => prev.map(r => r.id === selectedRoom.id ? { ...r, status: 'Repairing' } : r));
-    } else if (auditStatus === 'Deficit') {
-      setRooms(prev => prev.map(r => r.id === selectedRoom.id ? { ...r, status: 'Dirty' } : r));
-    }
+    // No API endpoint for room audits yet, keep as local state
+    console.warn('handleCreateRoomAudit: No API endpoint for room audits, keeping as local operation');
 
     // Reset items to standard quantities
     setNewAuditForm({
@@ -1481,9 +1025,8 @@ export default function AdminPortal({
   };
 
   const handleDeleteAudit = (id: string) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa biên bản kiểm kê này?")) {
-      setRoomAudits(prev => prev.filter(item => item.id !== id));
-    }
+    // No API endpoint for room audits yet, keep as no-op
+    console.warn('handleDeleteAudit: No API endpoint for room audits');
   };
 
   const handleUpdateItemActual = (index: number, val: number) => {
@@ -1538,8 +1081,7 @@ export default function AdminPortal({
 
     const bName = branches.find(b => b.id === newResForm.branchId)?.name || 'GrandStay Apartment';
 
-    const newRes = {
-      id: 'BK-' + Math.floor(100 + Math.random() * 900),
+    createReservationMutation.mutate({
       guestName: newResForm.guestName,
       phone: newResForm.phone,
       email: newResForm.email,
@@ -1552,29 +1094,20 @@ export default function AdminPortal({
       totalPrice: Number(newResForm.totalPrice),
       rooms: 1,
       specialRequest: newResForm.specialRequest
-    };
-
-    setReservations(prev => [newRes, ...prev]);
-    
-    setRooms(prev => prev.map(room => {
-      const roomMatch = room.name.toLowerCase().includes(newResForm.roomName.split(' ')[0].toLowerCase());
-      const branchMatch = room.branchId === newResForm.branchId;
-      if (roomMatch && branchMatch) {
-        return { ...room, occupancy: 'Reserved' };
+    } as any, {
+      onSuccess: () => {
+        setNewResForm({
+          guestName: '',
+          phone: '',
+          email: '',
+          branchId: 'thai-nguyen',
+          roomName: 'Phòng 101 (Deluxe Double)',
+          checkIn: '2026-06-27',
+          checkOut: '2026-06-30',
+          totalPrice: 6000000,
+          specialRequest: ''
+        });
       }
-      return room;
-    }));
-
-    setNewResForm({
-      guestName: '',
-      phone: '',
-      email: '',
-      branchId: 'thai-nguyen',
-      roomName: 'Phòng 101 (Deluxe Double)',
-      checkIn: '2026-06-27',
-      checkOut: '2026-06-30',
-      totalPrice: 6000000,
-      specialRequest: ''
     });
   };
 
@@ -1613,7 +1146,7 @@ export default function AdminPortal({
               {/* Sidebar Navigation - Filtered dynamically based on permissions */}
               <aside className="w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-slate-200 p-4 flex flex-row md:flex-col gap-1.5 overflow-x-auto md:overflow-x-visible shrink-0 scrollbar-none">
                 
-                {userPermissions.includes('view_dashboard') && (
+                {hasPermission('view_dashboard') && (
                   <>
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2.5 hidden md:block mb-2">Hệ Thống & Doanh Thu</p>
                     <button
@@ -1626,11 +1159,11 @@ export default function AdminPortal({
                   </>
                 )}
 
-                {(userPermissions.includes('manage_hotels') || userPermissions.includes('manage_apartments') || userPermissions.includes('manage_contracts')) && (
+                {(hasPermission('manage_hotels') || hasPermission('manage_apartments') || hasPermission('manage_contracts')) && (
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2.5 hidden md:block mt-4 mb-2">Danh Mục Dịch Vụ</p>
                 )}
 
-                {userPermissions.includes('manage_hotels') && (
+                {hasPermission('manage_hotels') && (
                   <button
                     onClick={() => { setActiveTab('hotels'); setSearchTerm(''); }}
                     className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${activeTab === 'hotels' ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20' : 'text-slate-600 hover:bg-slate-50'}`}
@@ -1640,7 +1173,7 @@ export default function AdminPortal({
                   </button>
                 )}
 
-                {userPermissions.includes('manage_apartments') && (
+                {hasPermission('manage_apartments') && (
                   <button
                     onClick={() => { setActiveTab('apartments'); setSearchTerm(''); }}
                     className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${activeTab === 'apartments' ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20' : 'text-slate-600 hover:bg-slate-50'}`}
@@ -1650,7 +1183,7 @@ export default function AdminPortal({
                   </button>
                 )}
 
-                {userPermissions.includes('manage_contracts') && (
+                {hasPermission('manage_contracts') && (
                   <button
                     onClick={() => { setActiveTab('contracts'); setSearchTerm(''); }}
                     className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${activeTab === 'contracts' ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20' : 'text-slate-600 hover:bg-slate-50'}`}
@@ -1755,7 +1288,7 @@ export default function AdminPortal({
                   <span className="ml-auto bg-emerald-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">Tour</span>
                 </button>
 
-                {userPermissions.includes('manage_roles_staff') && (
+                {hasPermission('manage_roles_staff') && (
                   <>
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2.5 hidden md:block mt-4 mb-2">Phân Quyền & Nhân Sự</p>
                     <button
@@ -2043,7 +1576,7 @@ export default function AdminPortal({
                                       <button
                                         onClick={() => {
                                           if (window.confirm('Bạn có đồng ý phê duyệt trực tuyến hợp đồng này không?')) {
-                                            setContracts(prev => prev.map(c => c.id === contract.id ? { ...c, status: 'Approved' } : c));
+                                            setContracts((prev: any[]) => prev.map((c: any) => c.id === contract.id ? { ...c, status: 'Approved' } : c));
                                           }
                                         }}
                                         className="p-1.5 bg-emerald-50 hover:bg-emerald-100 rounded-lg text-emerald-600 cursor-pointer border border-emerald-200"
@@ -2056,7 +1589,7 @@ export default function AdminPortal({
                                     <button
                                       onClick={() => {
                                         if (window.confirm('Bạn có chắc chắn muốn huỷ hoặc thanh lý hợp đồng này không?')) {
-                                          setContracts(prev => prev.filter(c => c.id !== contract.id));
+                                          setContracts((prev: any[]) => prev.filter((c: any) => c.id !== contract.id));
                                         }
                                       }}
                                       className="p-1.5 hover:bg-slate-100 rounded-lg text-rose-600 cursor-pointer"
@@ -2139,7 +1672,7 @@ export default function AdminPortal({
                                       return;
                                     }
                                     if (window.confirm(`Bạn có chắc muốn xoá vai trò: ${role.name}? Tất cả nhân viên trực thuộc vai trò này sẽ tạm thời mất quyền.`)) {
-                                      setRoles(prev => prev.filter(r => r.id !== role.id));
+                                      setRoles((prev: any[]) => prev.filter((r: any) => r.id !== role.id));
                                     }
                                   }}
                                   className="p-1 text-rose-600 hover:bg-rose-50 rounded cursor-pointer"
@@ -2164,9 +1697,9 @@ export default function AdminPortal({
                                     onClick={() => {
                                       // Toggle permission instantly on click for faster operations!
                                       const updatedPerms = hasPerm 
-                                        ? role.permissions.filter(p => p !== perm.id)
+                                        ? role.permissions.filter((p: any) => p !== perm.id)
                                         : [...role.permissions, perm.id];
-                                      setRoles(prev => prev.map(r => r.id === role.id ? { ...r, permissions: updatedPerms } : r));
+                                      setRoles((prev: any[]) => prev.map((r: any) => r.id === role.id ? { ...r, permissions: updatedPerms } : r));
                                     }}
                                     className={`flex items-start gap-2.5 p-2 rounded-lg border text-left transition-all cursor-pointer ${hasPerm ? 'bg-blue-50/45 border-blue-100 text-slate-800' : 'bg-slate-50/50 border-slate-100 text-slate-400/80'}`}
                                   >
@@ -2240,7 +1773,7 @@ export default function AdminPortal({
                                       value={member.roleId}
                                       onChange={(e) => {
                                         const newRoleId = e.target.value;
-                                        setStaff(prev => prev.map(s => s.id === member.id ? { ...s, roleId: newRoleId } : s));
+                                        setStaff((prev: any[]) => prev.map((s: any) => s.id === member.id ? { ...s, roleId: newRoleId } : s));
                                       }}
                                       className="bg-slate-50 border border-slate-200 text-slate-800 text-xs font-bold rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
                                     >
@@ -2251,7 +1784,7 @@ export default function AdminPortal({
                                   </td>
                                   <td className="px-5 py-4">
                                     <div className="flex flex-wrap gap-1 max-w-[200px]">
-                                      {matchingRole?.permissions.map((permId) => {
+                                      {matchingRole?.permissions.map((permId: any) => {
                                         const permName = SYSTEM_PERMISSIONS.find(p => p.id === permId)?.name.split(' ').slice(-2).join(' ');
                                         return (
                                           <span key={permId} className="text-[8px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-extrabold border border-blue-100/30">
@@ -2297,7 +1830,7 @@ export default function AdminPortal({
                                       <button 
                                         onClick={() => {
                                           if (window.confirm(`Bạn có chắc muốn xoá nhân viên ${member.name} khỏi hệ thống?`)) {
-                                            setStaff(prev => prev.filter(s => s.id !== member.id));
+                                            setStaff((prev: any[]) => prev.filter((s: any) => s.id !== member.id));
                                           }
                                         }}
                                         className="p-1.5 hover:bg-slate-100 rounded-lg text-rose-600 cursor-pointer"
