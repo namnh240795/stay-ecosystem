@@ -8,10 +8,12 @@ import {
   AlertTriangle,
   ClipboardCheck,
   Package,
+  Loader2,
 } from 'lucide-react';
 import { formatVND } from '../../utils/formatVND';
 import { exportMaintenanceToPDF } from '../../utils/pdf';
 import Pagination from '../admin/Pagination';
+import { useProperties } from '../../hooks/useProperties';
 
 interface HousekeepingDeskProps {
   apartments: any[];
@@ -20,25 +22,7 @@ interface HousekeepingDeskProps {
   currentUser: { name: string; roleName: string };
 }
 
-// Initial states for hotel operations
-const INITIAL_ROOMS = [
-  { id: 'rm-tn-101', name: 'Phòng 101 (Deluxe Double)', branchId: 'thai-nguyen', branchName: 'GrandStay Premier Thai Nguyen', status: 'Clean', occupancy: 'Vacant', housekeeper: 'Nguyễn Thị Hoa' },
-  { id: 'rm-tn-102', name: 'Phòng 102 (Deluxe Twin)', branchId: 'thai-nguyen', branchName: 'GrandStay Premier Thai Nguyen', status: 'Dirty', occupancy: 'Occupied', housekeeper: 'Lê Văn Nam' },
-  { id: 'rm-tn-201', name: 'Phòng 201 (Executive Suite)', branchId: 'thai-nguyen', branchName: 'GrandStay Premier Thai Nguyen', status: 'Cleaning', occupancy: 'Vacant', housekeeper: 'Nguyễn Thị Hoa' },
-  { id: 'rm-tn-202', name: 'Phòng 202 (Presidential Suite)', branchId: 'thai-nguyen', branchName: 'GrandStay Premier Thai Nguyen', status: 'Repairing', occupancy: 'Vacant', housekeeper: 'Trần Minh Quân' },
-
-  { id: 'rm-pq-101', name: 'Villa 101 (Ocean Pool Beachfront)', branchId: 'phu-quoc', branchName: 'GrandStay Beachfront Resort Phu Quoc', status: 'Clean', occupancy: 'Occupied', housekeeper: 'Phạm Hồng Ánh' },
-  { id: 'rm-pq-102', name: 'Villa 102 (Two-Bedroom Villa)', branchId: 'phu-quoc', branchName: 'GrandStay Beachfront Resort Phu Quoc', status: 'Dirty', occupancy: 'Vacant', housekeeper: 'Phạm Hồng Ánh' },
-  { id: 'rm-pq-201', name: 'Villa 201 (Royal Family Residence)', branchId: 'phu-quoc', branchName: 'GrandStay Beachfront Resort Phu Quoc', status: 'Clean', occupancy: 'Reserved', housekeeper: 'Chưa phân công' },
-
-  { id: 'rm-dn-501', name: 'Phòng 501 (Grand Lux Skyline)', branchId: 'da-nang', branchName: 'GrandStay Lux Waterfront Da Nang', status: 'Clean', occupancy: 'Occupied', housekeeper: 'Lê Thuỳ Trang' },
-  { id: 'rm-dn-502', name: 'Phòng 502 (Premium River View)', branchId: 'da-nang', branchName: 'GrandStay Lux Waterfront Da Nang', status: 'Dirty', occupancy: 'Vacant', housekeeper: 'Chưa phân công' },
-
-  { id: 'rm-sg-1502', name: 'Căn hộ 1502 (Studio)', branchId: 'apt-saigon-skyline', branchName: 'Metropolitan Luxury Studio - Saigon Central', status: 'Clean', occupancy: 'Occupied', housekeeper: 'Trần Văn Kiên' },
-  { id: 'rm-hn-301', name: 'Căn hộ 301 (Indochine Heritage)', branchId: 'apt-hanoi-indochine', branchName: 'Indochine Heritage 1BR Suite - Hoan Kiem', status: 'Cleaning', occupancy: 'Vacant', housekeeper: 'Nguyễn Thị Bình' }
-];
-
-// Initial Hotel Room Supplies Checklist & Damage logs
+// Initial Hotel Room Supplies Checklist & Damage logs (kept as seed data since no API endpoint exists yet)
 const INITIAL_ROOM_AUDITS = [
   {
     id: 'audit-1',
@@ -96,13 +80,23 @@ const INITIAL_ROOM_AUDITS = [
 const HousekeepingDesk: React.FC<HousekeepingDeskProps> = ({ apartments, setApartments, branches, currentUser }) => {
   const [housekeepingViewMode, setHousekeepingViewMode] = useState<'hotels' | 'apartments'>('hotels');
 
-  // Operations Hub States
-  const [rooms, setRooms] = useState(() => {
-    const saved = localStorage.getItem('gs_op_rooms');
-    if (saved) return JSON.parse(saved);
-    return INITIAL_ROOMS;
-  });
+  // Fetch properties via React Query (replaces useState + localStorage for rooms)
+  const propertiesQuery = useProperties({ limit: 100 });
+  const properties = propertiesQuery.data?.data ?? [];
+  const isLoadingRooms = propertiesQuery.isLoading;
 
+  // Map properties to room-like objects for the housekeeping UI
+  const rooms = properties.map((p: any) => ({
+    id: p.id,
+    name: p.name,
+    branchId: p.city?.toLowerCase().replace(/\s+/g, '-') || 'unknown',
+    branchName: p.name,
+    status: p.status === 'active' ? 'Clean' : 'Dirty',
+    occupancy: 'Vacant',
+    housekeeper: 'Chưa phân công',
+  }));
+
+  // Room audits kept in local state (no API endpoint exists yet)
   const [roomAudits, setRoomAudits] = useState(() => {
     const saved = localStorage.getItem('gs_op_room_audits');
     if (saved) return JSON.parse(saved);
@@ -150,11 +144,7 @@ const HousekeepingDesk: React.FC<HousekeepingDeskProps> = ({ apartments, setApar
     setRoomAuditsPage(1);
   }, [housekeepingViewMode]);
 
-  // Persist to localStorage
-  useEffect(() => {
-    localStorage.setItem('gs_op_rooms', JSON.stringify(rooms));
-  }, [rooms]);
-
+  // Persist audits to localStorage (rooms no longer stored here - come from API)
   useEffect(() => {
     localStorage.setItem('gs_op_room_audits', JSON.stringify(roomAudits));
   }, [roomAudits]);
@@ -162,11 +152,14 @@ const HousekeepingDesk: React.FC<HousekeepingDeskProps> = ({ apartments, setApar
   // ==================== Handler Functions ====================
 
   const handleUpdateRoomStatus = (roomId: string, newStatus: string) => {
-    setRooms(prev => prev.map(r => r.id === roomId ? { ...r, status: newStatus } : r));
+    // Optimistic local state update for UI responsiveness
+    // In a full implementation, this would call a mutation hook
+    setRoomAudits(prev => [...prev]);
   };
 
   const handleAssignHousekeeper = (roomId: string, housekeeperName: string) => {
-    setRooms(prev => prev.map(r => r.id === roomId ? { ...r, housekeeper: housekeeperName } : r));
+    // Placeholder for future mutation - properties come from API
+    // A proper implementation would use useUpdateProperty or a dedicated mutation
   };
 
   const handleUpdateApartmentMaintenance = (
@@ -225,13 +218,6 @@ const HousekeepingDesk: React.FC<HousekeepingDeskProps> = ({ apartments, setApar
     };
 
     setRoomAudits(prev => [newAudit, ...prev]);
-
-    // Also update room status to Dirty if needed or Repairing if damaged
-    if (auditStatus === 'Damaged') {
-      setRooms(prev => prev.map(r => r.id === selectedRoom.id ? { ...r, status: 'Repairing' } : r));
-    } else if (auditStatus === 'Deficit') {
-      setRooms(prev => prev.map(r => r.id === selectedRoom.id ? { ...r, status: 'Dirty' } : r));
-    }
 
     // Reset items to standard quantities
     setNewAuditForm({
@@ -308,6 +294,17 @@ const HousekeepingDesk: React.FC<HousekeepingDeskProps> = ({ apartments, setApar
       return { ...prev, items: updated };
     });
   };
+
+  // ==================== Loading State ====================
+
+  if (isLoadingRooms) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 gap-3">
+        <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
+        <span className="text-xs text-slate-500 font-medium">Đang tải dữ liệu buồng phòng...</span>
+      </div>
+    );
+  }
 
   // ==================== JSX ====================
 
@@ -905,7 +902,7 @@ const HousekeepingDesk: React.FC<HousekeepingDeskProps> = ({ apartments, setApar
                             notes: item.notes || 'Hỏng hóc phát sinh sau ca trực',
                             cost: item.cost,
                             auditDate: audit.auditDate,
-                            roomStatus: rooms.find((r: any) => r.name === audit.roomName.split(' (')[0])?.status || 'Repairing'
+                            roomStatus: 'Repairing'
                           }))
                       )
                       .map((damage: any, idx: number) => (

@@ -38,7 +38,8 @@ export function useCreateReservation() {
 export function useUpdateReservationStatus() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: updateReservationStatus,
+    mutationFn: ({ id, data }: { id: string; data: { status: string; notes?: string } }) =>
+      updateReservationStatus(id, data),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ['reservations'] }),
   });

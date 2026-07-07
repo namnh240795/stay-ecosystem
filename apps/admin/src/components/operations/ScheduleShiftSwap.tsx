@@ -1,7 +1,12 @@
-import { useState, useEffect } from 'react';
-import { CalendarDays, Clock, CheckCircle, User, Plus, Shuffle, FileText, Check, X } from 'lucide-react';
+import { useState } from 'react';
+import { CalendarDays, Clock, CheckCircle, User, Plus, Shuffle, FileText, Check, X, Loader2 } from 'lucide-react';
 import Pagination from '../admin/Pagination';
 import { exportRosterToPDF } from '../../utils/pdf';
+import {
+  useLeaveRequests,
+  useCreateLeaveRequest,
+  useUpdateLeaveRequestStatus,
+} from '../../hooks/useLeaveRequests';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -12,57 +17,9 @@ interface ScheduleShiftSwapProps {
 }
 
 // ---------------------------------------------------------------------------
-// Seed data
+// Initial roster (server-side roster API not yet available)
 // ---------------------------------------------------------------------------
 
-// Initial Schedule / Leave / Swap requests
-const INITIAL_SCHEDULE_REQUESTS = [
-  {
-    id: 'req-sch-1',
-    type: 'leave', // 'leave' | 'swap'
-    staffName: 'Nguyễn Thị Hoa',
-    roleName: 'Nhân Viên Buồng Phòng',
-    branchName: 'GrandStay Premier Thai Nguyen',
-    leaveStartDate: '2026-07-01',
-    leaveEndDate: '2026-07-03',
-    leaveType: 'annual', // 'annual' | 'sick' | 'unpaid'
-    reason: 'Xin nghỉ phép thường niên về quê ăn giỗ gia đình',
-    status: 'Pending',
-    createdAt: '2026-06-27'
-  },
-  {
-    id: 'req-sch-2',
-    type: 'swap',
-    staffName: 'Phạm Hồng Nhung',
-    roleName: 'Nhân Viên Lễ Tân',
-    branchName: 'GrandStay Premier Thai Nguyen',
-    originalShiftDate: '2026-06-29',
-    originalShiftName: 'Ca Sáng (06:00 - 14:00)',
-    targetShiftDate: '2026-06-29',
-    targetShiftName: 'Ca Đêm (22:00 - 06:00)',
-    targetStaffName: 'Hoàng Quốc Việt',
-    reason: 'Trùng lịch khám sức khoẻ định kì buổi sáng, muốn đổi ca với đồng nghiệp',
-    status: 'Pending',
-    createdAt: '2026-06-28'
-  },
-  {
-    id: 'req-sch-3',
-    type: 'leave',
-    staffName: 'Trần Minh Tuấn',
-    roleName: 'Quản Lý Dự Án',
-    branchName: 'GrandStay Premier Thai Nguyen',
-    leaveStartDate: '2026-06-25',
-    leaveEndDate: '2026-06-25',
-    leaveType: 'sick',
-    reason: 'Xin nghỉ ốm đột xuất do bị sốt siêu vi',
-    status: 'Approved',
-    approvedBy: 'Nguyễn Văn Quyết',
-    responseNotes: 'Đã duyệt nghỉ đột xuất. Đã giao Tuấn Anh bàn giao ca.',
-    createdAt: '2026-06-25'
-  }
-];
-
-// Initial Staff Weekly Shift Roster
 const INITIAL_ROSTER = [
   {
     staffId: 'staff-1',
@@ -161,21 +118,30 @@ const INITIAL_ROSTER = [
 // ---------------------------------------------------------------------------
 
 const ScheduleShiftSwap: React.FC<ScheduleShiftSwapProps> = ({ currentUser }) => {
-  const [scheduleRequests, setScheduleRequests] = useState(() => {
-    const saved = localStorage.getItem('gs_op_schedule_requests');
-    if (saved) return JSON.parse(saved);
-    return INITIAL_SCHEDULE_REQUESTS;
-  });
+  // React Query: leave requests
+  const { data: leaveRequestsData, isLoading, isError } = useLeaveRequests({});
+  const createLeaveRequest = useCreateLeaveRequest();
+  const updateLeaveRequestStatus = useUpdateLeaveRequestStatus();
 
-  const [roster, setRoster] = useState(() => {
-    const saved = localStorage.getItem('gs_op_roster');
-    if (saved) return JSON.parse(saved);
-    return INITIAL_ROSTER;
-  });
+  // Map API response to UI-friendly shape
+  const scheduleRequests = (leaveRequestsData?.data ?? []).map((r: any) => ({
+    ...r,
+    leaveStartDate: r.startDate,
+    leaveEndDate: r.endDate,
+    leaveType: r.leaveType ?? 'annual',
+    branchName: r.branchName ?? 'GrandStay Premier Thai Nguyen',
+    roleName: r.roleName ?? '',
+    staffName: r.staffName ?? '',
+  }));
 
+  // Local roster (server-side roster API not yet available)
+  const [roster, setRoster] = useState(INITIAL_ROSTER);
+
+  // Pagination
   const [scheduleRequestsPage, setScheduleRequestsPage] = useState(1);
   const [scheduleRequestsPerPage, setScheduleRequestsPerPage] = useState(5);
 
+  // Form state: leave request
   const [newLeaveForm, setNewLeaveForm] = useState({
     startDate: '',
     endDate: '',
@@ -183,14 +149,7 @@ const ScheduleShiftSwap: React.FC<ScheduleShiftSwapProps> = ({ currentUser }) =>
     reason: ''
   });
 
-  const [editingCell, setEditingCell] = useState<{
-    staffId: string;
-    date: string;
-    currentShift: string;
-  } | null>(null);
-
-  const [rosterRoleFilter, setRosterRoleFilter] = useState<string>('All');
-
+  // Form state: swap request
   const [newSwapForm, setNewSwapForm] = useState({
     originalDate: '',
     originalShift: 'Ca Sáng (06:00 - 14:00)',
@@ -200,16 +159,16 @@ const ScheduleShiftSwap: React.FC<ScheduleShiftSwapProps> = ({ currentUser }) =>
     reason: ''
   });
 
+  // Roster editing
+  const [editingCell, setEditingCell] = useState<{
+    staffId: string;
+    date: string;
+    currentShift: string;
+  } | null>(null);
+  const [rosterRoleFilter, setRosterRoleFilter] = useState<string>('All');
+
+  // Response notes for pending requests
   const [responseNotesState, setResponseNotesState] = useState<{ [key: string]: string }>({});
-
-  // Persistence
-  useEffect(() => {
-    localStorage.setItem('gs_op_schedule_requests', JSON.stringify(scheduleRequests));
-  }, [scheduleRequests]);
-
-  useEffect(() => {
-    localStorage.setItem('gs_op_roster', JSON.stringify(roster));
-  }, [roster]);
 
   // --- Handlers ---
 
@@ -220,28 +179,29 @@ const ScheduleShiftSwap: React.FC<ScheduleShiftSwapProps> = ({ currentUser }) =>
       return;
     }
 
-    const newReq = {
-      id: 'req-sch-' + Math.random().toString(36).substr(2, 5),
-      type: 'leave' as 'leave' | 'swap',
-      staffName: currentUser.name,
-      roleName: currentUser.roleName,
-      branchName: 'GrandStay Premier Thai Nguyen', // default branch
-      leaveStartDate: newLeaveForm.startDate,
-      leaveEndDate: newLeaveForm.endDate,
-      leaveType: newLeaveForm.type,
-      reason: newLeaveForm.reason,
-      status: 'Pending' as 'Pending' | 'Approved' | 'Rejected',
-      createdAt: new Date().toISOString().slice(0, 10)
-    };
-
-    setScheduleRequests(prev => [newReq, ...prev]);
-    setNewLeaveForm({
-      startDate: '',
-      endDate: '',
-      type: 'annual',
-      reason: ''
-    });
-    alert('Đã gửi yêu cầu xin nghỉ phép thành công!');
+    createLeaveRequest.mutate(
+      {
+        staffId: currentUser.name,
+        staffName: currentUser.name,
+        type: 'leave',
+        startDate: newLeaveForm.startDate,
+        endDate: newLeaveForm.endDate,
+        leaveType: newLeaveForm.type,
+        reason: newLeaveForm.reason,
+        branchName: 'GrandStay Premier Thai Nguyen',
+        roleName: currentUser.roleName,
+        status: 'Pending',
+      },
+      {
+        onSuccess: () => {
+          setNewLeaveForm({ startDate: '', endDate: '', type: 'annual', reason: '' });
+          alert('Đã gửi yêu cầu xin nghỉ phép thành công!');
+        },
+        onError: () => {
+          alert('Không thể gửi yêu cầu. Vui lòng thử lại.');
+        },
+      }
+    );
   };
 
   const handleCreateSwapRequest = (e: React.FormEvent) => {
@@ -251,48 +211,55 @@ const ScheduleShiftSwap: React.FC<ScheduleShiftSwapProps> = ({ currentUser }) =>
       return;
     }
 
-    const newReq = {
-      id: 'req-sch-' + Math.random().toString(36).substr(2, 5),
-      type: 'swap' as 'leave' | 'swap',
-      staffName: currentUser.name,
-      roleName: currentUser.roleName,
-      branchName: 'GrandStay Premier Thai Nguyen',
-      originalShiftDate: newSwapForm.originalDate,
-      originalShiftName: newSwapForm.originalShift,
-      targetShiftDate: newSwapForm.targetDate,
-      targetShiftName: newSwapForm.targetShift,
-      targetStaffName: newSwapForm.targetStaff,
-      reason: newSwapForm.reason,
-      status: 'Pending' as 'Pending' | 'Approved' | 'Rejected',
-      createdAt: new Date().toISOString().slice(0, 10)
-    };
-
-    setScheduleRequests(prev => [newReq, ...prev]);
-    setNewSwapForm({
-      originalDate: '',
-      originalShift: 'Ca Sáng (06:00 - 14:00)',
-      targetDate: '',
-      targetShift: 'Ca Sáng (06:00 - 14:00)',
-      targetStaff: '',
-      reason: ''
-    });
-    alert('Đã gửi yêu cầu xin đổi ca làm việc thành công!');
+    createLeaveRequest.mutate(
+      {
+        staffId: currentUser.name,
+        staffName: currentUser.name,
+        type: 'swap',
+        originalShiftDate: newSwapForm.originalDate,
+        originalShiftName: newSwapForm.originalShift,
+        targetShiftDate: newSwapForm.targetDate,
+        targetShiftName: newSwapForm.targetShift,
+        targetStaffName: newSwapForm.targetStaff,
+        startDate: newSwapForm.originalDate,
+        endDate: newSwapForm.targetDate,
+        reason: newSwapForm.reason,
+        branchName: 'GrandStay Premier Thai Nguyen',
+        roleName: currentUser.roleName,
+        status: 'Pending',
+      },
+      {
+        onSuccess: () => {
+          setNewSwapForm({
+            originalDate: '',
+            originalShift: 'Ca Sáng (06:00 - 14:00)',
+            targetDate: '',
+            targetShift: 'Ca Sáng (06:00 - 14:00)',
+            targetStaff: '',
+            reason: ''
+          });
+          alert('Đã gửi yêu cầu xin đổi ca làm việc thành công!');
+        },
+        onError: () => {
+          alert('Không thể gửi yêu cầu. Vui lòng thử lại.');
+        },
+      }
+    );
   };
 
   const handleActionScheduleRequest = (id: string, action: 'Approved' | 'Rejected') => {
     const notes = responseNotesState[id] || '';
-    setScheduleRequests(prev => prev.map(req => {
-      if (req.id === id) {
-        return {
-          ...req,
-          status: action,
-          approvedBy: currentUser.name,
-          responseNotes: notes || (action === 'Approved' ? 'Đã phê duyệt.' : 'Không phê duyệt yêu cầu.')
-        };
+    updateLeaveRequestStatus.mutate(
+      { id, data: { status: action, notes: notes || (action === 'Approved' ? 'Đã phê duyệt.' : 'Không phê duyệt yêu cầu.') } },
+      {
+        onSuccess: () => {
+          alert(action === 'Approved' ? 'Đã phê duyệt yêu cầu thành công!' : 'Đã từ chối yêu cầu.');
+        },
+        onError: () => {
+          alert('Không thể cập nhật trạng thái. Vui lòng thử lại.');
+        },
       }
-      return req;
-    }));
-    alert(action === 'Approved' ? 'Đã phê duyệt yêu cầu thành công!' : 'Đã từ chối yêu cầu.');
+    );
   };
 
   const handleUpdateShift = (staffId: string, date: string, newShift: string) => {
@@ -310,6 +277,25 @@ const ScheduleShiftSwap: React.FC<ScheduleShiftSwapProps> = ({ currentUser }) =>
     }));
     setEditingCell(null);
   };
+
+  // --- Loading / Error states ---
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 animate-fade-in">
+        <Loader2 className="w-8 h-8 text-blue-500 animate-spin mb-3" />
+        <span className="text-sm text-slate-500 font-bold">Đang tải dữ liệu yêu cầu...</span>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 animate-fade-in">
+        <span className="text-sm text-rose-500 font-bold">Không thể tải dữ liệu. Vui lòng thử lại.</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -704,9 +690,15 @@ const ScheduleShiftSwap: React.FC<ScheduleShiftSwapProps> = ({ currentUser }) =>
                 <div className="text-right">
                   <button
                     type="submit"
-                    className="w-full px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow-sm transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                    disabled={createLeaveRequest.isPending}
+                    className="w-full px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow-sm transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <CalendarDays className="w-4 h-4" /> Gửi Đơn Xin Nghỉ Phép
+                    {createLeaveRequest.isPending ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <CalendarDays className="w-4 h-4" />
+                    )}
+                    Gửi Đơn Xin Nghỉ Phép
                   </button>
                 </div>
               </form>
@@ -790,9 +782,15 @@ const ScheduleShiftSwap: React.FC<ScheduleShiftSwapProps> = ({ currentUser }) =>
                 <div className="text-right">
                   <button
                     type="submit"
-                    className="w-full px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow-sm transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                    disabled={createLeaveRequest.isPending}
+                    className="w-full px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow-sm transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Shuffle className="w-4 h-4" /> Gửi Đơn Xin Đổi Ca
+                    {createLeaveRequest.isPending ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Shuffle className="w-4 h-4" />
+                    )}
+                    Gửi Đơn Xin Đổi Ca
                   </button>
                 </div>
               </form>
@@ -942,13 +940,15 @@ const ScheduleShiftSwap: React.FC<ScheduleShiftSwapProps> = ({ currentUser }) =>
                               <div className="flex items-center gap-2">
                                 <button
                                   onClick={() => handleActionScheduleRequest(req.id, 'Approved')}
-                                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] rounded-lg shadow-sm transition-all cursor-pointer inline-flex items-center gap-1"
+                                  disabled={updateLeaveRequestStatus.isPending}
+                                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] rounded-lg shadow-sm transition-all cursor-pointer inline-flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                   <Check className="w-3.5 h-3.5" /> Phê duyệt đơn
                                 </button>
                                 <button
                                   onClick={() => handleActionScheduleRequest(req.id, 'Rejected')}
-                                  className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-[10px] rounded-lg shadow-sm transition-all cursor-pointer inline-flex items-center gap-1"
+                                  disabled={updateLeaveRequestStatus.isPending}
+                                  className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-[10px] rounded-lg shadow-sm transition-all cursor-pointer inline-flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                   <X className="w-3.5 h-3.5" /> Từ chối đơn
                                 </button>

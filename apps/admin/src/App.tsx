@@ -1,13 +1,16 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, Suspense, lazy } from "react";
 import AuthProvider from "./auth/provider";
-import AdminPortal from "./components/AdminPortal";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
+import ErrorBoundary from "./components/ErrorBoundary";
 import { MOCK_BRANCHES, MOCK_APARTMENTS } from "./data/mockData";
 import { MOCK_USERS } from "./mockUsers";
 import { Branch, Apartment, UserSim } from "./types";
+
+// Lazy load the admin portal (large component)
+const AdminPortal = lazy(() => import("./components/AdminPortal"));
 
 const defaultUser: UserSim = {
   id: 'admin-1',
@@ -21,21 +24,35 @@ const defaultUser: UserSim = {
   loyaltyPoints: 0,
 };
 
+function LoadingFallback() {
+  return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="text-center space-y-3">
+        <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto" />
+        <p className="text-sm text-slate-500 font-medium">Đang tải...</p>
+      </div>
+    </div>
+  );
+}
+
 function AdminView() {
-  // Mock data as fallback - in production these come from the API via React Query
   const [branches, setBranches] = useState<Branch[]>(MOCK_BRANCHES);
   const [apartments, setApartments] = useState<Apartment[]>(MOCK_APARTMENTS);
   const [currentUser] = useState<UserSim>(defaultUser);
 
   return (
-    <AdminPortal
-      branches={branches}
-      setBranches={setBranches}
-      apartments={apartments}
-      setApartments={setApartments}
-      currentUser={currentUser}
-      onBackToHome={() => {}}
-    />
+    <ErrorBoundary>
+      <Suspense fallback={<LoadingFallback />}>
+        <AdminPortal
+          branches={branches}
+          setBranches={setBranches}
+          apartments={apartments}
+          setApartments={setApartments}
+          currentUser={currentUser}
+          onBackToHome={() => {}}
+        />
+      </Suspense>
+    </ErrorBoundary>
   );
 }
 
@@ -75,8 +92,10 @@ function Layout() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <Layout />
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <Layout />
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
