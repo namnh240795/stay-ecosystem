@@ -1,0 +1,83 @@
+name = "web-service"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+
+[[d1_databases]]
+binding = "BRANCHES_DB"
+database_name = "branches-db"
+database_id = ""
+
+[[d1_databases]]
+binding = "APARTMENTS_DB"
+database_name = "apartments-db"
+database_id = ""
+
+[[d1_databases]]
+binding = "BOOKINGS_DB"
+database_name = "bookings-db"
+database_id = ""
+
+[[d1_databases]]
+binding = "USERS_DB"
+database_name = "users-db"
+database_id = "9d0bce6c-bd8d-4223-9ceb-c79557ce66b9"
+
+[env.sit]
+name = "web-service-sit"
+[[env.sit.d1_databases]]
+binding = "BRANCHES_DB"
+database_name = "branches-db-sit"
+database_id = ""
+[[env.sit.d1_databases]]
+binding = "APARTMENTS_DB"
+database_name = "apartments-db-sit"
+database_id = ""
+[[env.sit.d1_databases]]
+binding = "BOOKINGS_DB"
+database_name = "bookings-db-sit"
+database_id = ""
+[[env.sit.d1_databases]]
+binding = "USERS_DB"
+database_name = "users-db-sit"
+database_id = "9d0bce6c-bd8d-4223-9ceb-c79557ce66b9"
+
+[env.uat]
+name = "web-service-uat"
+[[env.uat.d1_databases]]
+binding = "BRANCHES_DB"
+database_name = "branches-db-uat"
+database_id = ""
+[[env.uat.d1_databases]]
+binding = "APARTMENTS_DB"
+database_name = "apartments-db-uat"
+database_id = ""
+[[env.uat.d1_databases]]
+binding = "BOOKINGS_DB"
+database_name = "bookings-db-uat"
+database_id = ""
+[[env.uat.d1_databases]]
+binding = "USERS_DB"
+database_name = "users-db-uat"
+database_id = "c6aa0fc5-a772-4340-b391-72c0cc2f1982"
+
+[env.prod]
+name = "web-service-prod"
+[[env.prod.d1_databases]]
+binding = "BRANCHES_DB"
+database_name = "branches-db-prod"
+database_id = ""
+[[env.prod.d1_databases]]
+binding = "APARTMENTS_DB"
+database_name = "apartments-db-prod"
+database_id = ""
+[[env.prod.d1_databases]]
+binding = "BOOKINGS_DB"
+database_name = "bookings-db-prod"
+database_id = ""
+[[env.prod.d1_databases]]
+binding = "USERS_DB"
+database_name = "users-db-prod"
+database_id = "8909eb50-af8f-4bcf-938a-0f0a57708e5d"
