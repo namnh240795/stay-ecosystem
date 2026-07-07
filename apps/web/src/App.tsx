@@ -1,17 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { AnimatePresence } from 'motion/react';
 import { Branch, SearchQuery, Apartment, UserSim } from './types';
 import { MOCK_USERS } from './mockUsers';
 import Header from './components/Header';
 import Footer from './components/Footer';
-import HomePage from './pages/HomePage';
-import MemberPage from './pages/MemberPage';
-import BookingModal from './components/BookingModal';
-import LoginPortal from './components/LoginPortal';
-import AuthCallback from './components/AuthCallback';
+import ErrorBoundary from './components/ErrorBoundary';
 import ScrollToTop from './components/ScrollToTop';
 import { BRANCHES, APARTMENTS } from './data';
+
+// Lazy load heavy page components
+const HomePage = lazy(() => import('./pages/HomePage'));
+const MemberPage = lazy(() => import('./pages/MemberPage'));
+const BookingModal = lazy(() => import('./components/BookingModal'));
+const LoginPortal = lazy(() => import('./components/LoginPortal'));
+const AuthCallback = lazy(() => import('./components/AuthCallback'));
 
 export default function App() {
   // Set default dates based on metadata: current time is 2026-07-01
@@ -280,6 +283,7 @@ export default function App() {
   };
 
   return (
+    <ErrorBoundary>
     <div className="min-h-screen flex flex-col justify-between bg-[#fdfdfd] text-slate-800 antialiased selection:bg-blue-500 selection:text-white">
       <ScrollToTop />
 
@@ -297,23 +301,25 @@ export default function App() {
 
       {/* Main Content Page Views with React Router Routes */}
       <main className="flex-grow">
-        <Routes>
-          <Route path="/" element={
-            <HomePage
-              searchQuery={searchQuery}
-              onSearch={handleSearch}
-              onBook={handleOpenBooking}
-              branches={branches}
-              apartments={apartments}
-              currentUser={currentUser}
-              onUpdateUser={handleUpdateUser}
-              onSearchClick={scrollToSearch}
-            />
-          } />
-          <Route path="/member" element={
-            <MemberPage 
-              bookedList={bookedList} 
-              onBackToHome={() => handleSetCurrentView('home')} 
+        <ErrorBoundary>
+          <Suspense fallback={<div className="flex items-center justify-center min-h-[50vh]"><div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" /></div>}>
+            <Routes>
+              <Route path="/" element={
+                <HomePage
+                  searchQuery={searchQuery}
+                  onSearch={handleSearch}
+                  onBook={handleOpenBooking}
+                  branches={branches}
+                  apartments={apartments}
+                  currentUser={currentUser}
+                  onUpdateUser={handleUpdateUser}
+                  onSearchClick={scrollToSearch}
+                />
+              } />
+              <Route path="/member" element={
+                <MemberPage
+                  bookedList={bookedList}
+                  onBackToHome={() => handleSetCurrentView('home')}
               currentUser={currentUser}
               onUpdateUser={handleUpdateUser}
               onUpdateBookedList={setBookedList}
@@ -321,7 +327,9 @@ export default function App() {
           } />
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+            </Routes>
+          </Suspense>
+        </ErrorBoundary>
       </main>
 
       {/* Premium Footer */}
@@ -356,5 +364,6 @@ export default function App() {
       </AnimatePresence>
 
     </div>
+    </ErrorBoundary>
   );
 }
