@@ -40,6 +40,8 @@ import {
   Sparkle
 } from 'lucide-react';
 import { Apartment, LongTermSearchQuery } from '../types';
+import { useApartments } from '../hooks/useApartments';
+import { useLongtermContent } from '../hooks/useContent';
 
 const APARTMENT_COORDS: Record<string, [number, number]> = {
   'apt-saigon-skyline': [10.795, 106.722], // Saigon Central near Landmark 81
@@ -71,17 +73,24 @@ interface LongTermStaysViewProps {
 }
 
 export default function LongTermStaysView({ initialLocation = 'All Locations', apartments = APARTMENTS }: LongTermStaysViewProps) {
-  // Dynamic Content states for Long-Term stay view
-  const [ltBanner, setLtBanner] = useState<string>(() => {
-    return localStorage.getItem('gs_longterm_banner_image') || 'https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=1920&q=80';
-  });
-  const [ltTitle, setLtTitle] = useState<string>(() => {
-    return localStorage.getItem('gs_longterm_title') || 'Long-term Rooms';
-  });
-  const [ltSubtitle, setLtSubtitle] = useState<string>(() => {
-    return localStorage.getItem('gs_longterm_subtitle') || 'Looking for extended stay options? Our long-term room packages offer comfortable accommodation at competitive rates for stays of 30 days or more.';
-  });
-  const [ltAdvantages, setLtAdvantages] = useState<string[]>(() => {
+  // Fetch apartments from API via React Query
+  const apartmentsQuery = useApartments({});
+
+  // Fetch long-term content from API via React Query
+  const longtermContentQuery = useLongtermContent();
+
+  // Derive long-term content values from API with localStorage fallbacks
+  const ltBanner = localStorage.getItem('gs_longterm_banner_image') || 'https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=1920&q=80';
+  const ltTitle = longtermContentQuery.data?.title || localStorage.getItem('gs_longterm_title') || 'Long-term Rooms';
+  const ltSubtitle = longtermContentQuery.data?.content || localStorage.getItem('gs_longterm_subtitle') || 'Looking for extended stay options? Our long-term room packages offer comfortable accommodation at competitive rates for stays of 30 days or more.';
+
+  const defaultAdvantages = [
+    "Significant discounts compared to nightly rates",
+    "Flexible lease terms from 1 to 12 months",
+    "Fully furnished rooms with utilities included",
+    "Dedicated housekeeping and maintenance"
+  ];
+  const ltAdvantages = longtermContentQuery.data?.benefits || (() => {
     const saved = localStorage.getItem('gs_longterm_advantages');
     if (saved) {
       try {
@@ -89,46 +98,8 @@ export default function LongTermStaysView({ initialLocation = 'All Locations', a
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       } catch (e) {}
     }
-    return [
-      "Significant discounts compared to nightly rates",
-      "Flexible lease terms from 1 to 12 months",
-      "Fully furnished rooms with utilities included",
-      "Dedicated housekeeping and maintenance"
-    ];
-  });
-
-  // Sync with localStorage dynamically
-  useEffect(() => {
-    const handleSyncLongTerm = () => {
-      setLtBanner(localStorage.getItem('gs_longterm_banner_image') || 'https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=1920&q=80');
-      setLtTitle(localStorage.getItem('gs_longterm_title') || 'Long-term Rooms');
-      setLtSubtitle(localStorage.getItem('gs_longterm_subtitle') || 'Looking for extended stay options? Our long-term room packages offer comfortable accommodation at competitive rates for stays of 30 days or more.');
-      
-      const saved = localStorage.getItem('gs_longterm_advantages');
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setLtAdvantages(parsed);
-          }
-        } catch (e) {}
-      } else {
-        setLtAdvantages([
-          "Significant discounts compared to nightly rates",
-          "Flexible lease terms from 1 to 12 months",
-          "Fully furnished rooms with utilities included",
-          "Dedicated housekeeping and maintenance"
-        ]);
-      }
-    };
-
-    window.addEventListener('storage', handleSyncLongTerm);
-    window.addEventListener('longterm_content_updated', handleSyncLongTerm);
-    return () => {
-      window.removeEventListener('storage', handleSyncLongTerm);
-      window.removeEventListener('longterm_content_updated', handleSyncLongTerm);
-    };
-  }, []);
+    return defaultAdvantages;
+  })();
 
   // 1. Search & Filter State
   const [filters, setFilters] = useState<LongTermSearchQuery>({
@@ -194,7 +165,7 @@ export default function LongTermStaysView({ initialLocation = 'All Locations', a
     setAptFormType(apt.type);
   };
 
-  // Dynamic list of apartments to allow editing
+  // Dynamic list of apartments to allow editing, initialized from API with localStorage override
   const [apartmentsList, setApartmentsList] = useState<Apartment[]>(() => {
     const saved = localStorage.getItem('gs_longterm_apartments_list');
     if (saved) {
@@ -202,7 +173,7 @@ export default function LongTermStaysView({ initialLocation = 'All Locations', a
         return JSON.parse(saved);
       } catch (e) {}
     }
-    return apartments;
+    return (apartmentsQuery.data?.data as unknown as Apartment[]) || apartments;
   });
 
   const saveApartmentsList = (newList: Apartment[]) => {

@@ -8,6 +8,8 @@ import Footer from './components/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
 import ScrollToTop from './components/ScrollToTop';
 import { BRANCHES, APARTMENTS } from './data';
+import { useBranches } from './hooks/useBranches';
+import { useApartments } from './hooks/useApartments';
 
 // Lazy load heavy page components
 const HomePage = lazy(() => import('./pages/HomePage'));
@@ -127,41 +129,12 @@ export default function App() {
 
 
 
-  // Dynamic state loaded from localStorage for real-time CRUD sync with user flow
-  const [branches, setBranches] = useState<Branch[]>(() => {
-    const saved = localStorage.getItem('gs_branches_data');
-    if (saved) return JSON.parse(saved);
-    return BRANCHES;
-  });
+  // Fetch branches and apartments from API via React Query
+  const branchesQuery = useBranches({});
+  const apartmentsQuery = useApartments({});
 
-  const [apartments, setApartments] = useState<Apartment[]>(() => {
-    const saved = localStorage.getItem('gs_apartments_data');
-    if (saved) return JSON.parse(saved);
-    return APARTMENTS;
-  });
-
-  useEffect(() => {
-    localStorage.setItem('gs_branches_data', JSON.stringify(branches));
-  }, [branches]);
-
-  useEffect(() => {
-    localStorage.setItem('gs_apartments_data', JSON.stringify(apartments));
-  }, [apartments]);
-
-  useEffect(() => {
-    const handleStorageChange = () => {
-      const savedBranches = localStorage.getItem('gs_branches_data');
-      if (savedBranches) {
-        setBranches(JSON.parse(savedBranches));
-      }
-      const savedApartments = localStorage.getItem('gs_apartments_data');
-      if (savedApartments) {
-        setApartments(JSON.parse(savedApartments));
-      }
-    };
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
+  const branches: Branch[] = (branchesQuery.data?.data as unknown as Branch[]) || BRANCHES;
+  const apartments: Apartment[] = (apartmentsQuery.data?.data as unknown as Apartment[]) || APARTMENTS;
 
   // Handle search box submit or dynamic change
   const handleSearch = (newQuery: SearchQuery) => {
@@ -193,30 +166,18 @@ export default function App() {
   };
 
   const handleReviewAdded = (branchId: string, newReview: any) => {
-    setBranches(prev => prev.map(b => {
-      if (b.id === branchId) {
-        const currentReviewsCount = b.reviews || 0;
-        const currentRating = b.rating || 5.0;
-        const newReviewsCount = currentReviewsCount + 1;
-        const newRating = Number(((currentRating * currentReviewsCount + newReview.rating) / newReviewsCount).toFixed(1));
-        
-        // Also update selectedBranch if it is currently open
-        if (selectedBranch && selectedBranch.id === branchId) {
-          setSelectedBranch(prevSelected => prevSelected ? {
-            ...prevSelected,
-            reviews: newReviewsCount,
-            rating: newRating
-          } : null);
-        }
-        
-        return {
-          ...b,
-          reviews: newReviewsCount,
-          rating: newRating
-        };
-      }
-      return b;
-    }));
+    // Update selectedBranch if it is currently open
+    if (selectedBranch && selectedBranch.id === branchId) {
+      const currentReviewsCount = selectedBranch.reviews || 0;
+      const currentRating = selectedBranch.rating || 5.0;
+      const newReviewsCount = currentReviewsCount + 1;
+      const newRating = Number(((currentRating * currentReviewsCount + newReview.rating) / newReviewsCount).toFixed(1));
+      setSelectedBranch(prev => prev ? {
+        ...prev,
+        reviews: newReviewsCount,
+        rating: newRating
+      } : null);
+    }
   };
 
   // Helper to sync new dynamic reservation into admin operations database
@@ -309,7 +270,6 @@ export default function App() {
                   searchQuery={searchQuery}
                   onSearch={handleSearch}
                   onBook={handleOpenBooking}
-                  branches={branches}
                   apartments={apartments}
                   currentUser={currentUser}
                   onUpdateUser={handleUpdateUser}
@@ -318,13 +278,11 @@ export default function App() {
               } />
               <Route path="/member" element={
                 <MemberPage
-                  bookedList={bookedList}
                   onBackToHome={() => handleSetCurrentView('home')}
-              currentUser={currentUser}
-              onUpdateUser={handleUpdateUser}
-              onUpdateBookedList={setBookedList}
-            />
-          } />
+                  currentUser={currentUser}
+                  onUpdateUser={handleUpdateUser}
+                />
+              } />
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

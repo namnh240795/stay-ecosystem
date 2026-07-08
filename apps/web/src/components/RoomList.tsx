@@ -1,32 +1,77 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  Star, 
-  MapPin, 
-  Sparkles, 
-  ShieldCheck, 
-  Coffee, 
-  Wifi, 
-  Waves, 
-  Compass, 
+import {
+  Star,
+  MapPin,
+  Sparkles,
+  ShieldCheck,
+  Coffee,
+  Wifi,
+  Waves,
+  Compass,
   CheckCircle,
   HelpCircle,
   TrendingUp,
   Award,
   Map as MapIcon,
-  List
+  List,
+  Loader2,
+  AlertTriangle
 } from 'lucide-react';
 import { Branch, SearchQuery } from '../types';
-import { BRANCHES, POPULAR_AMENITIES, formatVND } from '../data';
+import { POPULAR_AMENITIES, formatVND } from '../data';
+import { useBranches } from '../hooks/useBranches';
 import BranchMap from './BranchMap';
+
+/**
+ * Maps an API Branch object (from the backend) to the app's Branch type
+ * used by the frontend components.
+ */
+function mapApiBranchToAppBranch(apiBranch: {
+  id: string;
+  name: string;
+  brand?: string;
+  location?: string;
+  address?: string;
+  description?: string;
+  image_url?: string;
+  amenities?: string;
+}): Branch {
+  let amenities: string[] = ['Free Wi-Fi'];
+  if (apiBranch.amenities) {
+    try {
+      const parsed = JSON.parse(apiBranch.amenities);
+      if (Array.isArray(parsed)) amenities = parsed;
+    } catch {
+      // If not JSON, treat as comma-separated
+      amenities = apiBranch.amenities.split(',').map((a) => a.trim()).filter(Boolean);
+    }
+  }
+
+  return {
+    id: apiBranch.id,
+    name: apiBranch.name,
+    region: apiBranch.location || 'Vietnam',
+    brand: apiBranch.brand || 'GrandStay',
+    description: apiBranch.description || '',
+    image: apiBranch.image_url || 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1200&q=80',
+    rating: 4.5,
+    reviews: 128,
+    pricePerNight: 3_000_000,
+    amenities,
+    popularFor: 'GrandStay Experience',
+  };
+}
 
 interface RoomListProps {
   searchQuery: SearchQuery;
   onBook: (branch: Branch) => void;
-  branches?: Branch[];
 }
 
-export default function RoomList({ searchQuery, onBook, branches = BRANCHES }: RoomListProps) {
+export default function RoomList({ searchQuery, onBook }: RoomListProps) {
+  const { data: apiResponse, isLoading, error } = useBranches({});
+  const apiBranches = apiResponse?.data ?? [];
+  const branches = apiBranches.map(mapApiBranchToAppBranch);
   const [selectedAmenity, setSelectedAmenity] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'split'>('split');
   const [hoveredBranchId, setHoveredBranchId] = useState<string | null>(null);
@@ -77,6 +122,62 @@ export default function RoomList({ searchQuery, onBook, branches = BRANCHES }: R
         return <Coffee className="w-4 h-4 text-amber-500" />;
     }
   };
+
+  // Loading state while fetching branches from API
+  if (isLoading) {
+    return (
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-brand-blue text-xs font-bold uppercase tracking-wider mb-3">
+            <Award className="w-3.5 h-3.5 text-brand-gold" />
+            Hệ Thống Nghỉ Dưỡng GrandStay
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 mb-3">
+            Unique experiences at top GrandStay branches
+          </h2>
+          <p className="text-slate-500 text-sm sm:text-base max-w-xl mx-auto">
+            Choose your favorite location and enjoy your vacation in absolute luxury, tailored specifically to your stay preferences.
+          </p>
+        </div>
+
+        <div className="flex flex-col items-center justify-center py-24 space-y-4">
+          <Loader2 className="w-10 h-10 text-brand-blue animate-spin" />
+          <p className="text-sm text-slate-500 font-medium">Đang tải danh sách chi nhánh...</p>
+        </div>
+      </section>
+    );
+  }
+
+  // Error state when API call fails
+  if (error) {
+    return (
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-brand-blue text-xs font-bold uppercase tracking-wider mb-3">
+            <Award className="w-3.5 h-3.5 text-brand-gold" />
+            Hệ Thống Nghỉ Dưỡng GrandStay
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 mb-3">
+            Unique experiences at top GrandStay branches
+          </h2>
+        </div>
+
+        <div className="flex flex-col items-center justify-center py-20 bg-slate-50 rounded-2xl border border-dashed border-slate-200 max-w-xl mx-auto px-6">
+          <AlertTriangle className="w-12 h-12 text-rose-400 mx-auto mb-4" />
+          <h3 className="text-lg font-bold text-slate-800 mb-1">Không thể tải dữ liệu chi nhánh</h3>
+          <p className="text-slate-500 text-sm mb-6">
+            Đã xảy ra lỗi khi kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng và thử lại.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-xl hover:bg-slate-100 transition-colors cursor-pointer"
+          >
+            Tải lại trang
+          </button>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Star, MessageSquare, Calendar, User, CheckCircle2, ThumbsUp, Sparkles, Plus, X } from 'lucide-react';
 import { Review, Branch } from '../types';
+import { useReviews, useCreateReview } from '../hooks/useReviews';
 
 interface GuestReviewProps {
   targetId: string;
@@ -9,119 +10,29 @@ interface GuestReviewProps {
   currentUser?: { name: string };
 }
 
-// Pre-seeded reviews to make the app look complete and professional
-const DEFAULT_REVIEWS: Review[] = [
-  {
-    id: 'rev-1',
-    targetId: 'thai-nguyen',
-    guestName: 'Nguyễn Văn Minh',
-    rating: 5,
-    comment: 'Khu nghỉ dưỡng tuyệt vời! Đồi chè xanh mướt, không khí trong lành dễ chịu cực kỳ. Nhân viên phục vụ chu đáo, hồ bơi vô cực sạch sẽ và ngắm cảnh siêu đẹp. Chắc chắn sẽ quay lại cùng gia đình.',
-    date: '2026-06-20'
-  },
-  {
-    id: 'rev-2',
-    targetId: 'thai-nguyen',
-    guestName: 'Trần Thị Thu Thảo',
-    rating: 4.8,
-    comment: 'Phòng sạch sẽ, view hướng thẳng đồi chè rất lãng mạn. Đồ ăn sáng buffet phong phú, đặc biệt trà xanh đặc sản ở đây cực ngon. Chỉ có điểm trừ nhẹ là lối vào hơi dốc.',
-    date: '2026-06-18'
-  },
-  {
-    id: 'rev-3',
-    targetId: 'phu-quoc',
-    guestName: 'Phạm Thành Long',
-    rating: 5,
-    comment: 'Hoàng hôn ở đây đẹp đỉnh chóp! Bãi biển riêng tư, sạch sẽ và vắng vẻ nên nghỉ dưỡng rất sướng. Villa có hồ bơi riêng sạch sẽ, trang thiết bị thông minh hiện đại.',
-    date: '2026-06-25'
-  },
-  {
-    id: 'rev-4',
-    targetId: 'phu-quoc',
-    guestName: 'Lê Mỹ Linh',
-    rating: 4.5,
-    comment: 'Khuôn viên resort rất rộng và xanh mát. Trẻ em cực kỳ thích Kids Club ở đây. Hồ bơi lớn thiết kế đẹp, cocktail tại quầy bar sát biển ngon tuyệt vời. Sẽ giới thiệu cho bạn bè.',
-    date: '2026-06-24'
-  },
-  {
-    id: 'rev-5',
-    targetId: 'da-nang',
-    guestName: 'Hoàng Quốc Bảo',
-    rating: 5,
-    comment: 'Vị trí đắc địa ngay trung tâm, ngắm sông Hàn về đêm từ Sky Bar cực đỉnh. Phòng ốc thiết kế sang trọng, giường ngủ êm ái xuất sắc. Dịch vụ dọn phòng hàng ngày chu đáo.',
-    date: '2026-06-22'
-  },
-  {
-    id: 'rev-6',
-    targetId: 'da-nang',
-    guestName: 'Vũ Thị Mai',
-    rating: 4,
-    comment: 'Gần biển Mỹ Khê và các nhà hàng hải sản nổi tiếng. Phòng hội nghị hiện đại thích hợp đi công tác kết hợp nghỉ dưỡng. Bể bơi vô cực view trực diện biển rất đẹp.',
-    date: '2026-06-15'
-  },
-  {
-    id: 'rev-7',
-    targetId: 'ha-noi',
-    guestName: 'Đặng Minh Châu',
-    rating: 5,
-    comment: 'Một ốc đảo bình yên thực sự giữa lòng Hà Nội sôi động. Phong cách Indochine hoài cổ sang trọng và ấm cúng. Trà chiều truyền thống được chuẩn bị tỉ mỉ, rất đáng trải nghiệm.',
-    date: '2026-06-21'
-  },
-  {
-    id: 'rev-8',
-    targetId: 'saigon',
-    guestName: 'Johnathan Le',
-    rating: 5,
-    comment: 'Highly recommended for both short and long term stays in Saigon! Super modern smart home system, fast Wi-Fi for remote work, and the infinity pool has the best panoramic city view.',
-    date: '2026-06-23'
-  },
-  {
-    id: 'rev-9',
-    targetId: 'sapa',
-    guestName: 'Trần Khắc Huy',
-    rating: 5,
-    comment: 'Kỳ nghỉ tuyệt vời nhất trên đỉnh núi! Sáng thức dậy ngắm biển mây tràn qua ban công thung lũng Mường Hoa mà ngỡ như tiên cảnh. Bể bơi nước ấm hoạt động tốt, sưởi ấm hoàn hảo cho đêm lạnh Sapa.',
-    date: '2026-06-27'
-  }
-];
-
 export default function GuestReview({ targetId, targetName, onReviewAdded, currentUser }: GuestReviewProps) {
-  const [reviews, setReviews] = useState<Review[]>([]);
+  // React Query hook for fetching reviews
+  const reviewsQuery = useReviews({ apartmentId: targetId });
+  const createReviewMutation = useCreateReview();
+
+  // Map API review type to local Review type for UI compatibility
+  const reviews = (reviewsQuery.data?.data ?? []).map((r: any) => ({
+    id: r.id,
+    targetId: r.apartmentId || r.tourId || targetId,
+    guestName: r.customerName || r.guestName || '',
+    rating: r.rating,
+    comment: r.comment || '',
+    date: r.date || (r.createdAt ? r.createdAt.split('T')[0] : ''),
+  })) as Review[];
+
   const [showAddForm, setShowAddForm] = useState(false);
-  
+
   // Form states
   const [guestName, setGuestName] = useState(currentUser?.name || '');
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [hoverRating, setHoverRating] = useState<number | null>(null);
   const [successMessage, setSuccessMessage] = useState('');
-
-  // Load reviews from localStorage
-  useEffect(() => {
-    const stored = localStorage.getItem('gs_guest_reviews');
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored) as Review[];
-        // Filter reviews for this target
-        const filtered = parsed.filter(r => r.targetId === targetId);
-        if (filtered.length > 0) {
-          setReviews(filtered);
-        } else {
-          // Fill with default if matches targetId
-          const defaults = DEFAULT_REVIEWS.filter(r => r.targetId === targetId);
-          setReviews(defaults);
-        }
-      } catch (e) {
-        const defaults = DEFAULT_REVIEWS.filter(r => r.targetId === targetId);
-        setReviews(defaults);
-      }
-    } else {
-      const defaults = DEFAULT_REVIEWS.filter(r => r.targetId === targetId);
-      setReviews(defaults);
-      // Initialize localStorage
-      localStorage.setItem('gs_guest_reviews', JSON.stringify(DEFAULT_REVIEWS));
-    }
-  }, [targetId]);
 
   // Sync current user name if available and not custom edited yet
   useEffect(() => {
@@ -130,7 +41,7 @@ export default function GuestReview({ targetId, targetName, onReviewAdded, curre
     }
   }, [currentUser]);
 
-  // Handle Review Submission
+  // Handle Review Submission via API mutation
   const handleSubmitReview = (e: React.FormEvent) => {
     e.preventDefault();
     if (!guestName.trim()) {
@@ -142,48 +53,39 @@ export default function GuestReview({ targetId, targetName, onReviewAdded, curre
       return;
     }
 
-    const newReview: Review = {
-      id: `rev-custom-${Date.now()}`,
-      targetId,
-      guestName: guestName.trim(),
-      rating,
-      comment: comment.trim(),
-      date: new Date().toISOString().split('T')[0]
-    };
+    createReviewMutation.mutate(
+      {
+        apartmentId: targetId,
+        customerName: guestName.trim(),
+        rating,
+        comment: comment.trim(),
+      },
+      {
+        onSuccess: (createdReview: any) => {
+          // Reset Form
+          setComment('');
+          setShowAddForm(false);
+          setSuccessMessage('Cảm ơn bạn đã để lại đánh giá quý giá!');
+          setTimeout(() => setSuccessMessage(''), 4000);
 
-    // Update state and localStorage
-    const currentStored = localStorage.getItem('gs_guest_reviews');
-    let allReviews: Review[] = [];
-    if (currentStored) {
-      try {
-        allReviews = JSON.parse(currentStored);
-      } catch (e) {
-        allReviews = [...DEFAULT_REVIEWS];
+          // Trigger Callback to update parent (to update rating count and average score)
+          if (onReviewAdded) {
+            onReviewAdded({
+              id: createdReview.id,
+              targetId: createdReview.apartmentId || targetId,
+              guestName: createdReview.customerName || guestName.trim(),
+              rating: createdReview.rating || rating,
+              comment: createdReview.comment || comment.trim(),
+              date: createdReview.date || (createdReview.createdAt ? createdReview.createdAt.split('T')[0] : new Date().toISOString().split('T')[0]),
+            });
+          }
+        },
       }
-    } else {
-      allReviews = [...DEFAULT_REVIEWS];
-    }
-
-    const updatedAllReviews = [newReview, ...allReviews];
-    localStorage.setItem('gs_guest_reviews', JSON.stringify(updatedAllReviews));
-
-    // Update local list
-    setReviews(prev => [newReview, ...prev]);
-
-    // Reset Form
-    setComment('');
-    setShowAddForm(false);
-    setSuccessMessage('Cảm ơn bạn đã để lại đánh giá quý giá!');
-    setTimeout(() => setSuccessMessage(''), 4000);
-
-    // Trigger Callback to update parent (to update rating count and average score)
-    if (onReviewAdded) {
-      onReviewAdded(newReview);
-    }
+    );
   };
 
   // Stats Calculations
-  const averageRating = reviews.length > 0 
+  const averageRating = reviews.length > 0
     ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
     : '5.0';
 
@@ -251,7 +153,7 @@ export default function GuestReview({ targetId, targetName, onReviewAdded, curre
 
           <form onSubmit={handleSubmitReview} className="space-y-4 text-left">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              
+
               {/* Star Rating Select Input */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide">Điểm đánh giá của bạn:</label>
@@ -268,20 +170,20 @@ export default function GuestReview({ targetId, targetName, onReviewAdded, curre
                         onClick={() => setRating(star)}
                         className="p-1 focus:outline-none cursor-pointer transition-transform hover:scale-125"
                       >
-                        <Star 
+                        <Star
                           className={`w-6 h-6 transition-all ${
-                            isActive 
-                              ? 'text-amber-500 fill-amber-500 filter drop-shadow-sm' 
+                            isActive
+                              ? 'text-amber-500 fill-amber-500 filter drop-shadow-sm'
                               : 'text-slate-300'
-                          }`} 
+                          }`}
                         />
                       </button>
                     );
                   })}
                   <span className="text-xs font-extrabold text-slate-500 ml-2" id="rating-label">
-                    {rating === 5 ? 'Tuyệt vời (5/5)' : 
-                     rating === 4 ? 'Rất tốt (4/5)' : 
-                     rating === 3 ? 'Bình thường (3/5)' : 
+                    {rating === 5 ? 'Tuyệt vời (5/5)' :
+                     rating === 4 ? 'Rất tốt (4/5)' :
+                     rating === 3 ? 'Bình thường (3/5)' :
                      rating === 2 ? 'Kém (2/5)' : 'Rất tệ (1/5)'}
                   </span>
                 </div>
@@ -340,7 +242,7 @@ export default function GuestReview({ targetId, targetName, onReviewAdded, curre
 
       {/* Grid: Rating overview stats + List of Review Cards */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start" id="reviews-analytics-and-list">
-        
+
         {/* Left Stats Dashboard: 4 cols */}
         <div className="md:col-span-4 bg-slate-50 rounded-2xl p-5 border border-slate-100/80 space-y-4 text-center sm:text-left" id="reviews-summary-statistics">
           <div className="text-center py-2">
@@ -350,9 +252,9 @@ export default function GuestReview({ targetId, targetName, onReviewAdded, curre
                 const isFull = star <= Math.floor(parseFloat(averageRating));
                 const isHalf = !isFull && star - 0.5 <= parseFloat(averageRating);
                 return (
-                  <Star 
-                    key={star} 
-                    className={`w-4 h-4 ${isFull ? 'text-amber-500 fill-amber-500' : isHalf ? 'text-amber-500 fill-amber-500/50' : 'text-slate-200'}`} 
+                  <Star
+                    key={star}
+                    className={`w-4 h-4 ${isFull ? 'text-amber-500 fill-amber-500' : isHalf ? 'text-amber-500 fill-amber-500/50' : 'text-slate-200'}`}
                   />
                 );
               })}
@@ -382,8 +284,8 @@ export default function GuestReview({ targetId, targetName, onReviewAdded, curre
         <div className="md:col-span-8 space-y-4 text-left" id="reviews-cards-list-wrapper">
           {reviews.length > 0 ? (
             reviews.map((rev) => (
-              <div 
-                key={rev.id} 
+              <div
+                key={rev.id}
                 className="bg-white border border-slate-100 rounded-2xl p-4.5 hover:shadow-md transition-all duration-200 flex flex-col gap-3 relative"
                 id={`review-card-${rev.id}`}
               >
@@ -421,8 +323,8 @@ export default function GuestReview({ targetId, targetName, onReviewAdded, curre
 
                 {/* Action feedback */}
                 <div className="flex items-center gap-3 pt-2 border-t border-slate-50/80 mt-1 pl-1 text-[11px] text-slate-400 font-medium">
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="flex items-center gap-1 hover:text-brand-blue transition-colors cursor-pointer"
                     id={`btn-like-review-${rev.id}`}
                   >

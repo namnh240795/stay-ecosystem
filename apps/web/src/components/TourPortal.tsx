@@ -1,227 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  Compass, Users, User, Calendar, MapPin, Clock, Star, Check, Plus, Minus, 
-  QrCode, CreditCard, Info, Sparkles, DollarSign, Send, ArrowRight, Search, 
+import {
+  Compass, Users, User, Calendar, MapPin, Clock, Star, Check, Plus, Minus,
+  QrCode, CreditCard, Info, Sparkles, DollarSign, Send, ArrowRight, Search,
   X, Filter, CheckCircle, Flame, ShieldCheck, Ticket
 } from 'lucide-react';
 import { Tour, GroupTour, TourBooking, UserSim } from '../types';
-
-// Initial Mock Data
-const INITIAL_TOURS: Tour[] = [
-  {
-    id: 'tour-halong',
-    name: 'Tour Du Thuyền 5 Sao Vịnh Hạ Long Premium',
-    region: 'Vịnh Hạ Long',
-    image: 'https://images.unsplash.com/photo-1524230572899-a752b3835840?auto=format&fit=crop&w=800&q=85',
-    pricePerSlot: 2500000,
-    maxSlots: 12,
-    bookedSlots: 8,
-    duration: '2 ngày 1 đêm',
-    rating: 4.9,
-    description: 'Trải nghiệm du thuyền 5 sao đẳng cấp thế giới đi qua các hòn đảo đá vôi kỳ vĩ nhất Vịnh Hạ Long, nghỉ dưỡng phòng suite có ban công riêng, chèo thuyền kayak và thưởng thức tiệc hải sản thượng hạng.',
-    highlights: ['Nghỉ phòng Suite ban công hướng vịnh', 'Chèo thuyền kayak qua hang Luồn', 'Thưởng thức buffet hải sản tôm hùm', 'Đón hoàng hôn tại sundeck'],
-    tourType: 'multi',
-    itinerary: [
-      {
-        day: "Ngày 1",
-        title: "Hà Nội - Vịnh Hạ Long - Chèo thuyền Kayak & Hoàng Hôn",
-        activities: [
-          "08:30 - Xe limousine đón quý khách tại điểm hẹn hoặc khu phố cổ Hà Nội khởi hành đi Hạ Long.",
-          "12:00 - Check-in du thuyền tại cảng tàu quốc tế Tuần Châu, thưởng thức đồ uống chào mừng và nghe hướng dẫn an toàn.",
-          "13:00 - Thưởng thức bữa trưa buffet hải sản thượng hạng trong lúc du thuyền di chuyển qua Hòn Trống Mái, đỉnh Hương.",
-          "15:00 - Khám phá Hang Luồn bằng đò nan chèo tay hoặc tự do chèo thuyền kayak khám phá vách đá vôi.",
-          "17:30 - Tham gia tiệc trà hoàng hôn Sunset Party tại sundeck của tàu, ngắm ráng chiều tuyệt đẹp.",
-          "19:00 - Dùng bữa tối lãng mạn phong cách Fine Dining tại nhà hàng chuẩn Michelin của du thuyền."
-        ]
-      },
-      {
-        day: "Ngày 2",
-        title: "Hang Sửng Sốt - Hà Nội kết thúc hành trình di sản",
-        activities: [
-          "06:15 - Khởi đầu ngày mới với lớp tập Thái Cực Quyền (Tai Chi) trên sundeck đón tia nắng bình minh đầu tiên.",
-          "07:30 - Thưởng thức điểm tâm sáng nhẹ với trà, cafe hảo hạng và các loại bánh ngọt tự làm ngon miệng.",
-          "08:30 - Chinh phục Hang Sửng Sốt - hang động rộng lớn và lộng lẫy bậc nhất vịnh với hàng vạn mảng thạch nhũ tự nhiên.",
-          "10:00 - Quý khách trở về tàu, làm thủ tục trả phòng và thưởng thức bữa trưa sớm (Brunch buffet) trên đường về bến.",
-          "11:30 - Du thuyền cập bến Tuần Châu, xe limousine đón quý khách quay trở lại thủ đô Hà Nội."
-        ]
-      }
-    ]
-  },
-  {
-    id: 'tour-sapa',
-    name: 'Tour Trekking Chinh Phục Đỉnh Fansipan & Bản Cát Cát',
-    region: 'Sapa',
-    image: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=800&q=85',
-    pricePerSlot: 1500000,
-    maxSlots: 8,
-    bookedSlots: 5,
-    duration: '3 ngày 2 đêm',
-    rating: 4.8,
-    description: 'Chinh phục nóc nhà Đông Dương Fansipan bằng cáp treo hiện đại, trekking xuyên qua thung lũng Mường Hoa thơ mộng và trải nghiệm văn hóa bản địa độc đáo tại Bản Cát Cát.',
-    highlights: ['Vé cáp treo khứ hồi Fansipan', 'Trekking thung lũng Mường Hoa', 'Nghỉ đêm resort view núi thung lũng', 'Thưởng thức lẩu cá hồi đặc sản'],
-    tourType: 'multi',
-    itinerary: [
-      {
-        day: "Ngày 1",
-        title: "Hà Nội - Sapa - Bản Cát Cát mộc mạc",
-        activities: [
-          "06:30 - Khởi hành từ Hà Nội đi Sapa bằng xe giường nằm hạng sang đi qua cao tốc Nội Bài - Lào Cai.",
-          "13:00 - Đến Sapa nghỉ ngơi, dùng bữa trưa đậm đà phong vị Tây Bắc và nhận phòng khách sạn resort cao cấp.",
-          "14:30 - Bắt đầu đi bộ tham quan Bản Cát Cát của người đồng bào H'Mông, xem biểu diễn múa xòe và check-in thác nước Cát Cát.",
-          "19:00 - Thưởng thức lẩu cá hồi, cá tầm tươi ngọt đặc trưng vùng lạnh Sapa và dạo phố đêm tự do."
-        ]
-      },
-      {
-        day: "Ngày 2",
-        title: "Chinh Phục Đỉnh Fansipan - Check-in Cổng Trời mây ngàn",
-        activities: [
-          "07:30 - Dùng bữa sáng buffet tại khách sạn hướng núi rừng.",
-          "08:30 - Lên tàu hỏa leo núi Mường Hoa phong cách châu Âu, nối tuyến Cáp treo Fansipan vượt biển mây kỳ ảo.",
-          "10:00 - Chạm tay vào mốc cao độ 3,143m đỉnh Fansipan hùng vĩ, vãn cảnh quần thể tâm linh Kim Sơn Bảo Thắng Tự.",
-          "12:30 - Ăn trưa buffet trên đỉnh núi hoặc quay về thị trấn dùng bữa trưa riêng.",
-          "15:30 - Ghé thăm các quán cafe view thung lũng siêu mộng mơ như Viettrekking hay Moana Sapa.",
-          "18:30 - Thưởng thức các món đồ nướng ngói thơm lừng đặc trưng tại phố cổ Sapa."
-        ]
-      },
-      {
-        day: "Ngày 3",
-        title: "Sapa - Đèo Ô Quy Hồ siêu vĩ - Hà Nội",
-        activities: [
-          "08:00 - Ăn sáng thư thả, dạo chợ Sapa mua sắm các loại măng ớt, rau cải mèo và đồ thổ cẩm thủ công.",
-          "09:30 - Xe đưa đoàn chinh phục Đèo Ô Quy Hồ - cung đường đèo hùng vĩ nhất Việt Nam, ngắm nhìn thung lũng hoang dại.",
-          "12:00 - Làm thủ tục check-out khách sạn, dùng bữa trưa ấm cúng chia tay Sapa.",
-          "13:30 - Lên xe trở về Hà Nội, kết thúc chuyến đi tuyệt đẹp."
-        ]
-      }
-    ]
-  },
-  {
-    id: 'tour-phongnha',
-    name: 'Tour Khám Phá Kỳ Vĩ Hệ Thống Hang Động Phong Nha',
-    region: 'Quảng Bình',
-    image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=85',
-    pricePerSlot: 1800000,
-    maxSlots: 10,
-    bookedSlots: 4,
-    duration: '1 ngày khép kín',
-    rating: 4.7,
-    description: 'Hành trình mạo hiểm khám phá Động Phong Nha và Động Thiên Đường - kỳ quan hang động dài nhất châu Á với hệ thống thạch nhũ huyền ảo và tráng lệ được kiến tạo hàng triệu năm.',
-    highlights: ['Du thuyền ngược dòng sông Son', 'Khám phá thạch nhũ Động Thiên Đường', 'Bữa trưa ẩm thực dân dã Quảng Bình', 'Bảo hiểm du lịch trọn gói'],
-    tourType: 'day',
-    itinerary: [
-      {
-        day: "Cả Ngày",
-        title: "Hành Trình Khám Phá Kỳ Quan Thạch Nhũ Phong Nha & Thiên Đường",
-        activities: [
-          "08:00 - Hướng dẫn viên và xe du lịch đón khách tại Đồng Hới (nhà ga, sân bay hoặc khách sạn) di chuyển lên Phong Nha.",
-          "09:15 - Lên thuyền độc mộc rẽ sóng dòng sông Son nước xanh ngọc bích, tiến vào hang động Phong Nha lung linh huyền ảo.",
-          "10:00 - Trải nghiệm đi bộ trên dải cát trong động, ngắm nhìn mảng thạch nhũ Cung Đình, Tóc Tiên kiến tạo qua hàng triệu năm.",
-          "12:00 - Dùng bữa trưa đậm chất Quảng Bình tại nhà hàng ven sông Son với cá mát, gà nướng mật ong và tôm sông chao.",
-          "13:30 - Khởi hành đi Động Thiên Đường - khám phá 'Hoàng cung trong lòng đất' với hệ thống cầu gỗ tản bộ dài 1km mát rượi.",
-          "16:00 - Check-out động, khởi hành đưa quý khách trở lại điểm đón tại thành phố Đồng Hới.",
-          "17:30 - Xe trả khách an toàn. Kết thúc hành trình tham quan kỳ quan thiên nhiên."
-        ]
-      }
-    ]
-  },
-  {
-    id: 'tour-phuquoc',
-    name: 'Tour Lặn Ngắm San Hô & Khám Phá 4 Đảo Phú Quốc',
-    region: 'Phú Quốc',
-    image: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=800&q=85',
-    pricePerSlot: 1200000,
-    maxSlots: 15,
-    bookedSlots: 10,
-    duration: '1 ngày (8h - 17h)',
-    rating: 4.9,
-    description: 'Khám phá thế giới đại dương tuyệt mỹ tại Hòn Mây Rút, Hòn Móng Tay, lặn ngắm san hô tự nhiên tại Công viên bảo tồn san hô Nam Đảo Phú Quốc bằng cano cao tốc cực đỉnh.',
-    highlights: ['Di chuyển cano cao tốc đời mới', 'Lặn snorkeling ngắm san hô 100% tự nhiên', 'Quay phim flycam & chụp ảnh Sup miễn phí', 'Ăn trưa hải sản 8 món trên đảo hòn'],
-    tourType: 'day',
-    itinerary: [
-      {
-        day: "Cả Ngày",
-        title: "Khám Phá Thiên Đường Đảo Ngọc - Hòn Mây Rút, Hòn Móng Tay & Lặn San Hô",
-        activities: [
-          "08:30 - Xe đón quý khách tại khu nghỉ dưỡng, di chuyển đến cảng biển An Thới phía Nam đảo.",
-          "09:15 - Cano cao tốc đời mới xuất bến, lướt sóng đưa quý khách ra Hòn Móng Tay - tắm biển, check-in rặng dừa thơ mộng.",
-          "10:30 - Cano di chuyển đến khu vực Hòn Gầm Ghì, trang bị kính lặn ống thở chuyên nghiệp để ngắm san hô tự nhiên rực rỡ sắc màu.",
-          "12:00 - Di chuyển lên Hòn Mây Rút Trong - dùng bữa trưa hải sản 8 món ngập tràn tôm, cua, mực tươi ngon ngọt lịm.",
-          "14:30 - Trải nghiệm check-in sup chụp ảnh từ flycam cực độc đáo được các hướng dẫn viên setup hoàn toàn miễn phí.",
-          "15:30 - Cano quay lại cảng, xe đưa quý khách ghé qua Sunset Sanato ngắm hoàng hôn đỏ lựng bên bờ biển Phú Quốc.",
-          "17:00 - Trả khách về resort an toàn, kết thúc hành trình lặn biển."
-        ]
-      }
-    ]
-  },
-  {
-    id: 'tour-hue',
-    name: 'Tour Hoàng Hôn Sông Hương & Nhã Nhạc Cung Đình',
-    region: 'Huế',
-    image: 'https://images.unsplash.com/photo-1599707367072-cd6ada2bc375?auto=format&fit=crop&w=800&q=85',
-    pricePerSlot: 850000,
-    maxSlots: 20,
-    bookedSlots: 12,
-    duration: 'Nửa ngày (15h - 20h30)',
-    rating: 4.6,
-    description: 'Ngắm hoàng hôn lãng mạn trên dòng sông Hương thơ mộng, ghé thăm Chùa Thiên Mụ cổ kính, trải nghiệm thả hoa đăng cầu may mắn và thưởng thức Ca Huế Nhã Nhạc Cung Đình trên thuyền rồng.',
-    highlights: ['Thuyền rồng rước trên sông Hương', 'Nghe nhã nhạc và thả hoa đăng', 'Thưởng thức ẩm thực cung đình Huế', 'Trà chiều ngắm hoàng hôn'],
-    tourType: 'day',
-    itinerary: [
-      {
-        day: "Nửa Ngày",
-        title: "Hoàng Hôn Sông Hương, Thả Hoa Đăng & Thưởng Thức Ca Huế",
-        activities: [
-          "15:00 - Hướng dẫn viên và lái xe đón quý khách tại khu vực trung tâm Huế, xuất phát đi viếng Chùa Thiên Mụ.",
-          "16:30 - Xuống thuyền rồng gỗ truyền thống tại bến Kim Long, thưởng thức trà chiều cung đình khi nắng quái chiều vàng nhuộm sông Hương.",
-          "18:00 - Thưởng thức bữa tối ẩm thực các món bánh đặc sản Huế (bánh bèo, lọc, nậm, ram ít) chuẩn vị Huế xưa ngay trên thuyền.",
-          "19:15 - Thuyền tắt máy thả trôi, chương trình Ca Huế Nhã Nhạc Cung Đình Huế chính thức bắt đầu dưới sự biểu diễn của các nghệ sĩ gạo cội.",
-          "20:00 - Tự tay thả những chiếc đèn hoa đăng lung linh lấp lánh xuống dòng sông Hương thơ mộng gửi gắm ước nguyện bình an.",
-          "20:30 - Thuyền cập bến bờ sông Hương, xe đón quý khách về khách sạn nghỉ ngơi."
-        ]
-      }
-    ]
-  }
-];
-
-const INITIAL_GROUPS: GroupTour[] = [
-  {
-    id: 'group-1',
-    tourId: 'tour-sapa',
-    tourName: 'Tour Trekking Chinh Phục Đỉnh Fansipan & Bản Cát Cát',
-    creatorName: 'Trần Quân',
-    creatorEmail: 'tran_quan90@gmail.com',
-    currentMembers: 5,
-    requiredMembers: 8,
-    status: 'matching',
-    members: ['Trần Quân', 'Lê Minh', 'Nguyễn Lan', 'Phạm Huy', 'Đỗ Vy'],
-    date: '2026-07-04'
-  },
-  {
-    id: 'group-2',
-    tourId: 'tour-halong',
-    tourName: 'Tour Du Thuyền 5 Sao Vịnh Hạ Long Premium',
-    creatorName: 'Hoàng Oanh',
-    creatorEmail: 'oanh_hoang96@gmail.com',
-    currentMembers: 8,
-    requiredMembers: 12,
-    status: 'matching',
-    members: ['Hoàng Oanh (3 người)', 'Nguyễn Bảo (2 người)', 'Trần Hà (3 người)'],
-    date: '2026-07-06'
-  },
-  {
-    id: 'group-3',
-    tourId: 'tour-phuquoc',
-    tourName: 'Tour Lặn Ngắm San Hô & Khám Phá 4 Đảo Phú Quốc',
-    creatorName: 'Alex Smith',
-    creatorEmail: 'alex_smith@gmail.com',
-    currentMembers: 3,
-    requiredMembers: 6,
-    status: 'matching',
-    members: ['Alex Smith', 'Emma Watson', 'Minh Thư'],
-    date: '2026-07-08'
-  }
-];
+import { useTours, useBookTour, useTourBookings, useCancelTourBooking } from '../hooks/useTours';
+import { useGroups, useCreateGroup, useJoinGroup } from '../hooks/useGroups';
 
 interface TourPortalProps {
   currentUser: UserSim;
@@ -234,7 +20,7 @@ export default function TourPortal({ currentUser, onUpdateUser, embedded = false
   // Utility to map location string to region
   const mapPropToRegion = (loc?: string): string => {
     if (!loc || loc === 'All Locations') return 'All';
-    const normalized = loc.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const normalized = loc.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
     if (normalized.includes('phu quoc')) return 'Phú Quốc';
     if (normalized.includes('sapa')) return 'Sapa';
     if (normalized.includes('ha long') || normalized.includes('quang ninh')) return 'Vịnh Hạ Long';
@@ -243,34 +29,21 @@ export default function TourPortal({ currentUser, onUpdateUser, embedded = false
     return 'All';
   };
 
-  // State initialization with Local Storage Sync
-  const [tours, setTours] = useState<Tour[]>(() => {
-    const saved = localStorage.getItem('gs_tours_list');
-    return saved ? JSON.parse(saved) : INITIAL_TOURS;
-  });
+  // React Query hooks for data fetching
+  const toursQuery = useTours({});
+  const groupsQuery = useGroups({});
+  const bookingsQuery = useTourBookings({});
 
-  const [groups, setGroups] = useState<GroupTour[]>(() => {
-    const saved = localStorage.getItem('gs_group_tours');
-    return saved ? JSON.parse(saved) : INITIAL_GROUPS;
-  });
+  // Extract data arrays from paginated responses (cast to local types for UI compatibility)
+  const tours = (toursQuery.data?.data ?? []) as unknown as Tour[];
+  const groups = (groupsQuery.data?.data ?? []) as unknown as GroupTour[];
+  const bookings = (bookingsQuery.data?.data ?? []) as unknown as TourBooking[];
 
-  const [bookings, setBookings] = useState<TourBooking[]>(() => {
-    const saved = localStorage.getItem('gs_tour_bookings');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  // State Persistence Effect
-  useEffect(() => {
-    localStorage.setItem('gs_tours_list', JSON.stringify(tours));
-  }, [tours]);
-
-  useEffect(() => {
-    localStorage.setItem('gs_group_tours', JSON.stringify(groups));
-  }, [groups]);
-
-  useEffect(() => {
-    localStorage.setItem('gs_tour_bookings', JSON.stringify(bookings));
-  }, [bookings]);
+  // Mutation hooks for create/update operations
+  const bookTourMutation = useBookTour();
+  const createGroupMutation = useCreateGroup();
+  const joinGroupMutation = useJoinGroup();
+  const cancelBookingMutation = useCancelTourBooking();
 
   // View States
   const [activeSubTab, setActiveSubTab] = useState<'tours' | 'groups' | 'my-bookings'>('tours');
@@ -288,7 +61,7 @@ export default function TourPortal({ currentUser, onUpdateUser, embedded = false
   const [selectedTour, setSelectedTour] = useState<Tour | null>(null);
   const [modalType, setModalType] = useState<'book' | 'create_group' | 'join_group' | null>(null);
   const [selectedGroup, setSelectedGroup] = useState<GroupTour | null>(null);
-  
+
   // Tour Filter & Details State
   const [selectedType, setSelectedType] = useState<'all' | 'day' | 'multi'>('all');
   const [selectedDetailTour, setSelectedDetailTour] = useState<Tour | null>(null);
@@ -360,78 +133,54 @@ export default function TourPortal({ currentUser, onUpdateUser, embedded = false
 
   const handleVerifyPayment = () => {
     setIsVerifying(true);
+
+    // Simulate verification delay
     setTimeout(() => {
       setIsVerifying(false);
       setPaymentStep('success');
 
-      // 1. Process Booking data
       const finalPrice = (selectedTour?.pricePerSlot || 0) * bookingSlots;
-      const newBooking: TourBooking = {
-        id: `TB-${Math.floor(10000 + Math.random() * 90000)}`,
-        tourId: selectedTour!.id,
-        tourName: selectedTour!.name,
-        image: selectedTour!.image,
-        guestName,
-        guestPhone,
-        guestEmail,
-        slots: bookingSlots,
-        totalPrice: finalPrice,
-        bookingCode: generatedCode,
-        status: 'Confirmed',
-        isGroupTour: modalType === 'create_group' || modalType === 'join_group',
-        groupId: selectedGroup?.id || undefined,
-        date: bookingDate,
-        paymentMethod,
-        cardNumberLast4: paymentMethod === 'stripe' ? '4242' : undefined
-      };
 
-      setBookings(prev => [newBooking, ...prev]);
+      // Book the tour via API mutation
+      if (selectedTour) {
+        bookTourMutation.mutate({
+          id: selectedTour.id,
+          data: {
+            customerName: guestName,
+            customerEmail: guestEmail,
+            customerPhone: guestPhone,
+            date: bookingDate,
+            participants: bookingSlots,
+          }
+        });
+      }
 
-      // 2. Adjust Tour slot occupancy
-      setTours(prev => prev.map(t => {
-        if (t.id === selectedTour!.id) {
-          const updatedBooked = Math.min(t.maxSlots, t.bookedSlots + bookingSlots);
-          return { ...t, bookedSlots: updatedBooked };
-        }
-        return t;
-      }));
-
-      // 3. Update or Create matching groups
-      if (modalType === 'create_group') {
-        const newGroup: GroupTour = {
-          id: `G-${Math.floor(1000 + Math.random() * 9000)}`,
-          tourId: selectedTour!.id,
-          tourName: selectedTour!.name,
-          creatorName: guestName,
-          creatorEmail: guestEmail,
-          currentMembers: bookingSlots,
-          requiredMembers: targetGroupSlots,
-          status: bookingSlots >= targetGroupSlots ? 'matched' : 'matching',
-          members: [`${guestName} (${bookingSlots} chỗ)`],
-          date: bookingDate
-        };
-        setGroups(prev => [newGroup, ...prev]);
+      // Handle group operations via API mutations
+      if (modalType === 'create_group' && selectedTour) {
+        createGroupMutation.mutate({
+          name: `Nhóm ${selectedTour.name}`,
+          tourId: selectedTour.id,
+          leaderName: guestName,
+          leaderEmail: guestEmail,
+          maxMembers: targetGroupSlots,
+          departureDate: bookingDate,
+        });
         setSuccessMessage(`Nhóm ghép mới của bạn đã được tạo thành công trên hệ thống!\nTỷ lệ ghép hiện tại: ${bookingSlots}/${targetGroupSlots} chỗ.`);
       } else if (modalType === 'join_group' && selectedGroup) {
-        setGroups(prev => prev.map(g => {
-          if (g.id === selectedGroup.id) {
-            const nextMembers = g.currentMembers + bookingSlots;
-            const updatedStatus = nextMembers >= g.requiredMembers ? 'matched' : 'matching';
-            return {
-              ...g,
-              currentMembers: nextMembers,
-              status: updatedStatus,
-              members: [...g.members, `${guestName} (${bookingSlots} chỗ)`]
-            };
+        joinGroupMutation.mutate({
+          id: selectedGroup.id,
+          data: {
+            memberName: guestName,
+            memberEmail: guestEmail,
+            memberPhone: guestPhone,
           }
-          return g;
-        }));
+        });
         setSuccessMessage(`Bạn đã tham gia nhóm ghép thành công!\nGóp thêm ${bookingSlots} chỗ vào hành trình cùng đoàn.`);
       } else {
         setSuccessMessage(`Đặt chỗ tour du lịch thành công!\nMã vé điện tử: ${generatedCode}.\nChúng tôi đã gửi lịch trình chi tiết về email ${guestEmail}.`);
       }
 
-      // Award loyalty points simulator
+      // Award loyalty points
       if (onUpdateUser) {
         const earnedPoints = Math.floor(finalPrice / 10000); // 1 point for every 10k VND
         const updatedUser = {
@@ -445,7 +194,7 @@ export default function TourPortal({ currentUser, onUpdateUser, embedded = false
 
   const handleCancelBooking = (bookingId: string) => {
     if (window.confirm('Bạn có chắc chắn muốn hủy đặt vé tour này? Hoàn tiền sẽ tự động xử lý.')) {
-      setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: 'Cancelled' } : b));
+      cancelBookingMutation.mutate(bookingId);
       alert('Đã hủy đặt chỗ tour du lịch thành công. Số tiền đã được hoàn trả về phương thức thanh toán gốc.');
     }
   };
@@ -453,10 +202,10 @@ export default function TourPortal({ currentUser, onUpdateUser, embedded = false
   // Filters logic
   const filteredTours = tours.filter(t => {
     const matchesRegion = selectedRegion === 'All' || t.region === selectedRegion;
-    const matchesSearch = t.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    const matchesSearch = t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           t.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           t.region.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     const isMultiDay = t.tourType === 'multi' || (t.duration && (t.duration.toLowerCase().includes('ngày') && !t.duration.toLowerCase().includes('nửa ngày') && !t.duration.toLowerCase().includes('1 ngày')));
     const actualType = isMultiDay ? 'multi' : 'day';
     const matchesType = selectedType === 'all' || actualType === selectedType;
@@ -468,14 +217,14 @@ export default function TourPortal({ currentUser, onUpdateUser, embedded = false
     const tour = tours.find(t => t.id === g.tourId);
     if (!tour) return false;
     const matchesRegion = selectedRegion === 'All' || tour.region === selectedRegion;
-    const matchesSearch = g.tourName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    const matchesSearch = g.tourName.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           g.creatorName.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesRegion && matchesSearch;
   });
 
   return (
     <div id="tour-portal" className={`w-full font-sans ${embedded ? '' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10'}`}>
-      
+
       {/* Premium Header Accent */}
       {!embedded && (
         <div className="mb-8 text-center sm:text-left">
@@ -502,7 +251,7 @@ export default function TourPortal({ currentUser, onUpdateUser, embedded = false
             <Compass className="w-4 h-4 text-blue-500" />
             <span>Danh Sách Tour</span>
           </button>
-          
+
           <button
             onClick={() => setActiveSubTab('groups')}
             className={`flex-1 lg:flex-none px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer ${
@@ -537,15 +286,15 @@ export default function TourPortal({ currentUser, onUpdateUser, embedded = false
                 className="w-full bg-slate-50 border border-slate-200/80 rounded-xl pl-10 pr-4 py-2.5 text-xs focus:outline-none focus:border-blue-500 font-medium text-slate-800"
               />
             </div>
-            
+
             <div className="flex gap-1 overflow-x-auto pb-1 md:pb-0 scrollbar-none shrink-0">
               {regions.map(reg => (
                 <button
                   key={reg}
                   onClick={() => setSelectedRegion(reg)}
                   className={`px-3 py-2.5 rounded-xl text-xs font-bold border shrink-0 transition-all cursor-pointer ${
-                    selectedRegion === reg 
-                      ? 'bg-slate-900 text-white border-slate-900' 
+                    selectedRegion === reg
+                      ? 'bg-slate-900 text-white border-slate-900'
                       : 'bg-white text-slate-600 border-slate-200/80 hover:bg-slate-50'
                   }`}
                 >
@@ -559,7 +308,7 @@ export default function TourPortal({ currentUser, onUpdateUser, embedded = false
 
       {/* CORE DISPLAY DECISION ENGINE */}
       <AnimatePresence mode="wait">
-        
+
         {/* TAB 1: TOURS DISCOVER */}
         {activeSubTab === 'tours' && (
           <motion.div
@@ -578,15 +327,15 @@ export default function TourPortal({ currentUser, onUpdateUser, embedded = false
               <div className="flex flex-wrap gap-1.5">
                 {[
                   { value: 'all', label: 'Tất cả tour', count: tours.length },
-                  { 
-                    value: 'day', 
-                    label: 'Tour trong ngày', 
-                    count: tours.filter(t => !(t.tourType === 'multi' || (t.duration && t.duration.toLowerCase().includes('ngày') && !t.duration.toLowerCase().includes('nửa ngày') && !t.duration.toLowerCase().includes('1 ngày')))).length 
+                  {
+                    value: 'day',
+                    label: 'Tour trong ngày',
+                    count: tours.filter(t => !(t.tourType === 'multi' || (t.duration && t.duration.toLowerCase().includes('ngày') && !t.duration.toLowerCase().includes('nửa ngày') && !t.duration.toLowerCase().includes('1 ngày')))).length
                   },
-                  { 
-                    value: 'multi', 
-                    label: 'Tour dài ngày', 
-                    count: tours.filter(t => (t.tourType === 'multi' || (t.duration && t.duration.toLowerCase().includes('ngày') && !t.duration.toLowerCase().includes('nửa ngày') && !t.duration.toLowerCase().includes('1 ngày')))).length 
+                  {
+                    value: 'multi',
+                    label: 'Tour dài ngày',
+                    count: tours.filter(t => (t.tourType === 'multi' || (t.duration && t.duration.toLowerCase().includes('ngày') && !t.duration.toLowerCase().includes('nửa ngày') && !t.duration.toLowerCase().includes('1 ngày')))).length
                   }
                 ].map(type => (
                   <button
@@ -623,21 +372,21 @@ export default function TourPortal({ currentUser, onUpdateUser, embedded = false
                   const tourTypeColor = isMultiDay ? 'bg-indigo-50 text-indigo-700 border-indigo-100/50' : 'bg-teal-50 text-teal-700 border-teal-100/50';
 
                   return (
-                    <div 
+                    <div
                       key={tour.id}
                       id={`tour-card-${tour.id}`}
                       className="bg-white rounded-3xl border border-slate-100 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col group h-full"
                     >
                       {/* Photo Banner */}
                       <div className="relative h-56 overflow-hidden">
-                        <img 
-                          src={tour.image} 
+                        <img
+                          src={tour.image}
                           alt={tour.name}
                           referrerPolicy="no-referrer"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
-                        
+
                         {/* Badge region */}
                         <span className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm text-slate-800 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full shadow-sm flex items-center gap-1">
                           <MapPin className="w-3.5 h-3.5 text-blue-500" />
@@ -646,8 +395,8 @@ export default function TourPortal({ currentUser, onUpdateUser, embedded = false
 
                         {/* Left spots counter */}
                         <span className={`absolute top-4 right-4 text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm ${
-                          spotsLeft <= 3 
-                            ? 'bg-rose-500 text-white animate-pulse' 
+                          spotsLeft <= 3
+                            ? 'bg-rose-500 text-white animate-pulse'
                             : 'bg-slate-950/70 text-brand-gold backdrop-blur-sm'
                         }`}>
                           Còn {spotsLeft}/{tour.maxSlots} chỗ trống
@@ -698,7 +447,7 @@ export default function TourPortal({ currentUser, onUpdateUser, embedded = false
                             <span>Giới hạn: {tour.maxSlots} khách</span>
                           </div>
                           <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                            <div 
+                            <div
                               className={`h-full rounded-full ${percentBooked >= 80 ? 'bg-rose-500' : 'bg-emerald-500'}`}
                               style={{ width: `${percentBooked}%` }}
                             />
@@ -789,7 +538,7 @@ export default function TourPortal({ currentUser, onUpdateUser, embedded = false
                 const neededCount = group.requiredMembers - group.currentMembers;
 
                 return (
-                  <div 
+                  <div
                     key={group.id}
                     id={`group-card-${group.id}`}
                     className="bg-white rounded-3xl border border-slate-100 shadow-md p-6 flex flex-col justify-between space-y-5 hover:border-emerald-200 transition-colors"
@@ -821,7 +570,7 @@ export default function TourPortal({ currentUser, onUpdateUser, embedded = false
                         <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Thành viên tham gia:</span>
                         <div className="flex flex-wrap gap-1.5">
                           {group.members.map((member, idx) => (
-                            <span 
+                            <span
                               key={idx}
                               className="text-[10px] bg-slate-50 text-slate-600 px-2 py-1 rounded-lg border border-slate-100 flex items-center gap-1 font-medium"
                             >
@@ -843,7 +592,7 @@ export default function TourPortal({ currentUser, onUpdateUser, embedded = false
                       </div>
 
                       <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                        <div 
+                        <div
                           className="h-full bg-emerald-500 rounded-full transition-all duration-500"
                           style={{ width: `${progressPercent}%` }}
                         />
@@ -907,15 +656,15 @@ export default function TourPortal({ currentUser, onUpdateUser, embedded = false
             ) : (
               <div className="space-y-4">
                 {bookings.map((book) => (
-                  <div 
+                  <div
                     key={book.id}
                     className="bg-white rounded-3xl border border-slate-100 shadow-md p-5 flex flex-col lg:flex-row gap-5 items-stretch lg:items-center justify-between"
                   >
                     <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
                       <div className="w-24 h-20 rounded-2xl overflow-hidden shrink-0 bg-slate-100 mx-auto sm:mx-0">
-                        <img 
-                          src={book.image} 
-                          alt={book.tourName} 
+                        <img
+                          src={book.image}
+                          alt={book.tourName}
                           referrerPolicy="no-referrer"
                           className="w-full h-full object-cover"
                         />
@@ -923,8 +672,8 @@ export default function TourPortal({ currentUser, onUpdateUser, embedded = false
                       <div className="text-left space-y-1 flex-1">
                         <div className="flex items-center gap-1.5 flex-wrap justify-start">
                           <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${
-                            book.status === 'Cancelled' 
-                              ? 'bg-rose-50 text-rose-600 border border-rose-100' 
+                            book.status === 'Cancelled'
+                              ? 'bg-rose-50 text-rose-600 border border-rose-100'
                               : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
                           }`}>
                             {book.status === 'Cancelled' ? 'Đã hủy' : 'Đã xác nhận'}
@@ -984,9 +733,9 @@ export default function TourPortal({ currentUser, onUpdateUser, embedded = false
       <AnimatePresence>
         {selectedTour && modalType && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            
+
             {/* Backdrop */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -1031,8 +780,8 @@ export default function TourPortal({ currentUser, onUpdateUser, embedded = false
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">Họ tên khách hàng</label>
-                        <input 
-                          type="text" 
+                        <input
+                          type="text"
                           value={guestName}
                           onChange={(e) => setGuestName(e.target.value)}
                           className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold focus:outline-none focus:border-blue-500 transition-all"
@@ -1041,8 +790,8 @@ export default function TourPortal({ currentUser, onUpdateUser, embedded = false
                       </div>
                       <div>
                         <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">Số điện thoại liên hệ</label>
-                        <input 
-                          type="tel" 
+                        <input
+                          type="tel"
                           value={guestPhone}
                           onChange={(e) => setGuestPhone(e.target.value)}
                           className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold focus:outline-none focus:border-blue-500 transition-all"
@@ -1054,8 +803,8 @@ export default function TourPortal({ currentUser, onUpdateUser, embedded = false
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">Ngày tham quan</label>
-                        <input 
-                          type="date" 
+                        <input
+                          type="date"
                           value={bookingDate}
                           onChange={(e) => setBookingDate(e.target.value)}
                           min="2026-06-30"
@@ -1064,8 +813,8 @@ export default function TourPortal({ currentUser, onUpdateUser, embedded = false
                       </div>
                       <div>
                         <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">Địa chỉ email</label>
-                        <input 
-                          type="email" 
+                        <input
+                          type="email"
                           value={guestEmail}
                           onChange={(e) => setGuestEmail(e.target.value)}
                           className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold focus:outline-none focus:border-blue-500 transition-all"
@@ -1081,7 +830,7 @@ export default function TourPortal({ currentUser, onUpdateUser, embedded = false
                         <span className="block text-[10px] text-slate-400">Giá {formatVND(selectedTour.pricePerSlot)}/vé</span>
                       </div>
                       <div className="flex items-center justify-start sm:justify-end gap-3.5">
-                        <button 
+                        <button
                           type="button"
                           onClick={() => setBookingSlots(prev => Math.max(1, prev - 1))}
                           className="w-8 h-8 rounded-full border border-slate-200 bg-white flex items-center justify-center text-slate-600 hover:bg-slate-50 active:scale-95 transition-all"
@@ -1089,7 +838,7 @@ export default function TourPortal({ currentUser, onUpdateUser, embedded = false
                           <Minus className="w-4 h-4" />
                         </button>
                         <span className="w-4 text-center font-bold text-slate-800">{bookingSlots}</span>
-                        <button 
+                        <button
                           type="button"
                           onClick={() => setBookingSlots(prev => Math.min(selectedTour.maxSlots - selectedTour.bookedSlots, prev + 1))}
                           className="w-8 h-8 rounded-full border border-slate-200 bg-white flex items-center justify-center text-slate-600 hover:bg-slate-50 active:scale-95 transition-all"
@@ -1105,8 +854,8 @@ export default function TourPortal({ currentUser, onUpdateUser, embedded = false
                         <span className="text-xs font-bold uppercase tracking-wider block">Cấu hình mục tiêu nhóm ghép:</span>
                         <div className="flex items-center justify-between text-xs">
                           <span>Số lượng người tối thiểu cần ghép để giảm giá:</span>
-                          <select 
-                            value={targetGroupSlots} 
+                          <select
+                            value={targetGroupSlots}
                             onChange={(e) => setTargetGroupSlots(Number(e.target.value))}
                             className="bg-white border border-emerald-200 rounded-lg p-1 text-xs font-bold focus:outline-none text-slate-800"
                           >
@@ -1128,7 +877,7 @@ export default function TourPortal({ currentUser, onUpdateUser, embedded = false
                   <div className="space-y-2">
                     <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Chọn phương thức thanh toán giữ vé</span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div 
+                      <div
                         onClick={() => setPaymentMethod('sepay')}
                         className={`p-3.5 rounded-2xl border-2 text-left cursor-pointer transition-all ${
                           paymentMethod === 'sepay' ? 'border-blue-600 bg-blue-50/20' : 'border-slate-100 bg-slate-50/50 hover:bg-slate-50'
@@ -1137,7 +886,7 @@ export default function TourPortal({ currentUser, onUpdateUser, embedded = false
                         <span className="block text-xs font-bold text-slate-800">Cổng Tự Động SePay</span>
                         <span className="block text-[10px] text-slate-400 mt-1 leading-normal">Chuyển khoản QR ngân hàng thông minh tích hợp kiểm tra tức thì</span>
                       </div>
-                      <div 
+                      <div
                         onClick={() => setPaymentMethod('stripe')}
                         className={`p-3.5 rounded-2xl border-2 text-left cursor-pointer transition-all ${
                           paymentMethod === 'stripe' ? 'border-blue-600 bg-blue-50/20' : 'border-slate-100 bg-slate-50/50 hover:bg-slate-50'
@@ -1207,8 +956,8 @@ export default function TourPortal({ currentUser, onUpdateUser, embedded = false
                       {/* Fake simulated QR */}
                       <div className="w-36 h-36 bg-white border border-slate-200 rounded-2xl mx-auto flex flex-col justify-center items-center p-2 relative">
                         <div className="absolute inset-0 bg-slate-50/20 backdrop-blur-2xs rounded-2xl flex items-center justify-center p-1">
-                          <img 
-                            src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://grandstay.sepay.vn" 
+                          <img
+                            src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://grandstay.sepay.vn"
                             alt="QR thanh toán MB Bank"
                             referrerPolicy="no-referrer"
                             className="w-full h-full object-contain"
@@ -1223,12 +972,12 @@ export default function TourPortal({ currentUser, onUpdateUser, embedded = false
                     // Stripe visual simulator
                     <div className="bg-slate-50 border border-slate-100 p-5 rounded-3xl space-y-3.5 max-w-sm mx-auto text-left">
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Thông tin thẻ Visa/Mastercard</span>
-                      
+
                       <div className="space-y-2 text-xs">
                         <div>
                           <label className="block text-[10px] font-bold text-slate-400 uppercase mb-0.5">Số thẻ bảo mật</label>
-                          <input 
-                            type="text" 
+                          <input
+                            type="text"
                             defaultValue="4242 •••• •••• 4242"
                             disabled
                             className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-2 font-mono text-xs font-bold text-slate-700"
@@ -1237,20 +986,20 @@ export default function TourPortal({ currentUser, onUpdateUser, embedded = false
                         <div className="grid grid-cols-2 gap-2">
                           <div>
                             <label className="block text-[10px] font-bold text-slate-400 uppercase mb-0.5">Hạn dùng (MM/YY)</label>
-                            <input 
-                              type="text" 
-                              defaultValue="12/28" 
-                              disabled 
-                              className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-2 font-mono text-xs font-bold text-slate-700" 
+                            <input
+                              type="text"
+                              defaultValue="12/28"
+                              disabled
+                              className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-2 font-mono text-xs font-bold text-slate-700"
                             />
                           </div>
                           <div>
                             <label className="block text-[10px] font-bold text-slate-400 uppercase mb-0.5">Mã CVC</label>
-                            <input 
-                              type="text" 
-                              defaultValue="***" 
-                              disabled 
-                              className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-2 font-mono text-xs font-bold text-slate-700" 
+                            <input
+                              type="text"
+                              defaultValue="***"
+                              disabled
+                              className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-2 font-mono text-xs font-bold text-slate-700"
                             />
                           </div>
                         </div>
@@ -1291,7 +1040,7 @@ export default function TourPortal({ currentUser, onUpdateUser, embedded = false
                   <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-3xl">
                     ✓
                   </div>
-                  
+
                   <div className="space-y-1">
                     <h4 className="text-xl font-extrabold text-slate-900 tracking-tight">Giao Dịch Thành Công!</h4>
                     <p className="text-slate-400 text-xs">Mã giao dịch xác minh: {generatedCode}</p>
@@ -1499,7 +1248,7 @@ export default function TourPortal({ currentUser, onUpdateUser, embedded = false
                             <div className="w-7.5 h-7.5 rounded-full bg-indigo-50 border-2 border-indigo-500 text-indigo-600 flex items-center justify-center font-black text-[10px] font-mono shrink-0 z-10 shadow-sm">
                               {index + 1}
                             </div>
-                            
+
                             {/* Itinerary content block */}
                             <div className="space-y-2 flex-1 pt-0.5 text-left">
                               <div className="flex flex-wrap items-center gap-2">

@@ -12,7 +12,6 @@ interface HomePageProps {
   searchQuery: SearchQuery;
   onSearch: (query: SearchQuery) => void;
   onBook: (branch: Branch) => void;
-  branches: Branch[];
   apartments: Apartment[];
   currentUser: UserSim;
   onUpdateUser: (user: UserSim) => void;
@@ -23,7 +22,6 @@ export default function HomePage({
   searchQuery,
   onSearch,
   onBook,
-  branches,
   apartments,
   currentUser,
   onUpdateUser,
@@ -45,7 +43,7 @@ export default function HomePage({
       ) : searchQuery.activeTab === 'experience' ? (
         <TourPortal currentUser={currentUser} onUpdateUser={onUpdateUser} initialLocation={searchQuery.location} />
       ) : (
-        <RoomList searchQuery={searchQuery} onBook={onBook} branches={branches} />
+        <RoomList searchQuery={searchQuery} onBook={onBook} />
       )}
 
       {/* Promo and Spotlight Section */}

@@ -1,19 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  User, 
-  Sparkles, 
-  Calendar, 
-  Ticket, 
-  FileText, 
-  CheckCircle2, 
-  QrCode, 
-  Award, 
-  Gift, 
-  Copy, 
-  Check, 
-  MapPin, 
-  CreditCard, 
+import {
+  User,
+  Sparkles,
+  Calendar,
+  Ticket,
+  FileText,
+  CheckCircle2,
+  QrCode,
+  Award,
+  Gift,
+  Copy,
+  Check,
+  MapPin,
+  CreditCard,
   ExternalLink,
   Phone,
   Mail,
@@ -35,13 +35,14 @@ import GuestReview from './GuestReview';
 import { getTierInfo } from '../utils/loyalty';
 import OnlineCheckIn, { CheckInDocumentData } from './OnlineCheckIn';
 import TourPortal from './TourPortal';
+import { useBookings, useCancelBooking, useModifyBooking } from '../hooks/useBookings';
+import { useRefundPolicy } from '../hooks/useContent';
+import { useBranches } from '../hooks/useBranches';
 
 interface CustomerPortalProps {
-  bookedList: Branch[];
   onBackToHome: () => void;
   currentUser: UserSim;
   onUpdateUser: (updatedUser: UserSim) => void;
-  onUpdateBookedList?: (updatedList: Branch[]) => void;
 }
 
 interface Contract {
@@ -91,35 +92,76 @@ export const DEFAULT_REFUND_POLICY_SETTINGS = {
   ]
 };
 
-export default function CustomerPortal({ bookedList, onBackToHome, currentUser, onUpdateUser, onUpdateBookedList }: CustomerPortalProps) {
-  const [refundPolicySettings, setRefundPolicySettings] = useState(() => {
-    const saved = localStorage.getItem('gs_refund_policies');
-    if (saved) {
+// Default image for branches without an image
+const DEFAULT_BRANCH_IMAGE = 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=600&q=80';
+
+export default function CustomerPortal({ onBackToHome, currentUser, onUpdateUser }: CustomerPortalProps) {
+  // ── React Query: Bookings ──
+  const { data: bookingsResponse, isLoading: isLoadingBookings } = useBookings({});
+  const { data: branchesResponse } = useBranches({});
+  const cancelBookingMutation = useCancelBooking();
+  const modifyBookingMutation = useModifyBooking();
+
+  // ── React Query: Refund Policy ──
+  const { data: apiRefundPolicy } = useRefundPolicy();
+
+  // Map API bookings + branch data to the Branch format the UI expects
+  const bookedList: Branch[] = useMemo(() => {
+    if (!bookingsResponse?.data) return [];
+    const branches = branchesResponse?.data || [];
+    const branchMap = new Map(branches.map(b => [b.id, b]));
+
+    return bookingsResponse.data.map((booking) => {
+      const branch = branchMap.get(booking.branchId);
+      // Calculate number of nights for pricePerNight approximation
+      let nights = 1;
       try {
-        return JSON.parse(saved);
-      } catch (e) {
-        // use default
-      }
+        const ci = new Date(booking.checkIn);
+        const co = new Date(booking.checkOut);
+        nights = Math.max(1, Math.ceil((co.getTime() - ci.getTime()) / (1000 * 60 * 60 * 24)));
+      } catch { /* default 1 */ }
+
+      return {
+        // Branch display fields (enriched from branches API or defaults)
+        id: booking.branchId,
+        name: branch?.name || booking.apartmentId || 'Phòng đã đặt',
+        region: branch?.city || 'Chưa xác định',
+        brand: 'GrandStay',
+        description: branch?.description || '',
+        image: branch?.imageUrl || DEFAULT_BRANCH_IMAGE,
+        rating: 5.0,
+        reviews: 0,
+        pricePerNight: Math.round(booking.totalPrice / nights),
+        amenities: [],
+        popularFor: '',
+        // Booking-specific fields
+        paymentMethod: 'sepay' as const,
+        checkIn: booking.checkIn,
+        checkOut: booking.checkOut,
+        totalPrice: booking.totalPrice,
+        guestName: booking.customerName,
+        guestPhone: booking.customerPhone,
+        guestEmail: booking.customerEmail,
+        rooms: 1,
+        adults: booking.guests,
+        children: 0,
+        bookingCode: booking.id,
+        bookingStatus: booking.status as Branch['bookingStatus'],
+      };
+    });
+  }, [bookingsResponse, branchesResponse]);
+
+  // Refund policy: use API data where available, fall back to defaults
+  const refundPolicySettings = useMemo(() => {
+    if (apiRefundPolicy) {
+      return {
+        ...DEFAULT_REFUND_POLICY_SETTINGS,
+        title: apiRefundPolicy.title || DEFAULT_REFUND_POLICY_SETTINGS.title,
+        subtitle: apiRefundPolicy.content || DEFAULT_REFUND_POLICY_SETTINGS.subtitle,
+      };
     }
     return DEFAULT_REFUND_POLICY_SETTINGS;
-  });
-
-  useEffect(() => {
-    const handleUpdate = () => {
-      const saved = localStorage.getItem('gs_refund_policies');
-      if (saved) {
-        try {
-          setRefundPolicySettings(JSON.parse(saved));
-        } catch (e) {
-          // ignore
-        }
-      }
-    };
-    window.addEventListener('refund_policies_updated', handleUpdate);
-    return () => {
-      window.removeEventListener('refund_policies_updated', handleUpdate);
-    };
-  }, []);
+  }, [apiRefundPolicy]);
 
   const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'vouchers' | 'contracts' | 'policies' | 'tours'>('overview');
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
@@ -217,11 +259,11 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
       const checkIn = new Date(checkInDateStr);
       const diffTime = checkIn.getTime() - today.getTime();
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
+
       const p100 = refundPolicySettings.policies[0]?.percentage ?? 100;
       const p50 = refundPolicySettings.policies[1]?.percentage ?? 50;
       const p0 = refundPolicySettings.policies[2]?.percentage ?? 0;
-      
+
       if (diffDays > 3) {
         return {
           refundPercentage: p100,
@@ -263,81 +305,55 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
     }
   };
 
-  // Submit cancellation/modification request
+  // Submit cancellation/modification request via API mutations
   const handleSubmitRequest = () => {
     if (selectedBookingForPolicy === null || !policyModalType) return;
     const booking = bookedList[selectedBookingForPolicy];
-    const refundCalculated = calculateRefund(booking.checkIn || '2026-07-05', booking.totalPrice || 0);
-    
-    // Build updated bookedList
-    const updatedBookedList = bookedList.map((item, idx) => {
-      if (idx === selectedBookingForPolicy) {
-        return {
-          ...item,
-          bookingStatus: policyModalType === 'cancel' ? 'RefundPending' : ('ModifyPending' as any),
-          refundRequestReason: refundReason,
-          refundRequestType: policyModalType,
-          refundRequestedAt: '2026-06-30T18:56:20-07:00',
-          refundRequestAmount: policyModalType === 'cancel' ? refundCalculated.refundAmount : 0,
-          refundBankName: policyModalType === 'cancel' ? refundBankName : undefined,
-          refundBankAccount: policyModalType === 'cancel' ? refundBankAccount : undefined,
-          refundBankOwner: policyModalType === 'cancel' ? refundBankOwner : undefined,
-          refundNewCheckIn: policyModalType === 'modify' ? newCheckIn : undefined,
-          refundNewCheckOut: policyModalType === 'modify' ? newCheckOut : undefined
-        };
-      }
-      return item;
-    });
-    
-    // Update state & localStorage
-    if (onUpdateBookedList) {
-      onUpdateBookedList(updatedBookedList);
+    const bookingId = booking.bookingCode || booking.id;
+
+    if (policyModalType === 'cancel') {
+      const refundCalculated = calculateRefund(booking.checkIn || '2026-07-05', booking.totalPrice || 0);
+
+      cancelBookingMutation.mutate(bookingId, {
+        onSuccess: () => {
+          setPolicySuccessMsg(
+            `Gửi yêu cầu huỷ phòng và hoàn trả thành công! Hệ thống ghi nhận mức hoàn trả dự kiến ${formatVND(refundCalculated.refundAmount)} (${refundCalculated.refundPercentage}%). Bộ phận tài vụ sẽ hoàn tất xử lý trong vòng 3 ngày làm việc.`
+          );
+          setRefundReason('');
+          setRefundBankAccount('');
+          setRefundBankOwner('');
+        },
+        onError: (error) => {
+          console.error('Cancel booking failed:', error);
+          setPolicySuccessMsg('Đã xảy ra lỗi khi gửi yêu cầu huỷ. Vui lòng thử lại sau.');
+        }
+      });
+    } else {
+      modifyBookingMutation.mutate(
+        {
+          id: bookingId,
+          data: {
+            checkIn: newCheckIn,
+            checkOut: newCheckOut,
+            notes: refundReason,
+          },
+        },
+        {
+          onSuccess: () => {
+            setPolicySuccessMsg(
+              `Gửi yêu cầu đổi lịch trình lưu trú thành công! Bộ phận lễ tân sẽ đối chiếu phòng trống từ ngày ${newCheckIn} đến ${newCheckOut} và liên hệ phản hồi cho quý khách trong vòng 15 phút.`
+            );
+            setRefundReason('');
+            setNewCheckIn('');
+            setNewCheckOut('');
+          },
+          onError: (error) => {
+            console.error('Modify booking failed:', error);
+            setPolicySuccessMsg('Đã xảy ra lỗi khi gửi yêu cầu đổi lịch. Vui lòng thử lại sau.');
+          },
+        }
+      );
     }
-    localStorage.setItem('gs_op_booked_list', JSON.stringify(updatedBookedList));
-    
-    // Sync to gs_op_reservations so Admin Portal can see it!
-    try {
-      const savedRes = localStorage.getItem('gs_op_reservations');
-      if (savedRes) {
-        const currentRes = JSON.parse(savedRes);
-        const updatedRes = currentRes.map((r: any) => {
-          if (r.id === booking.bookingCode) {
-            return {
-              ...r,
-              status: policyModalType === 'cancel' ? 'RefundPending' : 'ModifyPending',
-              refundRequest: {
-                reason: refundReason,
-                requestType: policyModalType,
-                requestedAt: '2026-06-30T18:56:20-07:00',
-                refundAmount: policyModalType === 'cancel' ? refundCalculated.refundAmount : 0,
-                bankName: refundBankName,
-                bankAccount: refundBankAccount,
-                bankOwner: refundBankOwner,
-                newCheckIn: policyModalType === 'modify' ? newCheckIn : undefined,
-                newCheckOut: policyModalType === 'modify' ? newCheckOut : undefined
-              }
-            };
-          }
-          return r;
-        });
-        localStorage.setItem('gs_op_reservations', JSON.stringify(updatedRes));
-      }
-    } catch (e) {
-      console.error(e);
-    }
-    
-    setPolicySuccessMsg(
-      policyModalType === 'cancel' 
-        ? `Gửi yêu cầu huỷ phòng và hoàn trả thành công! Hệ thống ghi nhận mức hoàn trả dự kiến ${formatVND(refundCalculated.refundAmount)} (${refundCalculated.refundPercentage}%). Bộ phận tài vụ sẽ hoàn tất xử lý trong vòng 3 ngày làm việc.`
-        : `Gửi yêu cầu đổi lịch trình lưu trú thành công! Bộ phận lễ tân sẽ đối chiếu phòng trống từ ngày ${newCheckIn} đến ${newCheckOut} và liên hệ phản hồi cho quý khách trong vòng 15 phút.`
-    );
-    
-    // Clear forms
-    setRefundReason('');
-    setRefundBankAccount('');
-    setRefundBankOwner('');
-    setNewCheckIn('');
-    setNewCheckOut('');
   };
 
   // Sync with currentUser prop changes (e.g., when switched from admin simulator)
@@ -533,46 +549,46 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
 
         {/* Workspace: Sidebar + Tab Content */}
         <div className="flex-grow flex flex-col md:flex-row min-h-0">
-          
+
           {/* Sidebar */}
           <div className="w-full md:w-64 bg-slate-50 border-r border-slate-100 p-5 flex flex-col justify-between shrink-0 space-y-6">
-            
+
             {/* Short User Info & Edit */}
             <div className="space-y-4">
               <div className="bg-white rounded-2xl p-4 border border-slate-200/50 shadow-sm relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-16 h-16 bg-brand-gold/5 rounded-full blur-xl pointer-events-none" />
-                
+
                 {isEditingProfile ? (
                   <div className="space-y-3">
                     <div className="space-y-1">
                       <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Họ và Tên</label>
-                      <input 
-                        type="text" 
-                        value={profileName} 
-                        onChange={(e) => setProfileName(e.target.value)} 
-                        className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-blue-500" 
+                      <input
+                        type="text"
+                        value={profileName}
+                        onChange={(e) => setProfileName(e.target.value)}
+                        className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-blue-500"
                       />
                     </div>
                     <div className="space-y-1">
                       <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Số điện thoại</label>
-                      <input 
-                        type="text" 
-                        value={profilePhone} 
-                        onChange={(e) => setProfilePhone(e.target.value)} 
-                        className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-blue-500" 
+                      <input
+                        type="text"
+                        value={profilePhone}
+                        onChange={(e) => setProfilePhone(e.target.value)}
+                        className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-blue-500"
                       />
                     </div>
                     <div className="space-y-1">
                       <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Hòm thư email</label>
-                      <input 
-                        type="email" 
-                        value={profileEmail} 
-                        onChange={(e) => setProfileEmail(e.target.value)} 
-                        className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-blue-500" 
+                      <input
+                        type="email"
+                        value={profileEmail}
+                        onChange={(e) => setProfileEmail(e.target.value)}
+                        className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-blue-500"
                       />
                     </div>
-                    <button 
-                      onClick={handleSaveProfile} 
+                    <button
+                      onClick={handleSaveProfile}
                       className="w-full py-1.5 bg-slate-900 text-white rounded-lg text-xs font-bold hover:bg-slate-800 transition-colors"
                     >
                       Lưu thông tin
@@ -601,8 +617,8 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
                         <span className="truncate">{profileEmail}</span>
                       </div>
                     </div>
-                    <button 
-                      onClick={() => setIsEditingProfile(true)} 
+                    <button
+                      onClick={() => setIsEditingProfile(true)}
                       className="w-full py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-all"
                     >
                       Cập nhật thông tin
@@ -701,7 +717,7 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
 
           {/* Main Content Area */}
           <div className="flex-grow p-6 sm:p-8 overflow-y-auto min-w-0 bg-white">
-            
+
             {/* TAB 1: OVERVIEW */}
             {activeTab === 'overview' && (
               <motion.div
@@ -743,7 +759,7 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
                     </div>
                     {/* Progress Bar */}
                     <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-                      <div 
+                      <div
                         className="h-full bg-gradient-to-r from-amber-400 via-brand-gold to-yellow-300 rounded-full"
                         style={{ width: `${Math.min(tierInfo.progress, 100)}%` }}
                       />
@@ -781,7 +797,7 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
 
                 {/* Quick stats / Features */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                  
+
                   {/* Stat 1 */}
                   <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 flex items-center gap-4">
                     <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
@@ -846,26 +862,30 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
               >
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-bold text-slate-900">Thông tin đặt phòng nghỉ dưỡng của bạn</h3>
-                  <span className="text-xs text-slate-400 font-mono">ĐỒNG BỘ TRỰC TUYẾN</span>
+                  {isLoadingBookings ? (
+                    <span className="text-xs text-amber-500 font-mono animate-pulse">ĐANG TẢI...</span>
+                  ) : (
+                    <span className="text-xs text-slate-400 font-mono">ĐỒNG BỘ TRỰC TUYẾN</span>
+                  )}
                 </div>
 
-                {/* Session Bookings List (Dynamic) */}
+                {/* Session Bookings List (Dynamic from API) */}
                 {bookedList.length > 0 && (
                   <div className="space-y-4">
                     <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100 inline-block">
                       ĐẶT PHÒNG HIỆN TẠI (Đang chờ nhận phòng)
                     </span>
-                    
+
                     {bookedList.map((book, idx) => (
-                      <div 
-                        key={idx} 
+                      <div
+                        key={book.bookingCode || idx}
                         className="bg-white border-2 border-blue-100 rounded-3xl p-5 flex flex-col md:flex-row items-center gap-5 shadow-md shadow-blue-500/5 relative overflow-hidden"
                       >
                         <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-500" />
-                        <img 
-                          src={book.image} 
-                          alt={book.name} 
-                          className="w-full md:w-32 h-24 object-cover rounded-2xl shrink-0" 
+                        <img
+                          src={book.image}
+                          alt={book.name}
+                          className="w-full md:w-32 h-24 object-cover rounded-2xl shrink-0"
                         />
                         <div className="flex-grow text-left space-y-1.5 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
@@ -875,7 +895,7 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
                             <span className="text-[10px] bg-amber-50 text-amber-600 font-bold px-1.5 py-0.5 rounded border border-amber-100">
                               {book.paymentMethod === 'stripe' ? `Thanh toán Stripe (•••• ${book.cardNumberLast4 || '4242'})` : 'Thanh toán SePay'}
                             </span>
-                            
+
                             {/* Policy Status badges */}
                             {book.bookingStatus === 'RefundPending' && (
                               <span className="text-[10px] bg-amber-100 text-amber-800 font-bold px-1.5 py-0.5 rounded border border-amber-200">
@@ -1031,6 +1051,15 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
                   </div>
                 )}
 
+                {/* Loading state for bookings */}
+                {isLoadingBookings && bookedList.length === 0 && (
+                  <div className="text-center py-12 bg-slate-50 rounded-3xl border border-dashed border-slate-200 space-y-3">
+                    <RefreshCw className="w-8 h-8 text-slate-300 mx-auto animate-spin" />
+                    <h4 className="font-bold text-slate-500 text-sm">Đang tải danh sách đặt phòng...</h4>
+                    <p className="text-slate-400 text-xs">Vui lòng chờ trong giây lát</p>
+                  </div>
+                )}
+
                 {/* Historical Bookings */}
                 <div className="space-y-4">
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block text-left">
@@ -1038,16 +1067,16 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
                   </span>
 
                   {historicalBookings.map((book) => (
-                    <div 
-                      key={book.id} 
+                    <div
+                      key={book.id}
                       className="bg-slate-50 rounded-3xl p-5 border border-slate-100 flex flex-col md:flex-row items-center gap-5 hover:bg-white hover:border-slate-200 transition-all shadow-sm"
                     >
-                      <img 
-                        src={book.image} 
-                        alt={book.branchName} 
-                        className="w-full md:w-32 h-24 object-cover rounded-2xl shrink-0 filter brightness-95" 
+                      <img
+                        src={book.image}
+                        alt={book.branchName}
+                        className="w-full md:w-32 h-24 object-cover rounded-2xl shrink-0 filter brightness-95"
                       />
-                      
+
                       <div className="flex-grow text-left space-y-2 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-[9px] bg-slate-200 text-slate-600 font-bold px-1.5 py-0.5 rounded uppercase tracking-wider font-mono">
@@ -1060,9 +1089,9 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
                             <Check className="w-2.5 h-2.5" /> {book.status}
                           </span>
                         </div>
-                        
+
                         <h4 className="font-extrabold text-slate-900 text-sm sm:text-base truncate">{book.branchName}</h4>
-                        
+
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-500">
                           <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-slate-400" /> {book.region}</span>
                           <span className="font-semibold text-slate-600">{book.dates}</span>
@@ -1117,18 +1146,18 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
                   {vouchers.map((voucher) => {
                     const isCopied = copiedCode === voucher.code;
                     return (
-                      <div 
+                      <div
                         key={voucher.code}
                         className="bg-white rounded-3xl border border-slate-100 shadow-md flex overflow-hidden relative group hover:shadow-lg transition-all hover:border-slate-200"
                       >
                         {/* Cut-out ticket dots left/right */}
                         <div className="absolute top-1/2 -left-2 w-4 h-4 rounded-full bg-white border-r border-slate-200 -translate-y-1/2 z-10" />
                         <div className="absolute top-1/2 -right-2 w-4 h-4 rounded-full bg-white border-l border-slate-200 -translate-y-1/2 z-10" />
-                        
+
                         {/* Side color accent block */}
                         <div className={`w-24 bg-gradient-to-b ${voucher.color} shrink-0 p-4 flex flex-col justify-between items-center text-white relative`}>
                           <div className="absolute top-0 right-0 w-16 h-16 bg-white/5 rounded-full blur-xl pointer-events-none" />
-                          
+
                           <span className="text-[9px] font-black uppercase tracking-widest text-slate-100 font-mono text-center block">
                             {voucher.type}
                           </span>
@@ -1158,7 +1187,7 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
                             <div className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs font-mono font-bold text-slate-700">
                               {voucher.code}
                             </div>
-                            
+
                             <button
                               onClick={() => handleCopyCode(voucher.code)}
                               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${isCopied ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-slate-900 text-white hover:bg-slate-800 shadow-sm shadow-slate-900/10'}`}
@@ -1218,7 +1247,7 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
                 ) : (
                   <div className="space-y-4">
                     {allContracts.map((contract) => (
-                      <div 
+                      <div
                         key={contract.id}
                         className="bg-white border border-slate-100 rounded-3xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 shadow-sm hover:shadow-md transition-all hover:border-slate-200"
                       >
@@ -1251,7 +1280,7 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
                             <span className="text-[10px] text-slate-400 block font-mono">NGÀY KÝ</span>
                             <strong className="text-slate-700 text-xs font-bold">{contract.signedDate}</strong>
                           </div>
-                          
+
                           <button
                             onClick={() => setShowContractDetail(contract)}
                             className="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm shadow-slate-950/10 cursor-pointer"
@@ -1296,7 +1325,7 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
                 {/* Timeline visual card */}
                 <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 rounded-3xl p-6 text-white relative overflow-hidden shadow-xl">
                   <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-                  
+
                   <h4 className="font-extrabold text-base text-amber-400 mb-6 flex items-center gap-2">
                     <Info className="w-5 h-5" /> Biểu Đồ Thời Gian & Tỷ Lệ Hoàn Tiền Tiêu Chuẩn
                   </h4>
@@ -1351,8 +1380,8 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
                     <div className="space-y-3">
                       <div>
                         <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">Tổng tiền phòng đặt (VND)</label>
-                        <input 
-                          type="number" 
+                        <input
+                          type="number"
                           defaultValue={5000000}
                           id="sim_total_price"
                           className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono font-bold focus:outline-none focus:border-indigo-500 transition-all"
@@ -1361,7 +1390,7 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
                       </div>
                       <div>
                         <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">Số ngày còn lại trước check-in</label>
-                        <select 
+                        <select
                           id="sim_days_left"
                           className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold focus:outline-none focus:border-indigo-500 transition-all"
                         >
@@ -1459,7 +1488,7 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
                     Theo dõi lịch trình hoạt động dã ngoại, lặn biển, đi du thuyền 5 sao và các hội nhóm ghép xe, ghép tour của bạn.
                   </p>
                 </div>
-                
+
                 <TourPortal currentUser={currentUser} onUpdateUser={onUpdateUser} embedded={true} />
               </motion.div>
             )}
@@ -1474,14 +1503,14 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
       <AnimatePresence>
         {showQrModal && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowQrModal(null)}
               className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm cursor-pointer"
             />
-            
+
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -1511,7 +1540,7 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
                 <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-slate-400 m-2" />
                 <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-slate-400 m-2" />
                 <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-slate-400 m-2" />
-                
+
                 {/* SVG representing a beautiful, complex QR Code with GrandStay logo nested */}
                 <svg className="w-40 h-40 text-slate-800" viewBox="0 0 100 100" fill="currentColor">
                   {/* Outer corner squares */}
@@ -1532,11 +1561,11 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
                   <rect x="45" y="5" width="8" height="8" />
                   <rect x="58" y="10" width="6" height="4" />
                   <rect x="40" y="20" width="4" height="8" />
-                  
+
                   <rect x="8" y="35" width="8" height="4" />
                   <rect x="5" y="45" width="6" height="8" />
                   <rect x="20" y="40" width="8" height="4" />
-                  
+
                   <rect x="35" y="35" width="30" height="30" fill="#0f172a" rx="6" />
                   <rect x="38" y="38" width="24" height="24" fill="white" rx="4" />
                   <circle cx="50" cy="50" r="8" fill="#d97706" />
@@ -1579,7 +1608,7 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
       <AnimatePresence>
         {showContractDetail && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -1622,13 +1651,13 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
                 </div>
 
                 <div className="space-y-3">
-                  <p><strong className="text-slate-800 uppercase block border-b border-slate-200 pb-1 mb-1">BÊN CHO THUÊ (BÊN A):</strong> 
+                  <p><strong className="text-slate-800 uppercase block border-b border-slate-200 pb-1 mb-1">BÊN CHO THUÊ (BÊN A):</strong>
                     <strong>Công ty Cổ phần Đầu tư Phát triển Nghỉ dưỡng GrandStay Hospitality</strong><br />
                     Mã số doanh nghiệp: 0108892026 do Sở Kế hoạch và Đầu tư Hà Nội cấp.<br />
                     Đại diện pháp luật: Ông Trần Hoàng Sơn - Chức vụ: Chủ tịch HĐQT.
                   </p>
 
-                  <p><strong className="text-slate-800 uppercase block border-b border-slate-200 pb-1 mb-1">BÊN THUÊ (BÊN B):</strong> 
+                  <p><strong className="text-slate-800 uppercase block border-b border-slate-200 pb-1 mb-1">BÊN THUÊ (BÊN B):</strong>
                     <strong>Khách hàng đại diện: {showContractDetail.tenantName}</strong><br />
                     Số điện thoại liên hệ: {showContractDetail.tenantPhone} <br />
                     Địa chỉ thư điện tử đăng ký chữ ký số: {showContractDetail.tenantEmail}
@@ -1705,7 +1734,7 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
       <AnimatePresence>
         {activeReviewBranch && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -1739,9 +1768,9 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
 
               {/* GuestReview Component with custom scrolling inside modal */}
               <div className="flex-grow my-4 overflow-y-auto no-scrollbar">
-                <GuestReview 
-                  targetId={activeReviewBranch.id} 
-                  targetName={activeReviewBranch.name} 
+                <GuestReview
+                  targetId={activeReviewBranch.id}
+                  targetName={activeReviewBranch.name}
                   onReviewAdded={(newReview) => handleReviewAddedFromPortal(activeReviewBranch.id, newReview)}
                   currentUser={{ name: profileName }}
                 />
@@ -1777,7 +1806,7 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
       <AnimatePresence>
         {viewCheckedInDoc && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -1818,10 +1847,10 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
                 {/* Photo frame */}
                 <div className="w-24 h-32 bg-slate-900 border border-slate-800 rounded-xl relative overflow-hidden shrink-0 flex items-center justify-center group mx-auto sm:mx-0">
                   {viewCheckedInDoc.capturedPhoto ? (
-                    <img 
-                      src={viewCheckedInDoc.capturedPhoto} 
-                      alt="Avatar" 
-                      className="w-full h-full object-cover" 
+                    <img
+                      src={viewCheckedInDoc.capturedPhoto}
+                      alt="Avatar"
+                      className="w-full h-full object-cover"
                       referrerPolicy="no-referrer"
                     />
                   ) : (
@@ -1906,7 +1935,7 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
       <AnimatePresence>
         {selectedBookingForPolicy !== null && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -2010,7 +2039,7 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
                       <div className="space-y-3">
                         <div>
                           <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">Lý do huỷ phòng <span className="text-rose-500">*</span></label>
-                          <textarea 
+                          <textarea
                             rows={2}
                             value={refundReason}
                             onChange={(e) => setRefundReason(e.target.value)}
@@ -2037,8 +2066,8 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
                           </div>
                           <div>
                             <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">Chủ tài khoản ngân hàng <span className="text-rose-500">*</span></label>
-                            <input 
-                              type="text" 
+                            <input
+                              type="text"
                               value={refundBankOwner}
                               onChange={(e) => setRefundBankOwner(e.target.value)}
                               placeholder="NGUYEN VAN A"
@@ -2050,8 +2079,8 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
 
                         <div>
                           <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">Số tài khoản nhận tiền <span className="text-rose-500">*</span></label>
-                          <input 
-                            type="text" 
+                          <input
+                            type="text"
                             value={refundBankAccount}
                             onChange={(e) => setRefundBankAccount(e.target.value)}
                             placeholder="Nhập số tài khoản ngân hàng..."
@@ -2074,8 +2103,8 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
                         <div className="grid grid-cols-2 gap-3">
                           <div>
                             <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">Ngày Check-in mới <span className="text-rose-500">*</span></label>
-                            <input 
-                              type="date" 
+                            <input
+                              type="date"
                               value={newCheckIn}
                               onChange={(e) => setNewCheckIn(e.target.value)}
                               min="2026-06-30"
@@ -2085,8 +2114,8 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
                           </div>
                           <div>
                             <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">Ngày Check-out mới <span className="text-rose-500">*</span></label>
-                            <input 
-                              type="date" 
+                            <input
+                              type="date"
                               value={newCheckOut}
                               onChange={(e) => setNewCheckOut(e.target.value)}
                               min={newCheckIn || "2026-06-30"}
@@ -2098,7 +2127,7 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
 
                         <div>
                           <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">Lý do thay đổi <span className="text-rose-500">*</span></label>
-                          <textarea 
+                          <textarea
                             rows={3}
                             value={refundReason}
                             onChange={(e) => setRefundReason(e.target.value)}
@@ -2123,10 +2152,15 @@ export default function CustomerPortal({ bookedList, onBackToHome, currentUser, 
                     <button
                       type="button"
                       onClick={handleSubmitRequest}
-                      disabled={!refundReason || (policyModalType === 'cancel' ? (!refundBankAccount || !refundBankOwner) : (!newCheckIn || !newCheckOut))}
+                      disabled={
+                        !refundReason ||
+                        cancelBookingMutation.isPending ||
+                        modifyBookingMutation.isPending ||
+                        (policyModalType === 'cancel' ? (!refundBankAccount || !refundBankOwner) : (!newCheckIn || !newCheckOut))
+                      }
                       className={`flex-1 py-3 text-white rounded-xl text-xs font-bold transition-all cursor-pointer ${policyModalType === 'cancel' ? 'bg-rose-600 hover:bg-rose-700 disabled:bg-rose-300' : 'bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300'}`}
                     >
-                      Gửi yêu cầu đổi/huỷ
+                      {(cancelBookingMutation.isPending || modifyBookingMutation.isPending) ? 'Đang gửi...' : 'Gửi yêu cầu đổi/huỷ'}
                     </button>
                   </div>
                 </div>

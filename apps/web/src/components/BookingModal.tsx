@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  CheckCircle, 
-  X, 
-  Calendar, 
-  Users, 
-  CreditCard, 
-  MapPin, 
-  Phone, 
-  User, 
-  Check, 
+import {
+  CheckCircle,
+  X,
+  Calendar,
+  Users,
+  CreditCard,
+  MapPin,
+  Phone,
+  User,
+  Check,
   MessageSquare,
   Sparkles,
   Clock,
@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { Branch, SearchQuery, UserSim } from '../types';
 import { formatVND } from '../data';
+import { useCreateBooking } from '../hooks/useBookings';
 import StripePaymentForm from './StripePaymentForm';
 import GuestReview from './GuestReview';
 
@@ -44,6 +45,9 @@ export default function BookingModal({
   const [guestName, setGuestName] = useState('');
   const [guestPhone, setGuestPhone] = useState('');
   const [specialRequest, setSpecialRequest] = useState('');
+
+  // React Query mutation for creating bookings via API
+  const createBookingMutation = useCreateBooking();
 
   // SePay & Holding States
   const [bookingStep, setBookingStep] = useState<'form' | 'hold' | 'success'>('form');
@@ -115,28 +119,47 @@ export default function BookingModal({
   // Step 2: Confirm SePay payment callback simulation
   const handleSimulatePayment = () => {
     setPaymentStatus('verifying');
-    setTimeout(() => {
-      const bookedItem: Branch = {
-        ...selectedBranch,
-        paymentMethod: 'sepay' as const,
-        bookingCode: bookingCode,
+    createBookingMutation.mutate(
+      {
+        apartmentId: selectedBranch.id,
+        branchId: selectedBranch.id,
+        customerName: guestName,
+        customerEmail: currentUser.email || `${guestPhone}@grandstay.vn`,
+        customerPhone: guestPhone,
         checkIn: searchQuery.checkIn,
         checkOut: searchQuery.checkOut,
-        totalPrice: totalPrice,
-        guestName: guestName,
-        guestPhone: guestPhone,
-        guestEmail: currentUser.email || `${guestPhone}@grandstay.vn`,
-        rooms: searchQuery.rooms,
-        adults: searchQuery.adults,
-        children: searchQuery.children,
-        bookingStatus: 'Reserved',
-        description: specialRequest || 'Đặt phòng trực tuyến qua Customer Portal.'
-      };
-      
-      onBookingSuccess(bookedItem, totalPrice);
-      setPaymentStatus('completed');
-      setBookingStep('success');
-    }, 2000); // 2 seconds verifying spinner
+        guests: searchQuery.adults + searchQuery.children,
+        notes: specialRequest || 'Đặt phòng trực tuyến qua Customer Portal.',
+      },
+      {
+        onSuccess: () => {
+          const bookedItem: Branch = {
+            ...selectedBranch,
+            paymentMethod: 'sepay' as const,
+            bookingCode: bookingCode,
+            checkIn: searchQuery.checkIn,
+            checkOut: searchQuery.checkOut,
+            totalPrice: totalPrice,
+            guestName: guestName,
+            guestPhone: guestPhone,
+            guestEmail: currentUser.email || `${guestPhone}@grandstay.vn`,
+            rooms: searchQuery.rooms,
+            adults: searchQuery.adults,
+            children: searchQuery.children,
+            bookingStatus: 'Reserved',
+            description: specialRequest || 'Đặt phòng trực tuyến qua Customer Portal.'
+          };
+
+          onBookingSuccess(bookedItem, totalPrice);
+          setPaymentStatus('completed');
+          setBookingStep('success');
+        },
+        onError: () => {
+          setPaymentStatus('pending');
+          alert('Có lỗi xảy ra khi tạo đặt phòng. Vui lòng thử lại.');
+        },
+      }
+    );
   };
 
   // Step 2 (Stripe option): Confirm Stripe payment secure submit
@@ -146,29 +169,48 @@ export default function BookingModal({
     const last4 = cleanNumber.slice(-4);
     setCardNumberLast4(last4);
 
-    setTimeout(() => {
-      const bookedItem: Branch = {
-        ...selectedBranch,
-        paymentMethod: 'stripe' as const,
-        cardNumberLast4: last4,
-        bookingCode: bookingCode,
+    createBookingMutation.mutate(
+      {
+        apartmentId: selectedBranch.id,
+        branchId: selectedBranch.id,
+        customerName: guestName,
+        customerEmail: currentUser.email || `${guestPhone}@grandstay.vn`,
+        customerPhone: guestPhone,
         checkIn: searchQuery.checkIn,
         checkOut: searchQuery.checkOut,
-        totalPrice: totalPrice,
-        guestName: guestName,
-        guestPhone: guestPhone,
-        guestEmail: currentUser.email || `${guestPhone}@grandstay.vn`,
-        rooms: searchQuery.rooms,
-        adults: searchQuery.adults,
-        children: searchQuery.children,
-        bookingStatus: 'Reserved',
-        description: specialRequest || 'Đặt phòng trực tuyến qua Customer Portal.'
-      };
-      
-      onBookingSuccess(bookedItem, totalPrice);
-      setPaymentStatus('completed');
-      setBookingStep('success');
-    }, 2000); // 2 seconds processing spinner
+        guests: searchQuery.adults + searchQuery.children,
+        notes: specialRequest || 'Đặt phòng trực tuyến qua Customer Portal.',
+      },
+      {
+        onSuccess: () => {
+          const bookedItem: Branch = {
+            ...selectedBranch,
+            paymentMethod: 'stripe' as const,
+            cardNumberLast4: last4,
+            bookingCode: bookingCode,
+            checkIn: searchQuery.checkIn,
+            checkOut: searchQuery.checkOut,
+            totalPrice: totalPrice,
+            guestName: guestName,
+            guestPhone: guestPhone,
+            guestEmail: currentUser.email || `${guestPhone}@grandstay.vn`,
+            rooms: searchQuery.rooms,
+            adults: searchQuery.adults,
+            children: searchQuery.children,
+            bookingStatus: 'Reserved',
+            description: specialRequest || 'Đặt phòng trực tuyến qua Customer Portal.'
+          };
+
+          onBookingSuccess(bookedItem, totalPrice);
+          setPaymentStatus('completed');
+          setBookingStep('success');
+        },
+        onError: () => {
+          setPaymentStatus('pending');
+          alert('Có lỗi xảy ra khi tạo đặt phòng. Vui lòng thử lại.');
+        },
+      }
+    );
   };
 
   return (
@@ -321,7 +363,7 @@ export default function BookingModal({
                     {/* Left: QR Code Container */}
                     <div className="md:col-span-5 bg-slate-50 rounded-2xl border border-slate-100 p-5 flex flex-col items-center justify-center text-center space-y-3 shadow-sm">
                       <div className="bg-white p-3.5 rounded-2xl border border-slate-200/60 shadow-inner relative group">
-                        {paymentStatus === 'verifying' && (
+                        {(paymentStatus === 'verifying' || createBookingMutation.isPending) && (
                           <div className="absolute inset-0 bg-white/90 rounded-2xl flex flex-col items-center justify-center p-4 z-10 transition-all">
                             <Loader2 className="w-8 h-8 text-blue-600 animate-spin mb-2" />
                             <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wide">Đang kiểm tra...</span>
@@ -425,10 +467,10 @@ export default function BookingModal({
                       <button
                         type="button"
                         onClick={handleSimulatePayment}
-                        disabled={paymentStatus === 'verifying'}
+                        disabled={paymentStatus === 'verifying' || createBookingMutation.isPending}
                         className="flex-1 sm:flex-none bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-bold text-xs shadow-md active:scale-98 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                       >
-                        {paymentStatus === 'verifying' ? (
+                        {paymentStatus === 'verifying' || createBookingMutation.isPending ? (
                           <>
                             <Loader2 className="w-4 h-4 animate-spin text-slate-200" />
                             <span>SePay Đang Kiểm Tra...</span>
