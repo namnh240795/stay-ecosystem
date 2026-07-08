@@ -32,23 +32,23 @@ app.post("/api/admin/seed", async (c) => {
   const paymentsDb = c.env.PAYMENTS_DB;
 
   const createTables = [
-    `CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, email TEXT NOT NULL UNIQUE, name TEXT, phone TEXT, avatar_url TEXT, role TEXT NOT NULL DEFAULT 'guest', auth0_sub TEXT UNIQUE, partner_id TEXT, created_at TEXT NOT NULL DEFAULT '', updated_at TEXT NOT NULL DEFAULT '')`,
-    `CREATE TABLE IF NOT EXISTS properties (id TEXT PRIMARY KEY, partner_id TEXT NOT NULL, title TEXT NOT NULL, description TEXT NOT NULL, address TEXT NOT NULL, city TEXT NOT NULL, country TEXT NOT NULL, latitude REAL, longitude REAL, price_per_night REAL NOT NULL, max_guests INTEGER NOT NULL DEFAULT 2, bedrooms INTEGER NOT NULL DEFAULT 1, bathrooms INTEGER NOT NULL DEFAULT 1, property_type TEXT NOT NULL DEFAULT 'apartment', status TEXT NOT NULL DEFAULT 'active', images TEXT, rules TEXT, created_at TEXT NOT NULL DEFAULT '', updated_at TEXT NOT NULL DEFAULT '')`,
-    `CREATE TABLE IF NOT EXISTS bookings (id TEXT PRIMARY KEY, property_id TEXT NOT NULL, guest_id TEXT NOT NULL, partner_id TEXT NOT NULL, check_in TEXT NOT NULL, check_out TEXT NOT NULL, nights INTEGER NOT NULL, guests INTEGER NOT NULL DEFAULT 1, total_price REAL NOT NULL, status TEXT NOT NULL DEFAULT 'pending', special_requests TEXT, cancellation_reason TEXT, cancelled_at TEXT, confirmed_at TEXT, completed_at TEXT, created_at TEXT NOT NULL DEFAULT '', updated_at TEXT NOT NULL DEFAULT '')`,
-    `CREATE TABLE IF NOT EXISTS payments (id TEXT PRIMARY KEY, booking_id TEXT NOT NULL, partner_id TEXT NOT NULL, amount REAL NOT NULL, currency TEXT NOT NULL DEFAULT 'VND', status TEXT NOT NULL DEFAULT 'pending', payment_method TEXT, transaction_id TEXT, metadata TEXT, created_at TEXT NOT NULL DEFAULT '', updated_at TEXT NOT NULL DEFAULT '')`,
-    `CREATE TABLE IF NOT EXISTS reviews (id TEXT PRIMARY KEY, property_id TEXT NOT NULL, booking_id TEXT, guest_id TEXT NOT NULL, partner_id TEXT, rating INTEGER NOT NULL, comment TEXT, partner_reply TEXT, created_at TEXT NOT NULL DEFAULT '', updated_at TEXT NOT NULL DEFAULT '')`,
-    `CREATE TABLE IF NOT EXISTS longterm_apartments (id TEXT PRIMARY KEY, partner_id TEXT, name TEXT NOT NULL, location TEXT, type TEXT, area REAL, bedrooms INTEGER, bathrooms INTEGER, monthly_price REAL, description TEXT, amenities TEXT, available_from TEXT, has_virtual_tour INTEGER DEFAULT 0, virtual_tour_url TEXT, pet_friendly INTEGER DEFAULT 0, maintenance_status TEXT DEFAULT 'Clean', estimated_repair_cost REAL, maintenance_notes TEXT, status TEXT DEFAULT 'active', created_at TEXT, updated_at TEXT)`,
-    `CREATE TABLE IF NOT EXISTS longterm_contracts (id TEXT PRIMARY KEY, apt_id TEXT, apt_name TEXT, location TEXT, monthly_price REAL, lease_term INTEGER, tenant_name TEXT, tenant_phone TEXT, tenant_email TEXT, signed_date TEXT, status TEXT DEFAULT 'active', created_at TEXT, updated_at TEXT)`,
-    `CREATE TABLE IF NOT EXISTS staff (id TEXT PRIMARY KEY, user_id TEXT, role_id TEXT, status TEXT DEFAULT 'Active', joined_at TEXT, created_at TEXT, updated_at TEXT)`,
-    `CREATE TABLE IF NOT EXISTS roles (id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE, description TEXT, permissions TEXT, created_at TEXT, updated_at TEXT)`,
-    `CREATE TABLE IF NOT EXISTS leave_requests (id TEXT PRIMARY KEY, type TEXT, staff_name TEXT, role_name TEXT, reason TEXT, start_date TEXT, end_date TEXT, status TEXT DEFAULT 'Pending', response_notes TEXT, reviewed_at TEXT, created_at TEXT, updated_at TEXT)`,
-    `CREATE TABLE IF NOT EXISTS tours (id TEXT PRIMARY KEY, name TEXT NOT NULL, region TEXT, image TEXT, price_per_slot INTEGER, max_slots INTEGER, booked_slots INTEGER DEFAULT 0, duration TEXT, rating REAL, description TEXT, highlights TEXT, tour_type TEXT, itinerary TEXT, created_at TEXT, updated_at TEXT)`,
-    `CREATE TABLE IF NOT EXISTS tour_bookings (id TEXT PRIMARY KEY, tour_id TEXT, tour_name TEXT, guest_name TEXT, guest_phone TEXT, guest_email TEXT, slots INTEGER, total_price INTEGER, booking_code TEXT, status TEXT, is_group_tour INTEGER DEFAULT 0, group_id TEXT, date TEXT, payment_method TEXT, created_at TEXT, updated_at TEXT)`,
-    `CREATE TABLE IF NOT EXISTS group_tours (id TEXT PRIMARY KEY, tour_id TEXT, tour_name TEXT, creator_name TEXT, creator_email TEXT, current_members INTEGER DEFAULT 0, required_members INTEGER, status TEXT DEFAULT 'matching', members TEXT, date TEXT, created_at TEXT, updated_at TEXT)`,
-    `CREATE TABLE IF NOT EXISTS site_config (key TEXT PRIMARY KEY, value TEXT, updated_at TEXT)`,
-    `CREATE TABLE IF NOT EXISTS service_requests (id TEXT PRIMARY KEY, room_name TEXT, guest_name TEXT, type TEXT, detail TEXT, assigned_staff TEXT, status TEXT DEFAULT 'Pending', time TEXT, created_at TEXT, updated_at TEXT)`,
-    `CREATE TABLE IF NOT EXISTS complaints (id TEXT PRIMARY KEY, guest_name TEXT, room_name TEXT, title TEXT, detail TEXT, priority TEXT, status TEXT DEFAULT 'Open', notes TEXT, time TEXT, created_at TEXT, updated_at TEXT)`,
-    `CREATE TABLE IF NOT EXISTS daily_logs (id TEXT PRIMARY KEY, author TEXT, shift TEXT, content TEXT, issues TEXT, date TEXT, time TEXT, created_at TEXT, updated_at TEXT)`,
+    `CREATE TABLE IF NOT EXISTS users (users_id TEXT PRIMARY KEY, users_email TEXT NOT NULL UNIQUE, users_name TEXT, users_phone TEXT, users_avatar_url TEXT, users_role TEXT NOT NULL DEFAULT 'guest', users_auth0_sub TEXT UNIQUE, users_partner_id TEXT, users_created_at TEXT NOT NULL DEFAULT '', users_updated_at TEXT NOT NULL DEFAULT '')`,
+    `CREATE TABLE IF NOT EXISTS properties (properties_id TEXT PRIMARY KEY, properties_partner_id TEXT NOT NULL, properties_title TEXT NOT NULL, properties_description TEXT NOT NULL, properties_address TEXT NOT NULL, properties_city TEXT NOT NULL, properties_country TEXT NOT NULL, properties_latitude REAL, properties_longitude REAL, properties_price_per_night REAL NOT NULL, properties_max_guests INTEGER NOT NULL DEFAULT 2, properties_bedrooms INTEGER NOT NULL DEFAULT 1, properties_bathrooms INTEGER NOT NULL DEFAULT 1, properties_property_type TEXT NOT NULL DEFAULT 'apartment', properties_status TEXT NOT NULL DEFAULT 'active', properties_images TEXT, properties_rules TEXT, properties_created_at TEXT NOT NULL DEFAULT '', properties_updated_at TEXT NOT NULL DEFAULT '')`,
+    `CREATE TABLE IF NOT EXISTS bookings (bookings_id TEXT PRIMARY KEY, bookings_property_id TEXT NOT NULL, bookings_guest_id TEXT NOT NULL, bookings_partner_id TEXT NOT NULL, bookings_check_in TEXT NOT NULL, bookings_check_out TEXT NOT NULL, bookings_nights INTEGER NOT NULL, bookings_guests INTEGER NOT NULL DEFAULT 1, bookings_total_price REAL NOT NULL, bookings_status TEXT NOT NULL DEFAULT 'pending', bookings_special_requests TEXT, bookings_cancellation_reason TEXT, bookings_cancelled_at TEXT, bookings_confirmed_at TEXT, bookings_completed_at TEXT, bookings_created_at TEXT NOT NULL DEFAULT '', bookings_updated_at TEXT NOT NULL DEFAULT '')`,
+    `CREATE TABLE IF NOT EXISTS payments (payments_id TEXT PRIMARY KEY, payments_booking_id TEXT NOT NULL, payments_partner_id TEXT NOT NULL, payments_amount REAL NOT NULL, payments_currency TEXT NOT NULL DEFAULT 'VND', payments_status TEXT NOT NULL DEFAULT 'pending', payments_payment_method TEXT, payments_transaction_id TEXT, payments_metadata TEXT, payments_created_at TEXT NOT NULL DEFAULT '', payments_updated_at TEXT NOT NULL DEFAULT '')`,
+    `CREATE TABLE IF NOT EXISTS reviews (reviews_id TEXT PRIMARY KEY, reviews_property_id TEXT NOT NULL, reviews_booking_id TEXT, reviews_guest_id TEXT NOT NULL, reviews_partner_id TEXT, reviews_rating INTEGER NOT NULL, reviews_comment TEXT, reviews_partner_reply TEXT, reviews_created_at TEXT NOT NULL DEFAULT '', reviews_updated_at TEXT NOT NULL DEFAULT '')`,
+    `CREATE TABLE IF NOT EXISTS longterm_apartments (longterm_apartments_id TEXT PRIMARY KEY, longterm_apartments_partner_id TEXT, longterm_apartments_name TEXT NOT NULL, longterm_apartments_location TEXT, longterm_apartments_type TEXT, longterm_apartments_area REAL, longterm_apartments_bedrooms INTEGER, longterm_apartments_bathrooms INTEGER, longterm_apartments_monthly_price REAL, longterm_apartments_description TEXT, longterm_apartments_amenities TEXT, longterm_apartments_available_from TEXT, longterm_apartments_has_virtual_tour INTEGER DEFAULT 0, longterm_apartments_virtual_tour_url TEXT, longterm_apartments_pet_friendly INTEGER DEFAULT 0, longterm_apartments_maintenance_status TEXT DEFAULT 'Clean', longterm_apartments_estimated_repair_cost REAL, longterm_apartments_maintenance_notes TEXT, longterm_apartments_status TEXT DEFAULT 'active', longterm_apartments_created_at TEXT, longterm_apartments_updated_at TEXT)`,
+    `CREATE TABLE IF NOT EXISTS longterm_contracts (longterm_contracts_id TEXT PRIMARY KEY, longterm_contracts_apt_id TEXT, longterm_contracts_apt_name TEXT, longterm_contracts_location TEXT, longterm_contracts_monthly_price REAL, longterm_contracts_lease_term INTEGER, longterm_contracts_tenant_name TEXT, longterm_contracts_tenant_phone TEXT, longterm_contracts_tenant_email TEXT, longterm_contracts_signed_date TEXT, longterm_contracts_status TEXT DEFAULT 'active', longterm_contracts_created_at TEXT, longterm_contracts_updated_at TEXT)`,
+    `CREATE TABLE IF NOT EXISTS staff (staff_id TEXT PRIMARY KEY, staff_user_id TEXT, staff_role_id TEXT, staff_status TEXT DEFAULT 'Active', staff_joined_at TEXT, staff_created_at TEXT, staff_updated_at TEXT)`,
+    `CREATE TABLE IF NOT EXISTS roles (roles_id TEXT PRIMARY KEY, roles_name TEXT NOT NULL UNIQUE, roles_description TEXT, roles_permissions TEXT, roles_created_at TEXT, roles_updated_at TEXT)`,
+    `CREATE TABLE IF NOT EXISTS leave_requests (leave_requests_id TEXT PRIMARY KEY, leave_requests_type TEXT, leave_requests_staff_name TEXT, leave_requests_role_name TEXT, leave_requests_reason TEXT, leave_requests_start_date TEXT, leave_requests_end_date TEXT, leave_requests_status TEXT DEFAULT 'Pending', leave_requests_response_notes TEXT, leave_requests_reviewed_at TEXT, leave_requests_created_at TEXT, leave_requests_updated_at TEXT)`,
+    `CREATE TABLE IF NOT EXISTS tours (tours_id TEXT PRIMARY KEY, tours_name TEXT NOT NULL, tours_region TEXT, tours_image TEXT, tours_price_per_slot INTEGER, tours_max_slots INTEGER, tours_booked_slots INTEGER DEFAULT 0, tours_duration TEXT, tours_rating REAL, tours_description TEXT, tours_highlights TEXT, tours_tour_type TEXT, tours_itinerary TEXT, tours_created_at TEXT, tours_updated_at TEXT)`,
+    `CREATE TABLE IF NOT EXISTS tour_bookings (tour_bookings_id TEXT PRIMARY KEY, tour_bookings_tour_id TEXT, tour_bookings_tour_name TEXT, tour_bookings_guest_name TEXT, tour_bookings_guest_phone TEXT, tour_bookings_guest_email TEXT, tour_bookings_slots INTEGER, tour_bookings_total_price INTEGER, tour_bookings_booking_code TEXT, tour_bookings_status TEXT, tour_bookings_is_group_tour INTEGER DEFAULT 0, tour_bookings_group_id TEXT, tour_bookings_date TEXT, tour_bookings_payment_method TEXT, tour_bookings_created_at TEXT, tour_bookings_updated_at TEXT)`,
+    `CREATE TABLE IF NOT EXISTS group_tours (group_tours_id TEXT PRIMARY KEY, group_tours_tour_id TEXT, group_tours_tour_name TEXT, group_tours_creator_name TEXT, group_tours_creator_email TEXT, group_tours_current_members INTEGER DEFAULT 0, group_tours_required_members INTEGER, group_tours_status TEXT DEFAULT 'matching', group_tours_members TEXT, group_tours_date TEXT, group_tours_created_at TEXT, group_tours_updated_at TEXT)`,
+    `CREATE TABLE IF NOT EXISTS site_config (site_config_key TEXT PRIMARY KEY, site_config_value TEXT, site_config_updated_at TEXT)`,
+    `CREATE TABLE IF NOT EXISTS service_requests (service_requests_id TEXT PRIMARY KEY, service_requests_room_name TEXT, service_requests_guest_name TEXT, service_requests_type TEXT, service_requests_detail TEXT, service_requests_assigned_staff TEXT, service_requests_status TEXT DEFAULT 'Pending', service_requests_time TEXT, service_requests_created_at TEXT, service_requests_updated_at TEXT)`,
+    `CREATE TABLE IF NOT EXISTS complaints (complaints_id TEXT PRIMARY KEY, complaints_guest_name TEXT, complaints_room_name TEXT, complaints_title TEXT, complaints_detail TEXT, complaints_priority TEXT, complaints_status TEXT DEFAULT 'Open', complaints_notes TEXT, complaints_time TEXT, complaints_created_at TEXT, complaints_updated_at TEXT)`,
+    `CREATE TABLE IF NOT EXISTS daily_logs (daily_logs_id TEXT PRIMARY KEY, daily_logs_author TEXT, daily_logs_shift TEXT, daily_logs_content TEXT, daily_logs_issues TEXT, daily_logs_date TEXT, daily_logs_time TEXT, daily_logs_created_at TEXT, daily_logs_updated_at TEXT)`,
   ];
 
   for (const sql of createTables) {
@@ -68,7 +68,7 @@ app.post("/api/admin/seed", async (c) => {
     { id: 'usr-006', email: 'phamhoang@gmail.com', name: 'Pham Hoang C', phone: '0933333333', role: 'guest' },
   ];
   for (const u of seedUsers) {
-    await usersDb.prepare("INSERT OR IGNORE INTO users (id, email, name, phone, role, auth0_sub, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, '', '')").bind(u.id, u.email, u.name, u.phone, u.role, u.auth0_sub || null).run();
+    await usersDb.prepare("INSERT OR IGNORE INTO users (users_id, users_email, users_name, users_phone, users_role, users_auth0_sub, users_created_at, users_updated_at) VALUES (?, ?, ?, ?, ?, ?, '', '')").bind(u.id, u.email, u.name, u.phone, u.role, u.auth0_sub || null).run();
   }
 
   // Seed properties
@@ -81,7 +81,7 @@ app.post("/api/admin/seed", async (c) => {
     { id: 'prop-006', partnerId: 'usr-002', title: 'Zen Garden Tea-view Suite', desc: 'Căn hộ dịch vụ cao cấp hướng đồi chè.', address: '15 Dong Tam, Thai Nguyen', city: 'Thai Nguyen', price: 1875000, type: 'apartment' },
   ];
   for (const p of seedProps) {
-    await propertiesDb.prepare("INSERT OR IGNORE INTO properties (id, partner_id, title, description, address, city, country, price_per_night, property_type, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 'Vietnam', ?, ?, 'active', '', '')").bind(p.id, p.partnerId, p.title, p.desc, p.address, p.city, p.price, p.type).run();
+    await propertiesDb.prepare("INSERT OR IGNORE INTO properties (properties_id, properties_partner_id, properties_title, properties_description, properties_address, properties_city, properties_country, properties_price_per_night, properties_property_type, properties_status, properties_created_at, properties_updated_at) VALUES (?, ?, ?, ?, ?, ?, 'Vietnam', ?, ?, 'active', '', '')").bind(p.id, p.partnerId, p.title, p.desc, p.address, p.city, p.price, p.type).run();
   }
 
   // Seed bookings
@@ -94,7 +94,7 @@ app.post("/api/admin/seed", async (c) => {
     { id: 'bk-006', propertyId: 'prop-001', guestId: 'usr-006', partnerId: 'usr-002', checkIn: '2026-06-25', checkOut: '2026-06-28', nights: 3, guests: 2, price: 7125000, status: 'cancelled' },
   ];
   for (const b of seedBookings) {
-    await bookingsDb.prepare("INSERT OR IGNORE INTO bookings (id, property_id, guest_id, partner_id, check_in, check_out, nights, guests, total_price, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '', '')").bind(b.id, b.propertyId, b.guestId, b.partnerId, b.checkIn, b.checkOut, b.nights, b.guests, b.price, b.status).run();
+    await bookingsDb.prepare("INSERT OR IGNORE INTO bookings (bookings_id, bookings_property_id, bookings_guest_id, bookings_partner_id, bookings_check_in, bookings_check_out, bookings_nights, bookings_guests, bookings_total_price, bookings_status, bookings_created_at, bookings_updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '', '')").bind(b.id, b.propertyId, b.guestId, b.partnerId, b.checkIn, b.checkOut, b.nights, b.guests, b.price, b.status).run();
   }
 
   // Seed payments
@@ -106,7 +106,7 @@ app.post("/api/admin/seed", async (c) => {
     { id: 'pay-005', bookingId: 'bk-005', partnerId: 'usr-005', amount: 10000000, status: 'pending', method: 'stripe' },
   ];
   for (const p of seedPayments) {
-    await paymentsDb.prepare("INSERT OR IGNORE INTO payments (id, booking_id, partner_id, amount, currency, status, payment_method, created_at, updated_at) VALUES (?, ?, ?, ?, 'VND', ?, ?, '', '')").bind(p.id, p.bookingId, p.partnerId, p.amount, p.status, p.method).run();
+    await paymentsDb.prepare("INSERT OR IGNORE INTO payments (payments_id, payments_booking_id, payments_partner_id, payments_amount, payments_currency, payments_status, payments_payment_method, payments_created_at, payments_updated_at) VALUES (?, ?, ?, ?, 'VND', ?, ?, '', '')").bind(p.id, p.bookingId, p.partnerId, p.amount, p.status, p.method).run();
   }
 
   return c.json({ success: true, message: "Database seeded with test data" });
@@ -120,13 +120,13 @@ app.get("/api/admin/dashboard/stats", async (c) => {
   const paymentsDb = c.env.PAYMENTS_DB;
 
   const totalBookings = await bookingsDb.prepare("SELECT COUNT(*) as count FROM bookings").first<{ count: number }>();
-  const activeBookings = await bookingsDb.prepare("SELECT COUNT(*) as count FROM bookings WHERE status IN ('pending', 'confirmed')").first<{ count: number }>();
+  const activeBookings = await bookingsDb.prepare("SELECT COUNT(*) as count FROM bookings WHERE bookings_status IN ('pending', 'confirmed')").first<{ count: number }>();
   const totalProperties = await propertiesDb.prepare("SELECT COUNT(*) as count FROM properties").first<{ count: number }>();
-  const activeProperties = await propertiesDb.prepare("SELECT COUNT(*) as count FROM properties WHERE status = 'active'").first<{ count: number }>();
-  const revenueStats = await bookingsDb.prepare("SELECT COALESCE(SUM(total_price), 0) as total FROM bookings WHERE status IN ('confirmed', 'completed')").first<{ total: number }>();
+  const activeProperties = await propertiesDb.prepare("SELECT COUNT(*) as count FROM properties WHERE properties_status = 'active'").first<{ count: number }>();
+  const revenueStats = await bookingsDb.prepare("SELECT COALESCE(SUM(bookings_total_price), 0) as total FROM bookings WHERE bookings_status IN ('confirmed', 'completed')").first<{ total: number }>();
   const totalUsers = await usersDb.prepare("SELECT COUNT(*) as count FROM users").first<{ count: number }>();
-  const sepayStats = await paymentsDb.prepare("SELECT COUNT(*) as count, COALESCE(SUM(amount), 0) as total FROM payments WHERE payment_method = 'sepay' AND status = 'completed'").first<{ count: number; total: number }>();
-  const stripeStats = await paymentsDb.prepare("SELECT COUNT(*) as count, COALESCE(SUM(amount), 0) as total FROM payments WHERE payment_method = 'stripe' AND status = 'completed'").first<{ count: number; total: number }>();
+  const sepayStats = await paymentsDb.prepare("SELECT COUNT(*) as count, COALESCE(SUM(payments_amount), 0) as total FROM payments WHERE payments_payment_method = 'sepay' AND payments_status = 'completed'").first<{ count: number; total: number }>();
+  const stripeStats = await paymentsDb.prepare("SELECT COUNT(*) as count, COALESCE(SUM(payments_amount), 0) as total FROM payments WHERE payments_payment_method = 'stripe' AND payments_status = 'completed'").first<{ count: number; total: number }>();
 
   return c.json({
     totalRevenue: revenueStats?.total || 0,
@@ -189,23 +189,23 @@ app.get("/api/admin/properties", async (c) => {
   let where = "WHERE 1=1";
   const params: any[] = [];
 
-  if (status) { where += " AND status = ?"; params.push(status); }
-  if (city) { where += " AND city = ?"; params.push(city); }
+  if (status) { where += " AND properties_status = ?"; params.push(status); }
+  if (city) { where += " AND properties_city = ?"; params.push(city); }
   if (search) {
-    where += " AND (title LIKE ? OR description LIKE ? OR address LIKE ?)";
+    where += " AND (properties_title LIKE ? OR properties_description LIKE ? OR properties_address LIKE ?)";
     const s = `%${search}%`;
     params.push(s, s, s);
   }
 
   const countResult = await propertiesDb.prepare(`SELECT COUNT(*) as count FROM properties ${where}`).bind(...params).first<{ count: number }>();
-  const results = await propertiesDb.prepare(`SELECT * FROM properties ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`).bind(...params, limit, offset).all();
+  const results = await propertiesDb.prepare(`SELECT * FROM properties ${where} ORDER BY properties_created_at DESC LIMIT ? OFFSET ?`).bind(...params, limit, offset).all();
 
   return c.json({ data: results.results, total: countResult?.count || 0, page, limit });
 });
 
 app.get("/api/admin/properties/:id", async (c) => {
   const propertiesDb = c.env.PROPERTIES_DB;
-  const property = await propertiesDb.prepare("SELECT * FROM properties WHERE id = ?").bind(c.req.param("id")).first();
+  const property = await propertiesDb.prepare("SELECT * FROM properties WHERE properties_id = ?").bind(c.req.param("id")).first();
   if (!property) return c.json({ error: "Not found" }, 404);
   return c.json(property);
 });
@@ -217,11 +217,11 @@ app.post("/api/admin/properties", async (c) => {
   const now = new Date().toISOString();
 
   await propertiesDb.prepare(
-    `INSERT INTO properties (id, partner_id, title, description, address, city, country, latitude, longitude, price_per_night, max_guests, bedrooms, bathrooms, property_type, status, images, rules, created_at, updated_at)
+    `INSERT INTO properties (properties_id, properties_partner_id, properties_title, properties_description, properties_address, properties_city, properties_country, properties_latitude, properties_longitude, properties_price_per_night, properties_max_guests, properties_bedrooms, properties_bathrooms, properties_property_type, properties_status, properties_images, properties_rules, properties_created_at, properties_updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, ?)`
   ).bind(id, data.partnerId, data.title, data.description, data.address, data.city, data.country, data.latitude || null, data.longitude || null, data.pricePerNight, data.maxGuests || 2, data.bedrooms || 1, data.bathrooms || 1, data.propertyType || "apartment", data.images || null, data.rules || null, now, now).run();
 
-  const created = await propertiesDb.prepare("SELECT * FROM properties WHERE id = ?").bind(id).first();
+  const created = await propertiesDb.prepare("SELECT * FROM properties WHERE properties_id = ?").bind(id).first();
   return c.json(created, 201);
 });
 
@@ -231,36 +231,36 @@ app.put("/api/admin/properties/:id", async (c) => {
   const data = await c.req.json();
   const now = new Date().toISOString();
 
-  const existing = await propertiesDb.prepare("SELECT * FROM properties WHERE id = ?").bind(id).first();
+  const existing = await propertiesDb.prepare("SELECT * FROM properties WHERE properties_id = ?").bind(id).first();
   if (!existing) return c.json({ error: "Not found" }, 404);
 
   const fields: string[] = [];
   const values: any[] = [];
 
   for (const [key, dbKey] of Object.entries({
-    title: "title", description: "description", address: "address",
-    city: "city", country: "country", pricePerNight: "price_per_night",
-    maxGuests: "max_guests", bedrooms: "bedrooms", bathrooms: "bathrooms",
-    propertyType: "property_type", images: "images", rules: "rules",
+    title: "properties_title", description: "properties_description", address: "properties_address",
+    city: "properties_city", country: "properties_country", pricePerNight: "properties_price_per_night",
+    maxGuests: "properties_max_guests", bedrooms: "properties_bedrooms", bathrooms: "properties_bathrooms",
+    propertyType: "properties_property_type", images: "properties_images", rules: "properties_rules",
   })) {
     if (data[key] !== undefined) { fields.push(`${dbKey} = ?`); values.push(data[key]); }
   }
 
-  fields.push("updated_at = ?");
+  fields.push("properties_updated_at = ?");
   values.push(now);
   values.push(id);
 
-  await propertiesDb.prepare(`UPDATE properties SET ${fields.join(", ")} WHERE id = ?`).bind(...values).run();
-  const updated = await propertiesDb.prepare("SELECT * FROM properties WHERE id = ?").bind(id).first();
+  await propertiesDb.prepare(`UPDATE properties SET ${fields.join(", ")} WHERE properties_id = ?`).bind(...values).run();
+  const updated = await propertiesDb.prepare("SELECT * FROM properties WHERE properties_id = ?").bind(id).first();
   return c.json(updated);
 });
 
 app.delete("/api/admin/properties/:id", async (c) => {
   const propertiesDb = c.env.PROPERTIES_DB;
   const id = c.req.param("id");
-  const existing = await propertiesDb.prepare("SELECT * FROM properties WHERE id = ?").bind(id).first();
+  const existing = await propertiesDb.prepare("SELECT * FROM properties WHERE properties_id = ?").bind(id).first();
   if (!existing) return c.json({ error: "Not found" }, 404);
-  await propertiesDb.prepare("DELETE FROM properties WHERE id = ?").bind(id).run();
+  await propertiesDb.prepare("DELETE FROM properties WHERE properties_id = ?").bind(id).run();
   return c.json({ success: true });
 });
 
@@ -275,18 +275,18 @@ app.get("/api/admin/bookings", async (c) => {
 
   let where = "WHERE 1=1";
   const params: any[] = [];
-  if (status) { where += " AND status = ?"; params.push(status); }
-  if (propertyId) { where += " AND property_id = ?"; params.push(propertyId); }
+  if (status) { where += " AND bookings_status = ?"; params.push(status); }
+  if (propertyId) { where += " AND bookings_property_id = ?"; params.push(propertyId); }
 
   const countResult = await bookingsDb.prepare(`SELECT COUNT(*) as count FROM bookings ${where}`).bind(...params).first<{ count: number }>();
-  const results = await bookingsDb.prepare(`SELECT * FROM bookings ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`).bind(...params, limit, offset).all();
+  const results = await bookingsDb.prepare(`SELECT * FROM bookings ${where} ORDER BY bookings_created_at DESC LIMIT ? OFFSET ?`).bind(...params, limit, offset).all();
 
   return c.json({ data: results.results, total: countResult?.count || 0, page, limit });
 });
 
 app.get("/api/admin/bookings/:id", async (c) => {
   const bookingsDb = c.env.BOOKINGS_DB;
-  const booking = await bookingsDb.prepare("SELECT * FROM bookings WHERE id = ?").bind(c.req.param("id")).first();
+  const booking = await bookingsDb.prepare("SELECT * FROM bookings WHERE bookings_id = ?").bind(c.req.param("id")).first();
   if (!booking) return c.json({ error: "Not found" }, 404);
   return c.json(booking);
 });
@@ -297,22 +297,22 @@ app.patch("/api/admin/bookings/:id/status", async (c) => {
   const data = await c.req.json();
   const now = new Date().toISOString();
 
-  const existing = await bookingsDb.prepare("SELECT * FROM bookings WHERE id = ?").bind(id).first();
+  const existing = await bookingsDb.prepare("SELECT * FROM bookings WHERE bookings_id = ?").bind(id).first();
   if (!existing) return c.json({ error: "Not found" }, 404);
 
-  let updateFields = "status = ?, updated_at = ?";
+  let updateFields = "bookings_status = ?, bookings_updated_at = ?";
   let updateValues: any[] = [data.status, now];
 
   if (data.status === "cancelled" && data.cancellationReason) {
-    updateFields += ", cancellation_reason = ?, cancelled_at = ?";
+    updateFields += ", bookings_cancellation_reason = ?, bookings_cancelled_at = ?";
     updateValues.push(data.cancellationReason, now);
   }
-  if (data.status === "confirmed") { updateFields += ", confirmed_at = ?"; updateValues.push(now); }
-  if (data.status === "completed") { updateFields += ", completed_at = ?"; updateValues.push(now); }
+  if (data.status === "confirmed") { updateFields += ", bookings_confirmed_at = ?"; updateValues.push(now); }
+  if (data.status === "completed") { updateFields += ", bookings_completed_at = ?"; updateValues.push(now); }
 
   updateValues.push(id);
-  await bookingsDb.prepare(`UPDATE bookings SET ${updateFields} WHERE id = ?`).bind(...updateValues).run();
-  const updated = await bookingsDb.prepare("SELECT * FROM bookings WHERE id = ?").bind(id).first();
+  await bookingsDb.prepare(`UPDATE bookings SET ${updateFields} WHERE bookings_id = ?`).bind(...updateValues).run();
+  const updated = await bookingsDb.prepare("SELECT * FROM bookings WHERE bookings_id = ?").bind(id).first();
   return c.json(updated);
 });
 
@@ -327,22 +327,22 @@ app.get("/api/admin/users", async (c) => {
 
   let where = "WHERE 1=1";
   const params: any[] = [];
-  if (role) { where += " AND role = ?"; params.push(role); }
+  if (role) { where += " AND users_role = ?"; params.push(role); }
   if (search) {
-    where += " AND (name LIKE ? OR email LIKE ?)";
+    where += " AND (users_name LIKE ? OR users_email LIKE ?)";
     const s = `%${search}%`;
     params.push(s, s);
   }
 
   const countResult = await usersDb.prepare(`SELECT COUNT(*) as count FROM users ${where}`).bind(...params).first<{ count: number }>();
-  const results = await usersDb.prepare(`SELECT * FROM users ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`).bind(...params, limit, offset).all();
+  const results = await usersDb.prepare(`SELECT * FROM users ${where} ORDER BY users_created_at DESC LIMIT ? OFFSET ?`).bind(...params, limit, offset).all();
 
   return c.json({ data: results.results, total: countResult?.count || 0, page, limit });
 });
 
 app.get("/api/admin/users/:id", async (c) => {
   const usersDb = c.env.USERS_DB;
-  const user = await usersDb.prepare("SELECT * FROM users WHERE id = ?").bind(c.req.param("id")).first();
+  const user = await usersDb.prepare("SELECT * FROM users WHERE users_id = ?").bind(c.req.param("id")).first();
   if (!user) return c.json({ error: "Not found" }, 404);
   return c.json(user);
 });
@@ -353,11 +353,11 @@ app.patch("/api/admin/users/:id/role", async (c) => {
   const data = await c.req.json();
   const now = new Date().toISOString();
 
-  const existing = await usersDb.prepare("SELECT * FROM users WHERE id = ?").bind(id).first();
+  const existing = await usersDb.prepare("SELECT * FROM users WHERE users_id = ?").bind(id).first();
   if (!existing) return c.json({ error: "Not found" }, 404);
 
-  await usersDb.prepare("UPDATE users SET role = ?, updated_at = ? WHERE id = ?").bind(data.role, now, id).run();
-  const updated = await usersDb.prepare("SELECT * FROM users WHERE id = ?").bind(id).first();
+  await usersDb.prepare("UPDATE users SET users_role = ?, users_updated_at = ? WHERE users_id = ?").bind(data.role, now, id).run();
+  const updated = await usersDb.prepare("SELECT * FROM users WHERE users_id = ?").bind(id).first();
   return c.json(updated);
 });
 

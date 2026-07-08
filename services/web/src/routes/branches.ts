@@ -12,7 +12,7 @@ const app = new Hono<{ Bindings: Env }>();
 // --- Helpers ---
 
 async function ensureBranchTable(db: D1Database) {
-  await db.prepare("CREATE TABLE IF NOT EXISTS branches (id TEXT PRIMARY KEY, name TEXT NOT NULL, brand TEXT, location TEXT, address TEXT, phone TEXT, email TEXT, description TEXT, image_url TEXT, amenities TEXT, is_active INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now')))").run();
+  await db.prepare("CREATE TABLE IF NOT EXISTS branches (branches_id TEXT PRIMARY KEY, branches_name TEXT NOT NULL, branches_brand TEXT, branches_location TEXT, branches_address TEXT, branches_phone TEXT, branches_email TEXT, branches_description TEXT, branches_image_url TEXT, branches_is_active INTEGER NOT NULL DEFAULT 1, branches_created_at TEXT NOT NULL DEFAULT (datetime('now')), branches_updated_at TEXT NOT NULL DEFAULT (datetime('now')))").run();
 }
 
 // ============================
@@ -32,19 +32,19 @@ app.get("/", async (c) => {
 
   const offset = (page - 1) * limit;
 
-  let where = "WHERE is_active = 1";
+  let where = "WHERE branches_is_active = 1";
   const params: any[] = [];
 
   if (location) {
-    where += " AND location = ?";
+    where += " AND branches_location = ?";
     params.push(location);
   }
   if (brand) {
-    where += " AND brand = ?";
+    where += " AND branches_brand = ?";
     params.push(brand);
   }
   if (search) {
-    where += " AND (name LIKE ? OR description LIKE ? OR address LIKE ?)";
+    where += " AND (branches_name LIKE ? OR branches_description LIKE ? OR branches_address LIKE ?)";
     const searchTerm = `%${search}%`;
     params.push(searchTerm, searchTerm, searchTerm);
   }
@@ -55,7 +55,7 @@ app.get("/", async (c) => {
     .first<{ total: number }>();
 
   const { results } = await db
-    .prepare(`SELECT * FROM branches ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`)
+    .prepare(`SELECT * FROM branches ${where} ORDER BY branches_created_at DESC LIMIT ? OFFSET ?`)
     .bind(...params, limit, offset)
     .all();
 
@@ -75,7 +75,7 @@ app.get("/:id", async (c) => {
   const id = c.req.param("id");
 
   const branch = await db
-    .prepare("SELECT * FROM branches WHERE id = ?")
+    .prepare("SELECT * FROM branches WHERE branches_id = ?")
     .bind(id)
     .first();
 

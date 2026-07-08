@@ -14,14 +14,14 @@ const app = new Hono<{ Bindings: Env }>();
 async function ensureReviewTable(db: D1Database) {
   await db.prepare(`
     CREATE TABLE IF NOT EXISTS reviews (
-      id TEXT PRIMARY KEY,
-      target_id TEXT NOT NULL,
-      target_name TEXT,
-      guest_name TEXT NOT NULL,
-      rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
-      comment TEXT,
-      created_at TEXT NOT NULL DEFAULT (datetime('now')),
-      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      reviews_id TEXT PRIMARY KEY,
+      reviews_target_id TEXT NOT NULL,
+      reviews_target_name TEXT,
+      reviews_guest_name TEXT NOT NULL,
+      reviews_rating INTEGER NOT NULL CHECK (reviews_rating >= 1 AND reviews_rating <= 5),
+      reviews_comment TEXT,
+      reviews_created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      reviews_updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
   `).run();
 }
@@ -45,7 +45,7 @@ app.get("/", async (c) => {
   const params: any[] = [];
 
   if (targetId) {
-    where += " AND target_id = ?";
+    where += " AND reviews_target_id = ?";
     params.push(targetId);
   }
 
@@ -55,7 +55,7 @@ app.get("/", async (c) => {
     .first<{ total: number }>();
 
   const { results } = await db
-    .prepare(`SELECT * FROM reviews ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`)
+    .prepare(`SELECT * FROM reviews ${where} ORDER BY reviews_created_at DESC LIMIT ? OFFSET ?`)
     .bind(...params, limit, offset)
     .all();
 
@@ -89,7 +89,7 @@ app.post("/", async (c) => {
 
   await db
     .prepare(
-      `INSERT INTO reviews (id, target_id, target_name, guest_name, rating, comment, created_at, updated_at)
+      `INSERT INTO reviews (reviews_id, reviews_target_id, reviews_target_name, reviews_guest_name, reviews_rating, reviews_comment, reviews_created_at, reviews_updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .bind(

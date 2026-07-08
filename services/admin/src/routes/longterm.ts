@@ -25,15 +25,15 @@ app.get("/api/admin/apartments", async (c) => {
   const params: any[] = [];
 
   if (status) {
-    where += " AND status = ?";
+    where += " AND longterm_apartments_status = ?";
     params.push(status);
   }
   if (city) {
-    where += " AND location LIKE ?";
+    where += " AND longterm_apartments_location LIKE ?";
     params.push(`%${city}%`);
   }
   if (search) {
-    where += " AND (name LIKE ? OR location LIKE ? OR description LIKE ?)";
+    where += " AND (longterm_apartments_name LIKE ? OR longterm_apartments_location LIKE ? OR longterm_apartments_description LIKE ?)";
     const s = `%${search}%`;
     params.push(s, s, s);
   }
@@ -45,7 +45,7 @@ app.get("/api/admin/apartments", async (c) => {
 
   const results = await db
     .prepare(
-      `SELECT * FROM longterm_apartments ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`
+      `SELECT * FROM longterm_apartments ${where} ORDER BY longterm_apartments_created_at DESC LIMIT ? OFFSET ?`
     )
     .bind(...params, limit, offset)
     .all();
@@ -53,7 +53,7 @@ app.get("/api/admin/apartments", async (c) => {
   return c.json({
     data: results.results.map((r: any) => ({
       ...r,
-      amenities: r.amenities ? JSON.parse(r.amenities) : [],
+      amenities: r.longterm_apartments_amenities ? JSON.parse(r.longterm_apartments_amenities) : [],
     })),
     total: countResult?.count || 0,
     page,
@@ -65,7 +65,7 @@ app.get("/api/admin/apartments", async (c) => {
 app.get("/api/admin/apartments/:id", async (c) => {
   const db = c.env.PROPERTIES_DB;
   const apartment = await db
-    .prepare("SELECT * FROM longterm_apartments WHERE id = ?")
+    .prepare("SELECT * FROM longterm_apartments WHERE longterm_apartments_id = ?")
     .bind(c.req.param("id"))
     .first();
 
@@ -75,8 +75,8 @@ app.get("/api/admin/apartments/:id", async (c) => {
 
   return c.json({
     ...apartment,
-    amenities: (apartment as any).amenities
-      ? JSON.parse((apartment as any).amenities)
+    amenities: (apartment as any).longterm_apartments_amenities
+      ? JSON.parse((apartment as any).longterm_apartments_amenities)
       : [],
   });
 });
@@ -91,11 +91,11 @@ app.post("/api/admin/apartments", async (c) => {
   await db
     .prepare(
       `INSERT INTO longterm_apartments (
-        id, partner_id, name, location, type, area, bedrooms, bathrooms,
-        monthly_price, description, amenities, available_from,
-        has_virtual_tour, virtual_tour_url, pet_friendly,
-        maintenance_status, estimated_repair_cost, maintenance_notes,
-        status, created_at, updated_at
+        longterm_apartments_id, longterm_apartments_partner_id, longterm_apartments_name, longterm_apartments_location, longterm_apartments_type, longterm_apartments_area, longterm_apartments_bedrooms, longterm_apartments_bathrooms,
+        longterm_apartments_monthly_price, longterm_apartments_description, longterm_apartments_amenities, longterm_apartments_available_from,
+        longterm_apartments_has_virtual_tour, longterm_apartments_virtual_tour_url, longterm_apartments_pet_friendly,
+        longterm_apartments_maintenance_status, longterm_apartments_estimated_repair_cost, longterm_apartments_maintenance_notes,
+        longterm_apartments_status, longterm_apartments_created_at, longterm_apartments_updated_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)`
     )
     .bind(
@@ -123,15 +123,15 @@ app.post("/api/admin/apartments", async (c) => {
     .run();
 
   const created = await db
-    .prepare("SELECT * FROM longterm_apartments WHERE id = ?")
+    .prepare("SELECT * FROM longterm_apartments WHERE longterm_apartments_id = ?")
     .bind(id)
     .first();
 
   return c.json(
     {
       ...created,
-      amenities: (created as any).amenities
-        ? JSON.parse((created as any).amenities)
+      amenities: (created as any).longterm_apartments_amenities
+        ? JSON.parse((created as any).longterm_apartments_amenities)
         : [],
     },
     201
@@ -146,7 +146,7 @@ app.put("/api/admin/apartments/:id", async (c) => {
   const now = new Date().toISOString();
 
   const existing = await db
-    .prepare("SELECT * FROM longterm_apartments WHERE id = ?")
+    .prepare("SELECT * FROM longterm_apartments WHERE longterm_apartments_id = ?")
     .bind(id)
     .first();
   if (!existing) {
@@ -157,21 +157,21 @@ app.put("/api/admin/apartments/:id", async (c) => {
   const values: any[] = [];
 
   const fieldMap: Record<string, string> = {
-    partnerId: "partner_id",
-    name: "name",
-    location: "location",
-    type: "type",
-    area: "area",
-    bedrooms: "bedrooms",
-    bathrooms: "bathrooms",
-    monthlyPrice: "monthly_price",
-    description: "description",
-    availableFrom: "available_from",
-    virtualTourUrl: "virtual_tour_url",
-    maintenanceStatus: "maintenance_status",
-    estimatedRepairCost: "estimated_repair_cost",
-    maintenanceNotes: "maintenance_notes",
-    status: "status",
+    partnerId: "longterm_apartments_partner_id",
+    name: "longterm_apartments_name",
+    location: "longterm_apartments_location",
+    type: "longterm_apartments_type",
+    area: "longterm_apartments_area",
+    bedrooms: "longterm_apartments_bedrooms",
+    bathrooms: "longterm_apartments_bathrooms",
+    monthlyPrice: "longterm_apartments_monthly_price",
+    description: "longterm_apartments_description",
+    availableFrom: "longterm_apartments_available_from",
+    virtualTourUrl: "longterm_apartments_virtual_tour_url",
+    maintenanceStatus: "longterm_apartments_maintenance_status",
+    estimatedRepairCost: "longterm_apartments_estimated_repair_cost",
+    maintenanceNotes: "longterm_apartments_maintenance_notes",
+    status: "longterm_apartments_status",
   };
 
   for (const [key, dbCol] of Object.entries(fieldMap)) {
@@ -182,15 +182,15 @@ app.put("/api/admin/apartments/:id", async (c) => {
   }
 
   if (data.amenities !== undefined) {
-    fields.push("amenities = ?");
+    fields.push("longterm_apartments_amenities = ?");
     values.push(JSON.stringify(data.amenities));
   }
   if (data.hasVirtualTour !== undefined) {
-    fields.push("has_virtual_tour = ?");
+    fields.push("longterm_apartments_has_virtual_tour = ?");
     values.push(data.hasVirtualTour ? 1 : 0);
   }
   if (data.petFriendly !== undefined) {
-    fields.push("pet_friendly = ?");
+    fields.push("longterm_apartments_pet_friendly = ?");
     values.push(data.petFriendly ? 1 : 0);
   }
 
@@ -198,26 +198,26 @@ app.put("/api/admin/apartments/:id", async (c) => {
     return c.json({ error: "No fields to update" }, 400);
   }
 
-  fields.push("updated_at = ?");
+  fields.push("longterm_apartments_updated_at = ?");
   values.push(now);
   values.push(id);
 
   await db
     .prepare(
-      `UPDATE longterm_apartments SET ${fields.join(", ")} WHERE id = ?`
+      `UPDATE longterm_apartments SET ${fields.join(", ")} WHERE longterm_apartments_id = ?`
     )
     .bind(...values)
     .run();
 
   const updated = await db
-    .prepare("SELECT * FROM longterm_apartments WHERE id = ?")
+    .prepare("SELECT * FROM longterm_apartments WHERE longterm_apartments_id = ?")
     .bind(id)
     .first();
 
   return c.json({
     ...updated,
-    amenities: (updated as any).amenities
-      ? JSON.parse((updated as any).amenities)
+    amenities: (updated as any).longterm_apartments_amenities
+      ? JSON.parse((updated as any).longterm_apartments_amenities)
       : [],
   });
 });
@@ -228,7 +228,7 @@ app.delete("/api/admin/apartments/:id", async (c) => {
   const id = c.req.param("id");
 
   const existing = await db
-    .prepare("SELECT * FROM longterm_apartments WHERE id = ?")
+    .prepare("SELECT * FROM longterm_apartments WHERE longterm_apartments_id = ?")
     .bind(id)
     .first();
   if (!existing) {
@@ -236,7 +236,7 @@ app.delete("/api/admin/apartments/:id", async (c) => {
   }
 
   await db
-    .prepare("DELETE FROM longterm_apartments WHERE id = ?")
+    .prepare("DELETE FROM longterm_apartments WHERE longterm_apartments_id = ?")
     .bind(id)
     .run();
 
@@ -257,7 +257,7 @@ app.get("/api/admin/contracts", async (c) => {
   const params: any[] = [];
 
   if (status) {
-    where += " AND status = ?";
+    where += " AND longterm_contracts_status = ?";
     params.push(status);
   }
 
@@ -268,7 +268,7 @@ app.get("/api/admin/contracts", async (c) => {
 
   const results = await db
     .prepare(
-      `SELECT * FROM longterm_contracts ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`
+      `SELECT * FROM longterm_contracts ${where} ORDER BY longterm_contracts_created_at DESC LIMIT ? OFFSET ?`
     )
     .bind(...params, limit, offset)
     .all();
@@ -291,9 +291,9 @@ app.post("/api/admin/contracts", async (c) => {
   await db
     .prepare(
       `INSERT INTO longterm_contracts (
-        id, apartment_id, apartment_name, location, monthly_price,
-        lease_term, tenant_name, tenant_phone, tenant_email,
-        signed_date, status, created_at, updated_at
+        longterm_contracts_id, longterm_contracts_apartment_id, longterm_contracts_apartment_name, longterm_contracts_location, longterm_contracts_monthly_price,
+        longterm_contracts_lease_term, longterm_contracts_tenant_name, longterm_contracts_tenant_phone, longterm_contracts_tenant_email,
+        longterm_contracts_signed_date, longterm_contracts_status, longterm_contracts_created_at, longterm_contracts_updated_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)`
     )
     .bind(
@@ -313,7 +313,7 @@ app.post("/api/admin/contracts", async (c) => {
     .run();
 
   const created = await db
-    .prepare("SELECT * FROM longterm_contracts WHERE id = ?")
+    .prepare("SELECT * FROM longterm_contracts WHERE longterm_contracts_id = ?")
     .bind(id)
     .first();
 
@@ -328,7 +328,7 @@ app.patch("/api/admin/contracts/:id/status", async (c) => {
   const now = new Date().toISOString();
 
   const existing = await db
-    .prepare("SELECT * FROM longterm_contracts WHERE id = ?")
+    .prepare("SELECT * FROM longterm_contracts WHERE longterm_contracts_id = ?")
     .bind(id)
     .first();
   if (!existing) {
@@ -336,12 +336,12 @@ app.patch("/api/admin/contracts/:id/status", async (c) => {
   }
 
   await db
-    .prepare("UPDATE longterm_contracts SET status = ?, updated_at = ? WHERE id = ?")
+    .prepare("UPDATE longterm_contracts SET longterm_contracts_status = ?, longterm_contracts_updated_at = ? WHERE longterm_contracts_id = ?")
     .bind(data.status, now, id)
     .run();
 
   const updated = await db
-    .prepare("SELECT * FROM longterm_contracts WHERE id = ?")
+    .prepare("SELECT * FROM longterm_contracts WHERE longterm_contracts_id = ?")
     .bind(id)
     .first();
 

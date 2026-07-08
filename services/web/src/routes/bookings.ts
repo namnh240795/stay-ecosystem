@@ -14,25 +14,25 @@ const app = new Hono<{ Bindings: Env }>();
 async function ensureBookingTable(db: D1Database) {
   await db.prepare(`
     CREATE TABLE IF NOT EXISTS bookings (
-      id TEXT PRIMARY KEY,
-      booking_code TEXT NOT NULL UNIQUE,
-      guest_name TEXT NOT NULL,
-      guest_phone TEXT,
-      guest_email TEXT,
-      branch_id TEXT,
-      branch_name TEXT,
-      room_name TEXT,
-      check_in TEXT NOT NULL,
-      check_out TEXT NOT NULL,
-      nights INTEGER NOT NULL DEFAULT 1,
-      adults INTEGER NOT NULL DEFAULT 1,
-      children INTEGER NOT NULL DEFAULT 0,
-      total_price REAL NOT NULL DEFAULT 0,
-      payment_method TEXT,
-      special_request TEXT,
-      status TEXT NOT NULL DEFAULT 'confirmed',
-      created_at TEXT NOT NULL DEFAULT (datetime('now')),
-      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      bookings_id TEXT PRIMARY KEY,
+      bookings_booking_code TEXT NOT NULL UNIQUE,
+      bookings_guest_name TEXT NOT NULL,
+      bookings_guest_phone TEXT,
+      bookings_guest_email TEXT,
+      bookings_branch_id TEXT,
+      bookings_branch_name TEXT,
+      bookings_room_name TEXT,
+      bookings_check_in TEXT NOT NULL,
+      bookings_check_out TEXT NOT NULL,
+      bookings_nights INTEGER NOT NULL DEFAULT 1,
+      bookings_adults INTEGER NOT NULL DEFAULT 1,
+      bookings_children INTEGER NOT NULL DEFAULT 0,
+      bookings_total_price REAL NOT NULL DEFAULT 0,
+      bookings_payment_method TEXT,
+      bookings_special_request TEXT,
+      bookings_status TEXT NOT NULL DEFAULT 'confirmed',
+      bookings_created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      bookings_updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
   `).run();
 }
@@ -77,11 +77,11 @@ app.post("/", async (c) => {
   await db
     .prepare(
       `INSERT INTO bookings (
-        id, booking_code, guest_name, guest_phone, guest_email,
-        branch_id, branch_name, room_name,
-        check_in, check_out, nights, adults, children,
-        total_price, payment_method, special_request,
-        status, created_at, updated_at
+        bookings_id, bookings_booking_code, bookings_guest_name, bookings_guest_phone, bookings_guest_email,
+        bookings_branch_id, bookings_branch_name, bookings_room_name,
+        bookings_check_in, bookings_check_out, bookings_nights, bookings_adults, bookings_children,
+        bookings_total_price, bookings_payment_method, bookings_special_request,
+        bookings_status, bookings_created_at, bookings_updated_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'confirmed', ?, ?)`
     )
     .bind(
@@ -148,11 +148,11 @@ app.get("/", async (c) => {
   const params: any[] = [];
 
   if (guestEmail) {
-    where += " AND guest_email = ?";
+    where += " AND bookings_guest_email = ?";
     params.push(guestEmail);
   }
   if (status) {
-    where += " AND status = ?";
+    where += " AND bookings_status = ?";
     params.push(status);
   }
 
@@ -162,7 +162,7 @@ app.get("/", async (c) => {
     .first<{ total: number }>();
 
   const { results } = await db
-    .prepare(`SELECT * FROM bookings ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`)
+    .prepare(`SELECT * FROM bookings ${where} ORDER BY bookings_created_at DESC LIMIT ? OFFSET ?`)
     .bind(...params, limit, offset)
     .all();
 
@@ -182,7 +182,7 @@ app.get("/:id", async (c) => {
   const id = c.req.param("id");
 
   const booking = await db
-    .prepare("SELECT * FROM bookings WHERE id = ?")
+    .prepare("SELECT * FROM bookings WHERE bookings_id = ?")
     .bind(id)
     .first();
 
@@ -201,15 +201,15 @@ app.put("/:id/cancel", async (c) => {
   const id = c.req.param("id");
 
   const booking = await db
-    .prepare("SELECT * FROM bookings WHERE id = ?")
+    .prepare("SELECT * FROM bookings WHERE bookings_id = ?")
     .bind(id)
-    .first<{ id: string; status: string }>();
+    .first<{ bookings_id: string; bookings_status: string }>();
 
   if (!booking) {
     return c.json({ error: "Booking not found" }, 404);
   }
 
-  if (booking.status === "cancelled") {
+  if (booking.bookings_status === "cancelled") {
     return c.json({ error: "Booking is already cancelled" }, 400);
   }
 
@@ -217,7 +217,7 @@ app.put("/:id/cancel", async (c) => {
 
   await db
     .prepare(
-      `UPDATE bookings SET status = 'cancelled', updated_at = ? WHERE id = ?`
+      `UPDATE bookings SET bookings_status = 'cancelled', bookings_updated_at = ? WHERE bookings_id = ?`
     )
     .bind(now, id)
     .run();
@@ -237,15 +237,15 @@ app.put("/:id/modify", async (c) => {
   }>();
 
   const booking = await db
-    .prepare("SELECT * FROM bookings WHERE id = ?")
+    .prepare("SELECT * FROM bookings WHERE bookings_id = ?")
     .bind(id)
-    .first<{ id: string; status: string }>();
+    .first<{ bookings_id: string; bookings_status: string }>();
 
   if (!booking) {
     return c.json({ error: "Booking not found" }, 404);
   }
 
-  if (booking.status === "cancelled") {
+  if (booking.bookings_status === "cancelled") {
     return c.json({ error: "Cannot modify a cancelled booking" }, 400);
   }
 
@@ -254,11 +254,11 @@ app.put("/:id/modify", async (c) => {
   await db
     .prepare(
       `UPDATE bookings
-       SET check_in = COALESCE(?, check_in),
-           check_out = COALESCE(?, check_out),
-           status = 'modify_pending',
-           updated_at = ?
-       WHERE id = ?`
+       SET bookings_check_in = COALESCE(?, bookings_check_in),
+           bookings_check_out = COALESCE(?, bookings_check_out),
+           bookings_status = 'modify_pending',
+           bookings_updated_at = ?
+       WHERE bookings_id = ?`
     )
     .bind(body.checkIn ?? null, body.checkOut ?? null, now, id)
     .run();

@@ -14,28 +14,28 @@ const app = new Hono<{ Bindings: Env }>();
 async function ensureConfigTable(db: D1Database) {
   await db.prepare(`
     CREATE TABLE IF NOT EXISTS site_config (
-      key TEXT PRIMARY KEY,
-      value TEXT NOT NULL,
-      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      site_config_key TEXT PRIMARY KEY,
+      site_config_value TEXT NOT NULL,
+      site_config_updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
   `).run();
 }
 
 async function getConfig(db: D1Database, key: string): Promise<string | null> {
   const row = await db
-    .prepare("SELECT value FROM site_config WHERE key = ?")
+    .prepare("SELECT site_config_value FROM site_config WHERE site_config_key = ?")
     .bind(key)
-    .first<{ value: string }>();
-  return row?.value ?? null;
+    .first<{ site_config_value: string }>();
+  return row?.site_config_value ?? null;
 }
 
 async function setConfig(db: D1Database, key: string, value: string): Promise<void> {
   const now = new Date().toISOString();
   await db
     .prepare(
-      `INSERT INTO site_config (key, value, updated_at)
+      `INSERT INTO site_config (site_config_key, site_config_value, site_config_updated_at)
        VALUES (?, ?, ?)
-       ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`
+       ON CONFLICT(site_config_key) DO UPDATE SET site_config_value = excluded.site_config_value, site_config_updated_at = excluded.site_config_updated_at`
     )
     .bind(key, value, now)
     .run();

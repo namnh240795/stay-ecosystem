@@ -13,28 +13,28 @@ const app = new Hono<{ Bindings: Env }>();
 
 async function ensureApartmentTable(db: D1Database) {
   await db.prepare(`
-    CREATE TABLE IF NOT EXISTS apartments (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      branch_id TEXT,
-      branch_name TEXT,
-      type TEXT,
-      location TEXT,
-      address TEXT,
-      description TEXT,
-      image_url TEXT,
-      images TEXT,
-      price_per_night REAL NOT NULL DEFAULT 0,
-      max_guests INTEGER NOT NULL DEFAULT 2,
-      bedrooms INTEGER NOT NULL DEFAULT 1,
-      bathrooms INTEGER NOT NULL DEFAULT 1,
-      pet_friendly INTEGER NOT NULL DEFAULT 0,
-      has_virtual_tour INTEGER NOT NULL DEFAULT 0,
-      virtual_tour_url TEXT,
-      amenities TEXT,
-      is_active INTEGER NOT NULL DEFAULT 1,
-      created_at TEXT NOT NULL DEFAULT (datetime('now')),
-      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    CREATE TABLE IF NOT EXISTS web_apartments (
+      web_apartments_id TEXT PRIMARY KEY,
+      web_apartments_name TEXT NOT NULL,
+      web_apartments_branch_id TEXT,
+      web_apartments_branch_name TEXT,
+      web_apartments_type TEXT,
+      web_apartments_location TEXT,
+      web_apartments_address TEXT,
+      web_apartments_description TEXT,
+      web_apartments_image_url TEXT,
+      web_apartments_images TEXT,
+      web_apartments_price_per_night REAL NOT NULL DEFAULT 0,
+      web_apartments_max_guests INTEGER NOT NULL DEFAULT 2,
+      web_apartments_bedrooms INTEGER NOT NULL DEFAULT 1,
+      web_apartments_bathrooms INTEGER NOT NULL DEFAULT 1,
+      web_apartments_pet_friendly INTEGER NOT NULL DEFAULT 0,
+      web_apartments_has_virtual_tour INTEGER NOT NULL DEFAULT 0,
+      web_apartments_virtual_tour_url TEXT,
+      web_apartments_amenities TEXT,
+      web_apartments_is_active INTEGER NOT NULL DEFAULT 1,
+      web_apartments_created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      web_apartments_updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
   `).run();
 }
@@ -60,44 +60,44 @@ app.get("/", async (c) => {
 
   const offset = (page - 1) * limit;
 
-  let where = "WHERE is_active = 1";
+  let where = "WHERE web_apartments_is_active = 1";
   const params: any[] = [];
 
   if (location) {
-    where += " AND location = ?";
+    where += " AND web_apartments_location = ?";
     params.push(location);
   }
   if (type) {
-    where += " AND type = ?";
+    where += " AND web_apartments_type = ?";
     params.push(type);
   }
   if (minPrice) {
-    where += " AND price_per_night >= ?";
+    where += " AND web_apartments_price_per_night >= ?";
     params.push(Number(minPrice));
   }
   if (maxPrice) {
-    where += " AND price_per_night <= ?";
+    where += " AND web_apartments_price_per_night <= ?";
     params.push(Number(maxPrice));
   }
   if (petFriendly === "true") {
-    where += " AND pet_friendly = 1";
+    where += " AND web_apartments_pet_friendly = 1";
   }
   if (hasVirtualTour === "true") {
-    where += " AND has_virtual_tour = 1";
+    where += " AND web_apartments_has_virtual_tour = 1";
   }
   if (search) {
-    where += " AND (name LIKE ? OR description LIKE ? OR branch_name LIKE ?)";
+    where += " AND (web_apartments_name LIKE ? OR web_apartments_description LIKE ? OR web_apartments_branch_name LIKE ?)";
     const searchTerm = `%${search}%`;
     params.push(searchTerm, searchTerm, searchTerm);
   }
 
   const countResult = await db
-    .prepare(`SELECT COUNT(*) as total FROM apartments ${where}`)
+    .prepare(`SELECT COUNT(*) as total FROM web_apartments ${where}`)
     .bind(...params)
     .first<{ total: number }>();
 
   const { results } = await db
-    .prepare(`SELECT * FROM apartments ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`)
+    .prepare(`SELECT * FROM web_apartments ${where} ORDER BY web_apartments_created_at DESC LIMIT ? OFFSET ?`)
     .bind(...params, limit, offset)
     .all();
 
@@ -117,7 +117,7 @@ app.get("/:id", async (c) => {
   const id = c.req.param("id");
 
   const apartment = await db
-    .prepare("SELECT * FROM apartments WHERE id = ?")
+    .prepare("SELECT * FROM web_apartments WHERE web_apartments_id = ?")
     .bind(id)
     .first();
 
@@ -128,8 +128,8 @@ app.get("/:id", async (c) => {
   // Parse JSON fields
   const parsed = {
     ...apartment,
-    images: apartment.images ? JSON.parse(apartment.images as string) : null,
-    amenities: apartment.amenities ? JSON.parse(apartment.amenities as string) : null,
+    web_apartments_images: apartment.web_apartments_images ? JSON.parse(apartment.web_apartments_images as string) : null,
+    web_apartments_amenities: apartment.web_apartments_amenities ? JSON.parse(apartment.web_apartments_amenities as string) : null,
   };
 
   return c.json(parsed);

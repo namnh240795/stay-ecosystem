@@ -12,46 +12,45 @@ const app = new Hono<{ Bindings: Env }>();
 // --- Helpers ---
 
 async function ensureTourTables(db: D1Database) {
-  await db.prepare(`CREATE TABLE IF NOT EXISTS tours (id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT, region TEXT, image_url TEXT, price_per_slot REAL NOT NULL, max_slots INTEGER NOT NULL DEFAULT 10, booked_slots INTEGER NOT NULL DEFAULT 0, duration TEXT, rating REAL DEFAULT 5.0, highlights TEXT, tour_type TEXT, itinerary TEXT, created_at TEXT, updated_at TEXT)`).run();
+  await db.prepare(`CREATE TABLE IF NOT EXISTS tours (tours_id TEXT PRIMARY KEY, tours_name TEXT NOT NULL, tours_description TEXT, tours_region TEXT, tours_image_url TEXT, tours_price_per_slot REAL NOT NULL, tours_max_slots INTEGER NOT NULL DEFAULT 10, tours_booked_slots INTEGER NOT NULL DEFAULT 0, tours_duration TEXT, tours_rating REAL DEFAULT 5.0, tours_highlights TEXT, tours_tour_type TEXT, tours_itinerary TEXT, tours_created_at TEXT, tours_updated_at TEXT)`).run();
 
-    CREATE TABLE IF NOT EXISTS tour_bookings (
-      id TEXT PRIMARY KEY,
-      tour_id TEXT NOT NULL,
-      guest_name TEXT NOT NULL,
-      guest_phone TEXT NOT NULL,
-      guest_email TEXT NOT NULL,
-      slots INTEGER NOT NULL DEFAULT 1,
-      date TEXT NOT NULL,
-      payment_method TEXT,
-      status TEXT NOT NULL DEFAULT 'confirmed',
-      created_at TEXT NOT NULL DEFAULT (datetime('now')),
-      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
-      FOREIGN KEY (tour_id) REFERENCES tours(id)
-    );
+  await db.prepare(`CREATE TABLE IF NOT EXISTS tour_bookings (
+      tour_bookings_id TEXT PRIMARY KEY,
+      tour_bookings_tour_id TEXT NOT NULL,
+      tour_bookings_guest_name TEXT NOT NULL,
+      tour_bookings_guest_phone TEXT NOT NULL,
+      tour_bookings_guest_email TEXT NOT NULL,
+      tour_bookings_slots INTEGER NOT NULL DEFAULT 1,
+      tour_bookings_date TEXT NOT NULL,
+      tour_bookings_payment_method TEXT,
+      tour_bookings_status TEXT NOT NULL DEFAULT 'confirmed',
+      tour_bookings_created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      tour_bookings_updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (tour_bookings_tour_id) REFERENCES tours(tours_id)
+    )`).run();
 
-    CREATE TABLE IF NOT EXISTS groups (
-      id TEXT PRIMARY KEY,
-      tour_id TEXT NOT NULL,
-      creator_name TEXT NOT NULL,
-      creator_email TEXT NOT NULL,
-      required_members INTEGER NOT NULL DEFAULT 2,
-      matched INTEGER NOT NULL DEFAULT 0,
-      date TEXT NOT NULL,
-      created_at TEXT NOT NULL DEFAULT (datetime('now')),
-      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
-      FOREIGN KEY (tour_id) REFERENCES tours(id)
-    );
+  await db.prepare(`CREATE TABLE IF NOT EXISTS groups (
+      groups_id TEXT PRIMARY KEY,
+      groups_tour_id TEXT NOT NULL,
+      groups_creator_name TEXT NOT NULL,
+      groups_creator_email TEXT NOT NULL,
+      groups_required_members INTEGER NOT NULL DEFAULT 2,
+      groups_matched INTEGER NOT NULL DEFAULT 0,
+      groups_date TEXT NOT NULL,
+      groups_created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      groups_updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (groups_tour_id) REFERENCES tours(tours_id)
+    )`).run();
 
-    CREATE TABLE IF NOT EXISTS group_members (
-      id TEXT PRIMARY KEY,
-      group_id TEXT NOT NULL,
-      guest_name TEXT NOT NULL,
-      guest_email TEXT NOT NULL,
-      slots INTEGER NOT NULL DEFAULT 1,
-      joined_at TEXT NOT NULL DEFAULT (datetime('now')),
-      FOREIGN KEY (group_id) REFERENCES groups(id)
-    );
-  `).run();
+  await db.prepare(`CREATE TABLE IF NOT EXISTS group_members (
+      group_members_id TEXT PRIMARY KEY,
+      group_members_group_id TEXT NOT NULL,
+      group_members_guest_name TEXT NOT NULL,
+      group_members_guest_email TEXT NOT NULL,
+      group_members_slots INTEGER NOT NULL DEFAULT 1,
+      group_members_joined_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (group_members_group_id) REFERENCES groups(groups_id)
+    )`).run();
 }
 
 // ============================
@@ -74,11 +73,11 @@ app.get("/", async (c) => {
   const params: any[] = [];
 
   if (region) {
-    where += " AND region = ?";
+    where += " AND tours_region = ?";
     params.push(region);
   }
   if (type) {
-    where += " AND type = ?";
+    where += " AND tours_tour_type = ?";
     params.push(type);
   }
 
@@ -88,7 +87,7 @@ app.get("/", async (c) => {
     .first<{ total: number }>();
 
   const { results } = await db
-    .prepare(`SELECT * FROM tours ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`)
+    .prepare(`SELECT * FROM tours ${where} ORDER BY tours_created_at DESC LIMIT ? OFFSET ?`)
     .bind(...params, limit, offset)
     .all();
 
@@ -107,8 +106,8 @@ app.post("/", async (c) => {
   const data = await c.req.json();
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
-  await db.prepare("INSERT INTO tours (id, name, region, image_url, price_per_slot, max_slots, booked_slots, duration, rating, description, highlights, tour_type, itinerary, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 0, ?, 5.0, ?, ?, ?, ?, ?, ?)").bind(id, data.name, data.region || null, data.image || null, data.pricePerSlot || 0, data.maxSlots || 10, data.duration || null, data.description || null, JSON.stringify(data.highlights || []), data.tourType || 'day', JSON.stringify(data.itinerary || []), now, now).run();
-  const tour = await db.prepare("SELECT * FROM tours WHERE id = ?").bind(id).first();
+  await db.prepare("INSERT INTO tours (tours_id, tours_name, tours_region, tours_image_url, tours_price_per_slot, tours_max_slots, tours_booked_slots, tours_duration, tours_rating, tours_description, tours_highlights, tours_tour_type, tours_itinerary, tours_created_at, tours_updated_at) VALUES (?, ?, ?, ?, ?, ?, 0, ?, 5.0, ?, ?, ?, ?, ?, ?)").bind(id, data.name, data.region || null, data.image || null, data.pricePerSlot || 0, data.maxSlots || 10, data.duration || null, data.description || null, JSON.stringify(data.highlights || []), data.tourType || 'day', JSON.stringify(data.itinerary || []), now, now).run();
+  const tour = await db.prepare("SELECT * FROM tours WHERE tours_id = ?").bind(id).first();
   return c.json(tour, 201);
 });
 
@@ -120,7 +119,7 @@ app.get("/:id", async (c) => {
   const id = c.req.param("id");
 
   const tour = await db
-    .prepare("SELECT * FROM tours WHERE id = ?")
+    .prepare("SELECT * FROM tours WHERE tours_id = ?")
     .bind(id)
     .first();
 
@@ -131,8 +130,8 @@ app.get("/:id", async (c) => {
   // Parse itinerary from JSON string
   const tourWithItinerary = {
     ...tour,
-    itinerary: tour.itinerary ? JSON.parse(tour.itinerary as string) : null,
-    dates: tour.dates ? JSON.parse(tour.dates as string) : null,
+    tours_itinerary: tour.tours_itinerary ? JSON.parse(tour.tours_itinerary as string) : null,
+    tours_dates: tour.tours_dates ? JSON.parse(tour.tours_dates as string) : null,
   };
 
   return c.json(tourWithItinerary);
@@ -155,15 +154,15 @@ app.post("/:id/book", async (c) => {
 
   // Check tour exists and has available slots
   const tour = await db
-    .prepare("SELECT * FROM tours WHERE id = ?")
+    .prepare("SELECT * FROM tours WHERE tours_id = ?")
     .bind(tourId)
-    .first<{ id: string; total_slots: number; booked_slots: number }>();
+    .first<{ tours_id: string; tours_max_slots: number; tours_booked_slots: number }>();
 
   if (!tour) {
     return c.json({ error: "Tour not found" }, 404);
   }
 
-  const available = tour.total_slots - tour.booked_slots;
+  const available = tour.tours_max_slots - tour.tours_booked_slots;
   if (body.slots > available) {
     return c.json({ error: `Only ${available} slots available` }, 400);
   }
@@ -174,7 +173,7 @@ app.post("/:id/book", async (c) => {
   // Insert booking
   await db
     .prepare(
-      `INSERT INTO tour_bookings (id, tour_id, guest_name, guest_phone, guest_email, slots, date, payment_method, status, created_at, updated_at)
+      `INSERT INTO tour_bookings (tour_bookings_id, tour_bookings_tour_id, tour_bookings_guest_name, tour_bookings_guest_phone, tour_bookings_guest_email, tour_bookings_slots, tour_bookings_date, tour_bookings_payment_method, tour_bookings_status, tour_bookings_created_at, tour_bookings_updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'confirmed', ?, ?)`
     )
     .bind(
@@ -194,7 +193,7 @@ app.post("/:id/book", async (c) => {
   // Increment booked slots
   await db
     .prepare(
-      `UPDATE tours SET booked_slots = booked_slots + ?, updated_at = ? WHERE id = ?`
+      `UPDATE tours SET tours_booked_slots = tours_booked_slots + ?, tours_updated_at = ? WHERE tours_id = ?`
     )
     .bind(body.slots, now, tourId)
     .run();
@@ -233,21 +232,21 @@ app.get("/bookings", async (c) => {
   const params: any[] = [];
 
   if (userId) {
-    where += " AND tb.guest_email = ?";
+    where += " AND tb.tour_bookings_guest_email = ?";
     params.push(userId);
   }
   if (status) {
-    where += " AND tb.status = ?";
+    where += " AND tb.tour_bookings_status = ?";
     params.push(status);
   }
 
   const { results } = await db
     .prepare(
-      `SELECT tb.*, t.name as tour_name, t.region as tour_region, t.type as tour_type
+      `SELECT tb.*, t.tours_name as tour_name, t.tours_region as tour_region, t.tours_tour_type as tour_type
        FROM tour_bookings tb
-       LEFT JOIN tours t ON tb.tour_id = t.id
+       LEFT JOIN tours t ON tb.tour_bookings_tour_id = t.tours_id
        ${where}
-       ORDER BY tb.created_at DESC`
+       ORDER BY tb.tour_bookings_created_at DESC`
     )
     .bind(...params)
     .all();
@@ -263,15 +262,15 @@ app.put("/bookings/:id/cancel", async (c) => {
   const bookingId = c.req.param("id");
 
   const booking = await db
-    .prepare("SELECT * FROM tour_bookings WHERE id = ?")
+    .prepare("SELECT * FROM tour_bookings WHERE tour_bookings_id = ?")
     .bind(bookingId)
-    .first<{ id: string; tour_id: string; slots: number; status: string }>();
+    .first<{ tour_bookings_id: string; tour_bookings_tour_id: string; tour_bookings_slots: number; tour_bookings_status: string }>();
 
   if (!booking) {
     return c.json({ error: "Booking not found" }, 404);
   }
 
-  if (booking.status === "cancelled") {
+  if (booking.tour_bookings_status === "cancelled") {
     return c.json({ error: "Booking is already cancelled" }, 400);
   }
 
@@ -280,7 +279,7 @@ app.put("/bookings/:id/cancel", async (c) => {
   // Update booking status
   await db
     .prepare(
-      `UPDATE tour_bookings SET status = 'cancelled', updated_at = ? WHERE id = ?`
+      `UPDATE tour_bookings SET tour_bookings_status = 'cancelled', tour_bookings_updated_at = ? WHERE tour_bookings_id = ?`
     )
     .bind(now, bookingId)
     .run();
@@ -288,9 +287,9 @@ app.put("/bookings/:id/cancel", async (c) => {
   // Decrement booked slots on the tour
   await db
     .prepare(
-      `UPDATE tours SET booked_slots = MAX(0, booked_slots - ?), updated_at = ? WHERE id = ?`
+      `UPDATE tours SET tours_booked_slots = MAX(0, tours_booked_slots - ?), tours_updated_at = ? WHERE tours_id = ?`
     )
-    .bind(booking.slots, now, booking.tour_id)
+    .bind(booking.tour_bookings_slots, now, booking.tour_bookings_tour_id)
     .run();
 
   return c.json({ success: true, message: "Booking cancelled" });
@@ -311,18 +310,18 @@ app.get("/groups", async (c) => {
   const params: any[] = [];
 
   if (status === "matching") {
-    where += " AND g.matched = 0";
+    where += " AND g.groups_matched = 0";
   } else if (status === "matched") {
-    where += " AND g.matched = 1";
+    where += " AND g.groups_matched = 1";
   }
 
   const { results } = await db
     .prepare(
-      `SELECT g.*, t.name as tour_name, t.region as tour_region
+      `SELECT g.*, t.tours_name as tour_name, t.tours_region as tour_region
        FROM groups g
-       LEFT JOIN tours t ON g.tour_id = t.id
+       LEFT JOIN tours t ON g.groups_tour_id = t.tours_id
        ${where}
-       ORDER BY g.created_at DESC`
+       ORDER BY g.groups_created_at DESC`
     )
     .bind(...params)
     .all();
@@ -331,8 +330,8 @@ app.get("/groups", async (c) => {
   const groupsWithMembers = await Promise.all(
     results.map(async (group) => {
       const memberCount = await db
-        .prepare("SELECT COALESCE(SUM(slots), 0) as total FROM group_members WHERE group_id = ?")
-        .bind(group.id)
+        .prepare("SELECT COALESCE(SUM(group_members_slots), 0) as total FROM group_members WHERE group_members_group_id = ?")
+        .bind(group.groups_id)
         .first<{ total: number }>();
 
       return {
@@ -360,7 +359,7 @@ app.post("/groups", async (c) => {
 
   // Verify tour exists
   const tour = await db
-    .prepare("SELECT * FROM tours WHERE id = ?")
+    .prepare("SELECT * FROM tours WHERE tours_id = ?")
     .bind(body.tourId)
     .first();
 
@@ -374,7 +373,7 @@ app.post("/groups", async (c) => {
   // Create group
   await db
     .prepare(
-      `INSERT INTO groups (id, tour_id, creator_name, creator_email, required_members, matched, date, created_at, updated_at)
+      `INSERT INTO groups (groups_id, groups_tour_id, groups_creator_name, groups_creator_email, groups_required_members, groups_matched, groups_date, groups_created_at, groups_updated_at)
        VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?)`
     )
     .bind(id, body.tourId, body.creatorName, body.creatorEmail, body.requiredMembers, body.date, now, now)
@@ -383,7 +382,7 @@ app.post("/groups", async (c) => {
   // Add creator as first member
   await db
     .prepare(
-      `INSERT INTO group_members (id, group_id, guest_name, guest_email, slots, joined_at)
+      `INSERT INTO group_members (group_members_id, group_members_group_id, group_members_guest_name, group_members_guest_email, group_members_slots, group_members_joined_at)
        VALUES (?, ?, ?, ?, 1, ?)`
     )
     .bind(crypto.randomUUID(), id, body.creatorName, body.creatorEmail, now)
@@ -419,21 +418,21 @@ app.post("/groups/:id/join", async (c) => {
 
   // Check group exists and is not already matched
   const group = await db
-    .prepare("SELECT * FROM groups WHERE id = ?")
+    .prepare("SELECT * FROM groups WHERE groups_id = ?")
     .bind(groupId)
-    .first<{ id: string; required_members: number; matched: number }>();
+    .first<{ groups_id: string; groups_required_members: number; groups_matched: number }>();
 
   if (!group) {
     return c.json({ error: "Group not found" }, 404);
   }
 
-  if (group.matched) {
+  if (group.groups_matched) {
     return c.json({ error: "Group is already full and matched" }, 400);
   }
 
   // Check if already a member
   const existingMember = await db
-    .prepare("SELECT id FROM group_members WHERE group_id = ? AND guest_email = ?")
+    .prepare("SELECT group_members_id FROM group_members WHERE group_members_group_id = ? AND group_members_guest_email = ?")
     .bind(groupId, body.guestEmail)
     .first();
 
@@ -446,7 +445,7 @@ app.post("/groups/:id/join", async (c) => {
   // Add member
   await db
     .prepare(
-      `INSERT INTO group_members (id, group_id, guest_name, guest_email, slots, joined_at)
+      `INSERT INTO group_members (group_members_id, group_members_group_id, group_members_guest_name, group_members_guest_email, group_members_slots, group_members_joined_at)
        VALUES (?, ?, ?, ?, ?, ?)`
     )
     .bind(crypto.randomUUID(), groupId, body.guestName, body.guestEmail, body.slots, now)
@@ -454,15 +453,15 @@ app.post("/groups/:id/join", async (c) => {
 
   // Check if group is now full
   const memberCount = await db
-    .prepare("SELECT COALESCE(SUM(slots), 0) as total FROM group_members WHERE group_id = ?")
+    .prepare("SELECT COALESCE(SUM(group_members_slots), 0) as total FROM group_members WHERE group_members_group_id = ?")
     .bind(groupId)
     .first<{ total: number }>();
 
   let matched = false;
-  if (memberCount && memberCount.total >= group.required_members) {
+  if (memberCount && memberCount.total >= group.groups_required_members) {
     matched = true;
     await db
-      .prepare("UPDATE groups SET matched = 1, updated_at = ? WHERE id = ?")
+      .prepare("UPDATE groups SET groups_matched = 1, groups_updated_at = ? WHERE groups_id = ?")
       .bind(now, groupId)
       .run();
   }
@@ -475,7 +474,7 @@ app.post("/groups/:id/join", async (c) => {
         : "Joined group successfully. Waiting for more members.",
       matched,
       currentMembers: memberCount?.total ?? 0,
-      requiredMembers: group.required_members,
+      requiredMembers: group.groups_required_members,
     },
     201
   );

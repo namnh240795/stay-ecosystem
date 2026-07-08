@@ -21,35 +21,35 @@ staff.get("/api/admin/staff", async (c) => {
   const search = c.req.query("search");
   const offset = (page - 1) * limit;
 
-  let where = "WHERE role != 'guest'";
+  let where = "WHERE u.users_role != 'guest'";
   const params: any[] = [];
 
   if (roleId) {
-    where += " AND role = ?";
+    where += " AND u.users_role = ?";
     params.push(roleId);
   }
   if (status) {
-    where += " AND id IN (SELECT user_id FROM staff WHERE status = ?)";
+    where += " AND u.users_id IN (SELECT staff_user_id FROM staff WHERE staff_status = ?)";
     params.push(status);
   }
   if (search) {
-    where += " AND (name LIKE ? OR email LIKE ? OR phone LIKE ?)";
+    where += " AND (u.users_name LIKE ? OR u.users_email LIKE ? OR u.users_phone LIKE ?)";
     const s = `%${search}%`;
     params.push(s, s, s);
   }
 
   const countResult = await usersDb
-    .prepare(`SELECT COUNT(*) as count FROM users ${where}`)
+    .prepare(`SELECT COUNT(*) as count FROM users u ${where}`)
     .bind(...params)
     .first<{ count: number }>();
 
   const results = await usersDb
     .prepare(
-      `SELECT u.*, s.status as staff_status, s.role_id, s.joined_at
+      `SELECT u.*, s.staff_status, s.staff_role_id, s.staff_joined_at
        FROM users u
-       LEFT JOIN staff s ON u.id = s.user_id
+       LEFT JOIN staff s ON u.users_id = s.staff_user_id
        ${where}
-       ORDER BY u.created_at DESC
+       ORDER BY u.users_created_at DESC
        LIMIT ? OFFSET ?`
     )
     .bind(...params, limit, offset)
@@ -70,10 +70,10 @@ staff.get("/api/admin/staff/:id", async (c) => {
 
   const result = await usersDb
     .prepare(
-      `SELECT u.*, s.status as staff_status, s.role_id, s.joined_at
+      `SELECT u.*, s.staff_status, s.staff_role_id, s.staff_joined_at
        FROM users u
-       LEFT JOIN staff s ON u.id = s.user_id
-       WHERE u.id = ? AND u.role != 'guest'`
+       LEFT JOIN staff s ON u.users_id = s.staff_user_id
+       WHERE u.users_id = ? AND u.users_role != 'guest'`
     )
     .bind(id)
     .first();
@@ -92,7 +92,7 @@ staff.post("/api/admin/staff", async (c) => {
   // Create user record
   await usersDb
     .prepare(
-      `INSERT INTO users (id, email, name, phone, role, created_at, updated_at)
+      `INSERT INTO users (users_id, users_email, users_name, users_phone, users_role, users_created_at, users_updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?)`
     )
     .bind(userId, data.email, data.name, data.phone || null, data.roleId || "staff", now, now)
@@ -101,7 +101,7 @@ staff.post("/api/admin/staff", async (c) => {
   // Create staff record
   await usersDb
     .prepare(
-      `INSERT INTO staff (id, user_id, role_id, status, joined_at, created_at, updated_at)
+      `INSERT INTO staff (staff_id, staff_user_id, staff_role_id, staff_status, staff_joined_at, staff_created_at, staff_updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?)`
     )
     .bind(crypto.randomUUID(), userId, data.roleId || null, data.status || "Active", now, now, now)
@@ -109,10 +109,10 @@ staff.post("/api/admin/staff", async (c) => {
 
   const created = await usersDb
     .prepare(
-      `SELECT u.*, s.status as staff_status, s.role_id, s.joined_at
+      `SELECT u.*, s.staff_status, s.staff_role_id, s.staff_joined_at
        FROM users u
-       LEFT JOIN staff s ON u.id = s.user_id
-       WHERE u.id = ?`
+       LEFT JOIN staff s ON u.users_id = s.staff_user_id
+       WHERE u.users_id = ?`
     )
     .bind(userId)
     .first();
@@ -128,7 +128,7 @@ staff.put("/api/admin/staff/:id", async (c) => {
   const now = new Date().toISOString();
 
   const existing = await usersDb
-    .prepare("SELECT * FROM users WHERE id = ? AND role != 'guest'")
+    .prepare("SELECT * FROM users WHERE users_id = ? AND users_role != 'guest'")
     .bind(id)
     .first();
   if (!existing) return c.json({ error: "Staff member not found" }, 404);
@@ -138,10 +138,10 @@ staff.put("/api/admin/staff/:id", async (c) => {
   const userValues: any[] = [];
 
   for (const [key, dbKey] of Object.entries({
-    name: "name",
-    email: "email",
-    phone: "phone",
-    roleId: "role",
+    name: "users_name",
+    email: "users_email",
+    phone: "users_phone",
+    roleId: "users_role",
   })) {
     if (data[key] !== undefined) {
       userFields.push(`${dbKey} = ?`);
@@ -150,11 +150,11 @@ staff.put("/api/admin/staff/:id", async (c) => {
   }
 
   if (userFields.length > 0) {
-    userFields.push("updated_at = ?");
+    userFields.push("users_updated_at = ?");
     userValues.push(now);
     userValues.push(id);
     await usersDb
-      .prepare(`UPDATE users SET ${userFields.join(", ")} WHERE id = ?`)
+      .prepare(`UPDATE users SET ${userFields.join(", ")} WHERE users_id = ?`)
       .bind(...userValues)
       .run();
   }
@@ -162,7 +162,7 @@ staff.put("/api/admin/staff/:id", async (c) => {
   // Update staff record if exists
   if (data.status !== undefined || data.roleId !== undefined) {
     const staffRecord = await usersDb
-      .prepare("SELECT * FROM staff WHERE user_id = ?")
+      .prepare("SELECT * FROM staff WHERE staff_user_id = ?")
       .bind(id)
       .first();
 
@@ -171,20 +171,20 @@ staff.put("/api/admin/staff/:id", async (c) => {
       const staffValues: any[] = [];
 
       if (data.roleId !== undefined) {
-        staffFields.push("role_id = ?");
+        staffFields.push("staff_role_id = ?");
         staffValues.push(data.roleId);
       }
       if (data.status !== undefined) {
-        staffFields.push("status = ?");
+        staffFields.push("staff_status = ?");
         staffValues.push(data.status);
       }
 
       if (staffFields.length > 0) {
-        staffFields.push("updated_at = ?");
+        staffFields.push("staff_updated_at = ?");
         staffValues.push(now);
         staffValues.push(id);
         await usersDb
-          .prepare(`UPDATE staff SET ${staffFields.join(", ")} WHERE user_id = ?`)
+          .prepare(`UPDATE staff SET ${staffFields.join(", ")} WHERE staff_user_id = ?`)
           .bind(...staffValues)
           .run();
       }
@@ -193,10 +193,10 @@ staff.put("/api/admin/staff/:id", async (c) => {
 
   const updated = await usersDb
     .prepare(
-      `SELECT u.*, s.status as staff_status, s.role_id, s.joined_at
+      `SELECT u.*, s.staff_status, s.staff_role_id, s.staff_joined_at
        FROM users u
-       LEFT JOIN staff s ON u.id = s.user_id
-       WHERE u.id = ?`
+       LEFT JOIN staff s ON u.users_id = s.staff_user_id
+       WHERE u.users_id = ?`
     )
     .bind(id)
     .first();
@@ -212,26 +212,26 @@ staff.patch("/api/admin/staff/:id/status", async (c) => {
   const now = new Date().toISOString();
 
   const existing = await usersDb
-    .prepare("SELECT * FROM users WHERE id = ? AND role != 'guest'")
+    .prepare("SELECT * FROM users WHERE users_id = ? AND users_role != 'guest'")
     .bind(id)
     .first();
   if (!existing) return c.json({ error: "Staff member not found" }, 404);
 
   const staffRecord = await usersDb
-    .prepare("SELECT * FROM staff WHERE user_id = ?")
+    .prepare("SELECT * FROM staff WHERE staff_user_id = ?")
     .bind(id)
     .first();
 
   if (staffRecord) {
     await usersDb
-      .prepare("UPDATE staff SET status = ?, updated_at = ? WHERE user_id = ?")
+      .prepare("UPDATE staff SET staff_status = ?, staff_updated_at = ? WHERE staff_user_id = ?")
       .bind(data.status, now, id)
       .run();
   } else {
     // Create staff record if it doesn't exist
     await usersDb
       .prepare(
-        `INSERT INTO staff (id, user_id, status, created_at, updated_at)
+        `INSERT INTO staff (staff_id, staff_user_id, staff_status, staff_created_at, staff_updated_at)
          VALUES (?, ?, ?, ?, ?)`
       )
       .bind(crypto.randomUUID(), id, data.status, now, now)
@@ -240,10 +240,10 @@ staff.patch("/api/admin/staff/:id/status", async (c) => {
 
   const updated = await usersDb
     .prepare(
-      `SELECT u.*, s.status as staff_status, s.role_id, s.joined_at
+      `SELECT u.*, s.staff_status, s.staff_role_id, s.staff_joined_at
        FROM users u
-       LEFT JOIN staff s ON u.id = s.user_id
-       WHERE u.id = ?`
+       LEFT JOIN staff s ON u.users_id = s.staff_user_id
+       WHERE u.users_id = ?`
     )
     .bind(id)
     .first();
@@ -257,15 +257,15 @@ staff.delete("/api/admin/staff/:id", async (c) => {
   const id = c.req.param("id");
 
   const existing = await usersDb
-    .prepare("SELECT * FROM users WHERE id = ? AND role != 'guest'")
+    .prepare("SELECT * FROM users WHERE users_id = ? AND users_role != 'guest'")
     .bind(id)
     .first();
   if (!existing) return c.json({ error: "Staff member not found" }, 404);
 
   // Delete staff record first (foreign key)
-  await usersDb.prepare("DELETE FROM staff WHERE user_id = ?").bind(id).run();
+  await usersDb.prepare("DELETE FROM staff WHERE staff_user_id = ?").bind(id).run();
   // Delete user record
-  await usersDb.prepare("DELETE FROM users WHERE id = ?").bind(id).run();
+  await usersDb.prepare("DELETE FROM users WHERE users_id = ?").bind(id).run();
 
   return c.json({ success: true });
 });
@@ -280,18 +280,18 @@ staff.get("/api/admin/roles", async (c) => {
   await usersDb
     .prepare(
       `CREATE TABLE IF NOT EXISTS roles (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL UNIQUE,
-        description TEXT,
-        permissions TEXT,
-        created_at TEXT NOT NULL DEFAULT '',
-        updated_at TEXT NOT NULL DEFAULT ''
+        roles_id TEXT PRIMARY KEY,
+        roles_name TEXT NOT NULL UNIQUE,
+        roles_description TEXT,
+        roles_permissions TEXT,
+        roles_created_at TEXT NOT NULL DEFAULT '',
+        roles_updated_at TEXT NOT NULL DEFAULT ''
       )`
     )
     .run();
 
   const results = await usersDb
-    .prepare("SELECT * FROM roles ORDER BY name ASC")
+    .prepare("SELECT * FROM roles ORDER BY roles_name ASC")
     .all();
 
   // If no roles exist, seed with defaults
@@ -306,7 +306,7 @@ staff.get("/api/admin/roles", async (c) => {
     for (const role of defaultRoles) {
       await usersDb
         .prepare(
-          `INSERT OR IGNORE INTO roles (id, name, description, permissions, created_at, updated_at)
+          `INSERT OR IGNORE INTO roles (roles_id, roles_name, roles_description, roles_permissions, roles_created_at, roles_updated_at)
            VALUES (?, ?, ?, ?, '', '')`
         )
         .bind(role.id, role.name, role.description, role.permissions)
@@ -314,7 +314,7 @@ staff.get("/api/admin/roles", async (c) => {
     }
 
     const seeded = await usersDb
-      .prepare("SELECT * FROM roles ORDER BY name ASC")
+      .prepare("SELECT * FROM roles ORDER BY roles_name ASC")
       .all();
     return c.json({ data: seeded.results });
   }
@@ -333,12 +333,12 @@ staff.post("/api/admin/roles", async (c) => {
   await usersDb
     .prepare(
       `CREATE TABLE IF NOT EXISTS roles (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL UNIQUE,
-        description TEXT,
-        permissions TEXT,
-        created_at TEXT NOT NULL DEFAULT '',
-        updated_at TEXT NOT NULL DEFAULT ''
+        roles_id TEXT PRIMARY KEY,
+        roles_name TEXT NOT NULL UNIQUE,
+        roles_description TEXT,
+        roles_permissions TEXT,
+        roles_created_at TEXT NOT NULL DEFAULT '',
+        roles_updated_at TEXT NOT NULL DEFAULT ''
       )`
     )
     .run();
@@ -346,7 +346,7 @@ staff.post("/api/admin/roles", async (c) => {
   try {
     await usersDb
       .prepare(
-        `INSERT INTO roles (id, name, description, permissions, created_at, updated_at)
+        `INSERT INTO roles (roles_id, roles_name, roles_description, roles_permissions, roles_created_at, roles_updated_at)
          VALUES (?, ?, ?, ?, ?, ?)`
       )
       .bind(
@@ -366,7 +366,7 @@ staff.post("/api/admin/roles", async (c) => {
   }
 
   const created = await usersDb
-    .prepare("SELECT * FROM roles WHERE id = ?")
+    .prepare("SELECT * FROM roles WHERE roles_id = ?")
     .bind(id)
     .first();
 
@@ -381,7 +381,7 @@ staff.put("/api/admin/roles/:id", async (c) => {
   const now = new Date().toISOString();
 
   const existing = await usersDb
-    .prepare("SELECT * FROM roles WHERE id = ?")
+    .prepare("SELECT * FROM roles WHERE roles_id = ?")
     .bind(id)
     .first();
   if (!existing) return c.json({ error: "Role not found" }, 404);
@@ -390,26 +390,26 @@ staff.put("/api/admin/roles/:id", async (c) => {
   const values: any[] = [];
 
   if (data.name !== undefined) {
-    fields.push("name = ?");
+    fields.push("roles_name = ?");
     values.push(data.name);
   }
   if (data.description !== undefined) {
-    fields.push("description = ?");
+    fields.push("roles_description = ?");
     values.push(data.description);
   }
   if (data.permissions !== undefined) {
-    fields.push("permissions = ?");
+    fields.push("roles_permissions = ?");
     values.push(JSON.stringify(data.permissions));
   }
 
   if (fields.length > 0) {
-    fields.push("updated_at = ?");
+    fields.push("roles_updated_at = ?");
     values.push(now);
     values.push(id);
 
     try {
       await usersDb
-        .prepare(`UPDATE roles SET ${fields.join(", ")} WHERE id = ?`)
+        .prepare(`UPDATE roles SET ${fields.join(", ")} WHERE roles_id = ?`)
         .bind(...values)
         .run();
     } catch (err: any) {
@@ -421,7 +421,7 @@ staff.put("/api/admin/roles/:id", async (c) => {
   }
 
   const updated = await usersDb
-    .prepare("SELECT * FROM roles WHERE id = ?")
+    .prepare("SELECT * FROM roles WHERE roles_id = ?")
     .bind(id)
     .first();
 
@@ -434,12 +434,12 @@ staff.delete("/api/admin/roles/:id", async (c) => {
   const id = c.req.param("id");
 
   const existing = await usersDb
-    .prepare("SELECT * FROM roles WHERE id = ?")
+    .prepare("SELECT * FROM roles WHERE roles_id = ?")
     .bind(id)
     .first();
   if (!existing) return c.json({ error: "Role not found" }, 404);
 
-  await usersDb.prepare("DELETE FROM roles WHERE id = ?").bind(id).run();
+  await usersDb.prepare("DELETE FROM roles WHERE roles_id = ?").bind(id).run();
   return c.json({ success: true });
 });
 
@@ -457,19 +457,19 @@ staff.get("/api/admin/leave-requests", async (c) => {
   await usersDb
     .prepare(
       `CREATE TABLE IF NOT EXISTS leave_requests (
-        id TEXT PRIMARY KEY,
-        type TEXT NOT NULL DEFAULT 'leave',
-        staff_name TEXT NOT NULL,
-        staff_id TEXT,
-        reason TEXT,
-        start_date TEXT NOT NULL,
-        end_date TEXT NOT NULL,
-        status TEXT NOT NULL DEFAULT 'Pending',
-        response_notes TEXT,
-        reviewed_by TEXT,
-        reviewed_at TEXT,
-        created_at TEXT NOT NULL DEFAULT '',
-        updated_at TEXT NOT NULL DEFAULT ''
+        leave_requests_id TEXT PRIMARY KEY,
+        leave_requests_type TEXT NOT NULL DEFAULT 'leave',
+        leave_requests_staff_name TEXT NOT NULL,
+        leave_requests_staff_id TEXT,
+        leave_requests_reason TEXT,
+        leave_requests_start_date TEXT NOT NULL,
+        leave_requests_end_date TEXT NOT NULL,
+        leave_requests_status TEXT NOT NULL DEFAULT 'Pending',
+        leave_requests_response_notes TEXT,
+        leave_requests_reviewed_by TEXT,
+        leave_requests_reviewed_at TEXT,
+        leave_requests_created_at TEXT NOT NULL DEFAULT '',
+        leave_requests_updated_at TEXT NOT NULL DEFAULT ''
       )`
     )
     .run();
@@ -478,7 +478,7 @@ staff.get("/api/admin/leave-requests", async (c) => {
   const params: any[] = [];
 
   if (status) {
-    where += " AND status = ?";
+    where += " AND leave_requests_status = ?";
     params.push(status);
   }
 
@@ -489,7 +489,7 @@ staff.get("/api/admin/leave-requests", async (c) => {
 
   const results = await usersDb
     .prepare(
-      `SELECT * FROM leave_requests ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`
+      `SELECT * FROM leave_requests ${where} ORDER BY leave_requests_created_at DESC LIMIT ? OFFSET ?`
     )
     .bind(...params, limit, offset)
     .all();
@@ -513,26 +513,26 @@ staff.post("/api/admin/leave-requests", async (c) => {
   await usersDb
     .prepare(
       `CREATE TABLE IF NOT EXISTS leave_requests (
-        id TEXT PRIMARY KEY,
-        type TEXT NOT NULL DEFAULT 'leave',
-        staff_name TEXT NOT NULL,
-        staff_id TEXT,
-        reason TEXT,
-        start_date TEXT NOT NULL,
-        end_date TEXT NOT NULL,
-        status TEXT NOT NULL DEFAULT 'Pending',
-        response_notes TEXT,
-        reviewed_by TEXT,
-        reviewed_at TEXT,
-        created_at TEXT NOT NULL DEFAULT '',
-        updated_at TEXT NOT NULL DEFAULT ''
+        leave_requests_id TEXT PRIMARY KEY,
+        leave_requests_type TEXT NOT NULL DEFAULT 'leave',
+        leave_requests_staff_name TEXT NOT NULL,
+        leave_requests_staff_id TEXT,
+        leave_requests_reason TEXT,
+        leave_requests_start_date TEXT NOT NULL,
+        leave_requests_end_date TEXT NOT NULL,
+        leave_requests_status TEXT NOT NULL DEFAULT 'Pending',
+        leave_requests_response_notes TEXT,
+        leave_requests_reviewed_by TEXT,
+        leave_requests_reviewed_at TEXT,
+        leave_requests_created_at TEXT NOT NULL DEFAULT '',
+        leave_requests_updated_at TEXT NOT NULL DEFAULT ''
       )`
     )
     .run();
 
   await usersDb
     .prepare(
-      `INSERT INTO leave_requests (id, type, staff_name, staff_id, reason, start_date, end_date, status, created_at, updated_at)
+      `INSERT INTO leave_requests (leave_requests_id, leave_requests_type, leave_requests_staff_name, leave_requests_staff_id, leave_requests_reason, leave_requests_start_date, leave_requests_end_date, leave_requests_status, leave_requests_created_at, leave_requests_updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending', ?, ?)`
     )
     .bind(
@@ -549,7 +549,7 @@ staff.post("/api/admin/leave-requests", async (c) => {
     .run();
 
   const created = await usersDb
-    .prepare("SELECT * FROM leave_requests WHERE id = ?")
+    .prepare("SELECT * FROM leave_requests WHERE leave_requests_id = ?")
     .bind(id)
     .first();
 
@@ -564,7 +564,7 @@ staff.patch("/api/admin/leave-requests/:id/status", async (c) => {
   const now = new Date().toISOString();
 
   const existing = await usersDb
-    .prepare("SELECT * FROM leave_requests WHERE id = ?")
+    .prepare("SELECT * FROM leave_requests WHERE leave_requests_id = ?")
     .bind(id)
     .first();
   if (!existing) return c.json({ error: "Leave request not found" }, 404);
@@ -572,14 +572,14 @@ staff.patch("/api/admin/leave-requests/:id/status", async (c) => {
   await usersDb
     .prepare(
       `UPDATE leave_requests
-       SET status = ?, response_notes = ?, reviewed_at = ?, updated_at = ?
-       WHERE id = ?`
+       SET leave_requests_status = ?, leave_requests_response_notes = ?, leave_requests_reviewed_at = ?, leave_requests_updated_at = ?
+       WHERE leave_requests_id = ?`
     )
     .bind(data.status, data.responseNotes || null, now, now, id)
     .run();
 
   const updated = await usersDb
-    .prepare("SELECT * FROM leave_requests WHERE id = ?")
+    .prepare("SELECT * FROM leave_requests WHERE leave_requests_id = ?")
     .bind(id)
     .first();
 

@@ -25,15 +25,15 @@ router.get("/api/admin/reservations", async (c) => {
   const params: any[] = [];
 
   if (status) {
-    where += " AND status = ?";
+    where += " AND bookings_status = ?";
     params.push(status);
   }
   if (branchId) {
-    where += " AND property_id = ?";
+    where += " AND bookings_property_id = ?";
     params.push(branchId);
   }
   if (search) {
-    where += " AND (guest_id LIKE ? OR special_requests LIKE ? OR id LIKE ?)";
+    where += " AND (bookings_guest_id LIKE ? OR bookings_special_requests LIKE ? OR bookings_id LIKE ?)";
     const s = `%${search}%`;
     params.push(s, s, s);
   }
@@ -45,7 +45,7 @@ router.get("/api/admin/reservations", async (c) => {
 
   const results = await db
     .prepare(
-      `SELECT * FROM bookings ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`
+      `SELECT * FROM bookings ${where} ORDER BY bookings_created_at DESC LIMIT ? OFFSET ?`
     )
     .bind(...params, limit, offset)
     .all();
@@ -64,7 +64,7 @@ router.get("/api/admin/reservations/:id", async (c) => {
   const id = c.req.param("id");
 
   const reservation = await db
-    .prepare("SELECT * FROM bookings WHERE id = ?")
+    .prepare("SELECT * FROM bookings WHERE bookings_id = ?")
     .bind(id)
     .first();
 
@@ -90,7 +90,7 @@ router.post("/api/admin/reservations", async (c) => {
 
   await db
     .prepare(
-      `INSERT INTO bookings (id, property_id, guest_id, partner_id, check_in, check_out, nights, guests, total_price, status, special_requests, created_at, updated_at)
+      `INSERT INTO bookings (bookings_id, bookings_property_id, bookings_guest_id, bookings_partner_id, bookings_check_in, bookings_check_out, bookings_nights, bookings_guests, bookings_total_price, bookings_status, bookings_special_requests, bookings_created_at, bookings_updated_at)
        VALUES (?, ?, '', '', ?, ?, ?, ?, ?, 'pending', ?, ?, ?)`
     )
     .bind(
@@ -108,7 +108,7 @@ router.post("/api/admin/reservations", async (c) => {
     .run();
 
   const created = await db
-    .prepare("SELECT * FROM bookings WHERE id = ?")
+    .prepare("SELECT * FROM bookings WHERE bookings_id = ?")
     .bind(id)
     .first();
   return c.json(created, 201);
@@ -138,37 +138,37 @@ router.patch("/api/admin/reservations/:id/status", async (c) => {
   }
 
   const existing = await db
-    .prepare("SELECT * FROM bookings WHERE id = ?")
+    .prepare("SELECT * FROM bookings WHERE bookings_id = ?")
     .bind(id)
     .first();
   if (!existing) {
     return c.json({ error: "Reservation not found" }, 404);
   }
 
-  let updateFields = "status = ?, updated_at = ?";
+  let updateFields = "bookings_status = ?, bookings_updated_at = ?";
   let updateValues: any[] = [data.status, now];
 
   if (data.status === "Cancelled") {
-    updateFields += ", cancellation_reason = ?, cancelled_at = ?";
+    updateFields += ", bookings_cancellation_reason = ?, bookings_cancelled_at = ?";
     updateValues.push(data.cancellationReason || "Cancelled by admin", now);
   }
   if (data.status === "confirmed" || data.status === "CheckedIn") {
-    updateFields += ", confirmed_at = ?";
+    updateFields += ", bookings_confirmed_at = ?";
     updateValues.push(now);
   }
   if (data.status === "completed" || data.status === "CheckedOut") {
-    updateFields += ", completed_at = ?";
+    updateFields += ", bookings_completed_at = ?";
     updateValues.push(now);
   }
 
   updateValues.push(id);
   await db
-    .prepare(`UPDATE bookings SET ${updateFields} WHERE id = ?`)
+    .prepare(`UPDATE bookings SET ${updateFields} WHERE bookings_id = ?`)
     .bind(...updateValues)
     .run();
 
   const updated = await db
-    .prepare("SELECT * FROM bookings WHERE id = ?")
+    .prepare("SELECT * FROM bookings WHERE bookings_id = ?")
     .bind(id)
     .first();
   return c.json(updated);
@@ -187,35 +187,35 @@ router.get("/api/admin/rooms", async (c) => {
   const params: any[] = [];
 
   if (branchId) {
-    where += " AND id = ?";
+    where += " AND properties_id = ?";
     params.push(branchId);
   }
   if (search) {
-    where += " AND (title LIKE ? OR address LIKE ?)";
+    where += " AND (properties_title LIKE ? OR properties_address LIKE ?)";
     const s = `%${search}%`;
     params.push(s, s);
   }
 
   // Rooms are derived from properties (each property = a room/unit)
   const results = await db
-    .prepare(`SELECT * FROM properties ${where} ORDER BY title ASC`)
+    .prepare(`SELECT * FROM properties ${where} ORDER BY properties_title ASC`)
     .bind(...params)
     .all();
 
   // Map properties to room-like objects with status
   const rooms = results.results.map((row: any) => ({
-    id: row.id,
-    name: row.title,
-    branchId: row.partner_id,
-    branchName: row.city,
+    id: row.properties_id,
+    name: row.properties_title,
+    branchId: row.properties_partner_id,
+    branchName: row.properties_city,
     status: status || "Clean",
-    propertyType: row.property_type,
-    bedrooms: row.bedrooms,
-    bathrooms: row.bathrooms,
-    maxGuests: row.max_guests,
-    pricePerNight: row.price_per_night,
-    address: row.address,
-    city: row.city,
+    propertyType: row.properties_property_type,
+    bedrooms: row.properties_bedrooms,
+    bathrooms: row.properties_bathrooms,
+    maxGuests: row.properties_max_guests,
+    pricePerNight: row.properties_price_per_night,
+    address: row.properties_address,
+    city: row.properties_city,
   }));
 
   // Filter by room status if provided (in a real app this would be a separate column)
@@ -239,22 +239,22 @@ router.post("/api/admin/requests", async (c) => {
   await db
     .prepare(
       `CREATE TABLE IF NOT EXISTS service_requests (
-        id TEXT PRIMARY KEY,
-        room_name TEXT NOT NULL,
-        guest_name TEXT NOT NULL,
-        type TEXT NOT NULL,
-        detail TEXT,
-        assigned_staff TEXT,
-        status TEXT NOT NULL DEFAULT 'pending',
-        created_at TEXT NOT NULL DEFAULT '',
-        updated_at TEXT NOT NULL DEFAULT ''
+        service_requests_id TEXT PRIMARY KEY,
+        service_requests_room_name TEXT NOT NULL,
+        service_requests_guest_name TEXT NOT NULL,
+        service_requests_type TEXT NOT NULL,
+        service_requests_detail TEXT,
+        service_requests_assigned_staff TEXT,
+        service_requests_status TEXT NOT NULL DEFAULT 'pending',
+        service_requests_created_at TEXT NOT NULL DEFAULT '',
+        service_requests_updated_at TEXT NOT NULL DEFAULT ''
       )`
     )
     .run();
 
   await db
     .prepare(
-      `INSERT INTO service_requests (id, room_name, guest_name, type, detail, assigned_staff, status, created_at, updated_at)
+      `INSERT INTO service_requests (service_requests_id, service_requests_room_name, service_requests_guest_name, service_requests_type, service_requests_detail, service_requests_assigned_staff, service_requests_status, service_requests_created_at, service_requests_updated_at)
        VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?)`
     )
     .bind(
@@ -270,7 +270,7 @@ router.post("/api/admin/requests", async (c) => {
     .run();
 
   const created = await db
-    .prepare("SELECT * FROM service_requests WHERE id = ?")
+    .prepare("SELECT * FROM service_requests WHERE service_requests_id = ?")
     .bind(id)
     .first();
   return c.json(created, 201);
@@ -288,15 +288,15 @@ router.get("/api/admin/requests", async (c) => {
   await db
     .prepare(
       `CREATE TABLE IF NOT EXISTS service_requests (
-        id TEXT PRIMARY KEY,
-        room_name TEXT NOT NULL,
-        guest_name TEXT NOT NULL,
-        type TEXT NOT NULL,
-        detail TEXT,
-        assigned_staff TEXT,
-        status TEXT NOT NULL DEFAULT 'pending',
-        created_at TEXT NOT NULL DEFAULT '',
-        updated_at TEXT NOT NULL DEFAULT ''
+        service_requests_id TEXT PRIMARY KEY,
+        service_requests_room_name TEXT NOT NULL,
+        service_requests_guest_name TEXT NOT NULL,
+        service_requests_type TEXT NOT NULL,
+        service_requests_detail TEXT,
+        service_requests_assigned_staff TEXT,
+        service_requests_status TEXT NOT NULL DEFAULT 'pending',
+        service_requests_created_at TEXT NOT NULL DEFAULT '',
+        service_requests_updated_at TEXT NOT NULL DEFAULT ''
       )`
     )
     .run();
@@ -305,7 +305,7 @@ router.get("/api/admin/requests", async (c) => {
   const params: any[] = [];
 
   if (status) {
-    where += " AND status = ?";
+    where += " AND service_requests_status = ?";
     params.push(status);
   }
 
@@ -318,7 +318,7 @@ router.get("/api/admin/requests", async (c) => {
 
   const results = await db
     .prepare(
-      `SELECT * FROM service_requests ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`
+      `SELECT * FROM service_requests ${where} ORDER BY service_requests_created_at DESC LIMIT ? OFFSET ?`
     )
     .bind(...params, limit, offset)
     .all();
@@ -339,7 +339,7 @@ router.patch("/api/admin/requests/:id/status", async (c) => {
   const now = new Date().toISOString();
 
   const existing = await db
-    .prepare("SELECT * FROM service_requests WHERE id = ?")
+    .prepare("SELECT * FROM service_requests WHERE service_requests_id = ?")
     .bind(id)
     .first();
   if (!existing) {
@@ -348,13 +348,13 @@ router.patch("/api/admin/requests/:id/status", async (c) => {
 
   await db
     .prepare(
-      "UPDATE service_requests SET status = ?, updated_at = ? WHERE id = ?"
+      "UPDATE service_requests SET service_requests_status = ?, service_requests_updated_at = ? WHERE service_requests_id = ?"
     )
     .bind(data.status, now, id)
     .run();
 
   const updated = await db
-    .prepare("SELECT * FROM service_requests WHERE id = ?")
+    .prepare("SELECT * FROM service_requests WHERE service_requests_id = ?")
     .bind(id)
     .first();
   return c.json(updated);
@@ -373,22 +373,22 @@ router.post("/api/admin/complaints", async (c) => {
   await db
     .prepare(
       `CREATE TABLE IF NOT EXISTS complaints (
-        id TEXT PRIMARY KEY,
-        guest_name TEXT NOT NULL,
-        room_name TEXT NOT NULL,
-        title TEXT NOT NULL,
-        detail TEXT,
-        priority TEXT NOT NULL DEFAULT 'medium',
-        status TEXT NOT NULL DEFAULT 'open',
-        created_at TEXT NOT NULL DEFAULT '',
-        updated_at TEXT NOT NULL DEFAULT ''
+        complaints_id TEXT PRIMARY KEY,
+        complaints_guest_name TEXT NOT NULL,
+        complaints_room_name TEXT NOT NULL,
+        complaints_title TEXT NOT NULL,
+        complaints_detail TEXT,
+        complaints_priority TEXT NOT NULL DEFAULT 'medium',
+        complaints_status TEXT NOT NULL DEFAULT 'open',
+        complaints_created_at TEXT NOT NULL DEFAULT '',
+        complaints_updated_at TEXT NOT NULL DEFAULT ''
       )`
     )
     .run();
 
   await db
     .prepare(
-      `INSERT INTO complaints (id, guest_name, room_name, title, detail, priority, status, created_at, updated_at)
+      `INSERT INTO complaints (complaints_id, complaints_guest_name, complaints_room_name, complaints_title, complaints_detail, complaints_priority, complaints_status, complaints_created_at, complaints_updated_at)
        VALUES (?, ?, ?, ?, ?, ?, 'open', ?, ?)`
     )
     .bind(
@@ -404,7 +404,7 @@ router.post("/api/admin/complaints", async (c) => {
     .run();
 
   const created = await db
-    .prepare("SELECT * FROM complaints WHERE id = ?")
+    .prepare("SELECT * FROM complaints WHERE complaints_id = ?")
     .bind(id)
     .first();
   return c.json(created, 201);
@@ -422,15 +422,15 @@ router.get("/api/admin/complaints", async (c) => {
   await db
     .prepare(
       `CREATE TABLE IF NOT EXISTS complaints (
-        id TEXT PRIMARY KEY,
-        guest_name TEXT NOT NULL,
-        room_name TEXT NOT NULL,
-        title TEXT NOT NULL,
-        detail TEXT,
-        priority TEXT NOT NULL DEFAULT 'medium',
-        status TEXT NOT NULL DEFAULT 'open',
-        created_at TEXT NOT NULL DEFAULT '',
-        updated_at TEXT NOT NULL DEFAULT ''
+        complaints_id TEXT PRIMARY KEY,
+        complaints_guest_name TEXT NOT NULL,
+        complaints_room_name TEXT NOT NULL,
+        complaints_title TEXT NOT NULL,
+        complaints_detail TEXT,
+        complaints_priority TEXT NOT NULL DEFAULT 'medium',
+        complaints_status TEXT NOT NULL DEFAULT 'open',
+        complaints_created_at TEXT NOT NULL DEFAULT '',
+        complaints_updated_at TEXT NOT NULL DEFAULT ''
       )`
     )
     .run();
@@ -439,7 +439,7 @@ router.get("/api/admin/complaints", async (c) => {
   const params: any[] = [];
 
   if (status) {
-    where += " AND status = ?";
+    where += " AND complaints_status = ?";
     params.push(status);
   }
 
@@ -450,7 +450,7 @@ router.get("/api/admin/complaints", async (c) => {
 
   const results = await db
     .prepare(
-      `SELECT * FROM complaints ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`
+      `SELECT * FROM complaints ${where} ORDER BY complaints_created_at DESC LIMIT ? OFFSET ?`
     )
     .bind(...params, limit, offset)
     .all();
@@ -471,7 +471,7 @@ router.patch("/api/admin/complaints/:id/status", async (c) => {
   const now = new Date().toISOString();
 
   const existing = await db
-    .prepare("SELECT * FROM complaints WHERE id = ?")
+    .prepare("SELECT * FROM complaints WHERE complaints_id = ?")
     .bind(id)
     .first();
   if (!existing) {
@@ -479,12 +479,12 @@ router.patch("/api/admin/complaints/:id/status", async (c) => {
   }
 
   await db
-    .prepare("UPDATE complaints SET status = ?, updated_at = ? WHERE id = ?")
+    .prepare("UPDATE complaints SET complaints_status = ?, complaints_updated_at = ? WHERE complaints_id = ?")
     .bind(data.status, now, id)
     .run();
 
   const updated = await db
-    .prepare("SELECT * FROM complaints WHERE id = ?")
+    .prepare("SELECT * FROM complaints WHERE complaints_id = ?")
     .bind(id)
     .first();
   return c.json(updated);
@@ -503,20 +503,20 @@ router.post("/api/admin/daily-logs", async (c) => {
   await db
     .prepare(
       `CREATE TABLE IF NOT EXISTS daily_logs (
-        id TEXT PRIMARY KEY,
-        author TEXT NOT NULL,
-        shift TEXT NOT NULL,
-        content TEXT NOT NULL,
-        issues TEXT,
-        created_at TEXT NOT NULL DEFAULT '',
-        updated_at TEXT NOT NULL DEFAULT ''
+        daily_logs_id TEXT PRIMARY KEY,
+        daily_logs_author TEXT NOT NULL,
+        daily_logs_shift TEXT NOT NULL,
+        daily_logs_content TEXT NOT NULL,
+        daily_logs_issues TEXT,
+        daily_logs_created_at TEXT NOT NULL DEFAULT '',
+        daily_logs_updated_at TEXT NOT NULL DEFAULT ''
       )`
     )
     .run();
 
   await db
     .prepare(
-      `INSERT INTO daily_logs (id, author, shift, content, issues, created_at, updated_at)
+      `INSERT INTO daily_logs (daily_logs_id, daily_logs_author, daily_logs_shift, daily_logs_content, daily_logs_issues, daily_logs_created_at, daily_logs_updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?)`
     )
     .bind(
@@ -531,7 +531,7 @@ router.post("/api/admin/daily-logs", async (c) => {
     .run();
 
   const created = await db
-    .prepare("SELECT * FROM daily_logs WHERE id = ?")
+    .prepare("SELECT * FROM daily_logs WHERE daily_logs_id = ?")
     .bind(id)
     .first();
   return c.json(created, 201);
@@ -548,13 +548,13 @@ router.get("/api/admin/daily-logs", async (c) => {
   await db
     .prepare(
       `CREATE TABLE IF NOT EXISTS daily_logs (
-        id TEXT PRIMARY KEY,
-        author TEXT NOT NULL,
-        shift TEXT NOT NULL,
-        content TEXT NOT NULL,
-        issues TEXT,
-        created_at TEXT NOT NULL DEFAULT '',
-        updated_at TEXT NOT NULL DEFAULT ''
+        daily_logs_id TEXT PRIMARY KEY,
+        daily_logs_author TEXT NOT NULL,
+        daily_logs_shift TEXT NOT NULL,
+        daily_logs_content TEXT NOT NULL,
+        daily_logs_issues TEXT,
+        daily_logs_created_at TEXT NOT NULL DEFAULT '',
+        daily_logs_updated_at TEXT NOT NULL DEFAULT ''
       )`
     )
     .run();
@@ -565,7 +565,7 @@ router.get("/api/admin/daily-logs", async (c) => {
 
   const results = await db
     .prepare(
-      "SELECT * FROM daily_logs ORDER BY created_at DESC LIMIT ? OFFSET ?"
+      "SELECT * FROM daily_logs ORDER BY daily_logs_created_at DESC LIMIT ? OFFSET ?"
     )
     .bind(limit, offset)
     .all();
