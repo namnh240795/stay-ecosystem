@@ -21,7 +21,7 @@ export type NewHeroSlide = typeof heroSlides.$inferInsert;
 
 export const footerSettings = sqliteTable('footer_settings', {
   id: text('id').primaryKey(), // singleton row
-  data: text('data'), // JSON text
+  data: text('data'), // JSON text — CMS/config data, intentionally denormalized as singleton JSON
   updatedAt: text('updated_at').notNull().default(''),
 });
 
@@ -32,7 +32,7 @@ export type NewFooterSetting = typeof footerSettings.$inferInsert;
 
 export const aboutContent = sqliteTable('about_content', {
   id: text('id').primaryKey(), // singleton row
-  data: text('data'), // JSON text
+  data: text('data'), // JSON text — CMS/config data, intentionally denormalized as singleton JSON
   updatedAt: text('updated_at').notNull().default(''),
 });
 
@@ -43,7 +43,7 @@ export type NewAboutContent = typeof aboutContent.$inferInsert;
 
 export const longtermContent = sqliteTable('longterm_content', {
   id: text('id').primaryKey(), // singleton row
-  data: text('data'), // JSON text
+  data: text('data'), // JSON text — CMS/config data, intentionally denormalized as singleton JSON
   updatedAt: text('updated_at').notNull().default(''),
 });
 
@@ -54,7 +54,7 @@ export type NewLongtermContent = typeof longtermContent.$inferInsert;
 
 export const refundPolicies = sqliteTable('refund_policies', {
   id: text('id').primaryKey(), // singleton row
-  data: text('data'), // JSON text
+  data: text('data'), // JSON text — CMS/config data, intentionally denormalized as singleton JSON
   updatedAt: text('updated_at').notNull().default(''),
 });
 

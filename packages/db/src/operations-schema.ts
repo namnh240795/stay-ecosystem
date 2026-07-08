@@ -25,7 +25,6 @@ export type NewComplaint = typeof complaints.$inferInsert;
 export const dailyLogs = sqliteTable('daily_logs', {
   id: text('id').primaryKey(), // UUID
   author: text('author').notNull(),
-  roleName: text('role_name').notNull(),
   shift: text('shift'),
   content: text('content').notNull(),
   issues: text('issues'),
@@ -92,7 +91,6 @@ export const leaveRequests = sqliteTable('leave_requests', {
   id: text('id').primaryKey(), // UUID
   type: text('type').notNull(),
   staffName: text('staff_name').notNull(),
-  roleName: text('role_name'),
   branchName: text('branch_name'),
   reason: text('reason'),
   leaveStartDate: text('leave_start_date'),

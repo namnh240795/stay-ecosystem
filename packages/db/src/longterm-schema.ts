@@ -13,14 +13,10 @@ export const longtermApartments = sqliteTable('longterm_apartments', {
   bathrooms: text('bathrooms'),
   monthlyPrice: real('monthly_price'),
   description: text('description'),
-  amenities: text('amenities'), // JSON text
   availableFrom: text('available_from'),
   hasVirtualTour: text('has_virtual_tour'),
   virtualTourUrl: text('virtual_tour_url'),
   petFriendly: text('pet_friendly'),
-  maintenanceStatus: text('maintenance_status'),
-  estimatedRepairCost: real('estimated_repair_cost'),
-  maintenanceNotes: text('maintenance_notes'),
   status: text('status').notNull().default('available'), // 'available' | 'rented' | 'maintenance' | 'inactive'
   createdAt: text('created_at').notNull().default(''),
   updatedAt: text('updated_at').notNull().default(''),
@@ -29,14 +25,43 @@ export const longtermApartments = sqliteTable('longterm_apartments', {
 export type LongtermApartment = typeof longtermApartments.$inferSelect;
 export type NewLongtermApartment = typeof longtermApartments.$inferInsert;
 
+// ─── Long-term Apartment Amenities ──────────────────────────────────────────
+
+export const longtermAmenities = sqliteTable('longterm_amenities', {
+  id: text('id').primaryKey(), // UUID
+  apartmentId: text('apartment_id')
+    .notNull()
+    .references(() => longtermApartments.id),
+  amenityName: text('amenity_name').notNull(),
+});
+
+export type LongtermAmenity = typeof longtermAmenities.$inferSelect;
+export type NewLongtermAmenity = typeof longtermAmenities.$inferInsert;
+
+// ─── Maintenance Records (5NF: extracted from longtermApartments) ─────────────
+
+export const maintenanceRecords = sqliteTable('maintenance_records', {
+  id: text('id').primaryKey(), // UUID
+  apartmentId: text('apartment_id')
+    .notNull()
+    .references(() => longtermApartments.id),
+  status: text('status').notNull().default('clean'), // 'clean' | 'needs_repair' | 'under_maintenance'
+  estimatedCost: real('estimated_cost'),
+  notes: text('notes'),
+  createdAt: text('created_at').notNull().default(''),
+  updatedAt: text('updated_at').notNull().default(''),
+});
+
+export type MaintenanceRecord = typeof maintenanceRecords.$inferSelect;
+export type NewMaintenanceRecord = typeof maintenanceRecords.$inferInsert;
+
 // ─── Long-term Contracts ────────────────────────────────────────────────────
 
 export const longtermContracts = sqliteTable('longterm_contracts', {
   id: text('id').primaryKey(), // UUID
-  aptId: text('apt_id'),
-  aptName: text('apt_name'),
-  location: text('location'),
-  monthlyPrice: real('monthly_price'),
+  aptId: text('apt_id')
+    .notNull()
+    .references(() => longtermApartments.id),
   leaseTerm: text('lease_term'),
   tenantName: text('tenant_name'),
   tenantPhone: text('tenant_phone'),

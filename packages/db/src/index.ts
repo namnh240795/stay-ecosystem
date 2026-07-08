@@ -4,6 +4,7 @@ export type { User, NewUser, PartnerApplication, NewPartnerApplication } from '.
 
 export {
   properties,
+  propertyImages,
   amenities,
   propertyAmenities,
   availability,
@@ -11,6 +12,8 @@ export {
 export type {
   Property,
   NewProperty,
+  PropertyImage,
+  NewPropertyImage,
   Amenity,
   NewAmenity,
   PropertyAmenity,
@@ -52,23 +55,35 @@ export type {
 
 export {
   longtermApartments,
+  longtermAmenities,
+  maintenanceRecords,
   longtermContracts,
 } from './longterm-schema';
 export type {
   LongtermApartment,
   NewLongtermApartment,
+  LongtermAmenity,
+  NewLongtermAmenity,
+  MaintenanceRecord,
+  NewMaintenanceRecord,
   LongtermContract,
   NewLongtermContract,
 } from './longterm-schema';
 
 export {
   tours,
+  tourHighlights,
+  tourItinerary,
   tourBookings,
   groupTours,
 } from './tours-schema';
 export type {
   Tour,
   NewTour,
+  TourHighlight,
+  NewTourHighlight,
+  TourItinerary,
+  NewTourItinerary,
   TourBooking,
   NewTourBooking,
   GroupTour,
@@ -77,14 +92,23 @@ export type {
 
 export {
   branches,
+  branchAmenities,
   webApartments,
+  webApartmentAmenities,
+  webApartmentImages,
   siteConfig,
 } from './web-schema';
 export type {
   Branch,
   NewBranch,
+  BranchAmenity,
+  NewBranchAmenity,
   WebApartment,
   NewWebApartment,
+  WebApartmentAmenity,
+  NewWebApartmentAmenity,
+  WebApartmentImage,
+  NewWebApartmentImage,
   SiteConfig,
   NewSiteConfig,
 } from './web-schema';

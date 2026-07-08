@@ -21,7 +21,6 @@ export const properties = sqliteTable('properties', {
   bathrooms: integer('bathrooms').notNull().default(1),
   propertyType: text('property_type').notNull().default('apartment'), // 'apartment' | 'house' | 'condo' | 'villa'
   status: text('status').notNull().default('active'), // 'active' | 'inactive' | 'maintenance'
-  images: text('images'), // JSON array of image URLs
   rules: text('rules'), // house rules text
   createdAt: text('created_at').notNull().default(''),
   updatedAt: text('updated_at').notNull().default(''),
@@ -29,6 +28,20 @@ export const properties = sqliteTable('properties', {
 
 export type Property = typeof properties.$inferSelect;
 export type NewProperty = typeof properties.$inferInsert;
+
+// ─── Property Images ────────────────────────────────────────────────────────
+
+export const propertyImages = sqliteTable('property_images', {
+  id: text('id').primaryKey(), // UUID
+  propertyId: text('property_id')
+    .notNull()
+    .references(() => properties.id),
+  imageUrl: text('image_url').notNull(),
+  sortOrder: integer('sort_order').default(0),
+});
+
+export type PropertyImage = typeof propertyImages.$inferSelect;
+export type NewPropertyImage = typeof propertyImages.$inferInsert;
 
 // ─── Amenities ───────────────────────────────────────────────────────────────
 

@@ -8,6 +8,13 @@
       "when": 1783477870432,
       "tag": "0000_many_dark_beast",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1783497559927,
+      "tag": "0001_stormy_gravity",
+      "breakpoints": true
     }
   ]
 }

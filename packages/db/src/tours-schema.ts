@@ -9,13 +9,10 @@ export const tours = sqliteTable('tours', {
   image: text('image'),
   pricePerSlot: real('price_per_slot'),
   maxSlots: integer('max_slots'),
-  bookedSlots: integer('booked_slots').default(0),
   duration: text('duration'),
   rating: real('rating'),
   description: text('description'),
-  highlights: text('highlights'), // JSON text
   tourType: text('tour_type'),
-  itinerary: text('itinerary'), // JSON text
   createdAt: text('created_at').notNull().default(''),
   updatedAt: text('updated_at').notNull().default(''),
 });
@@ -23,13 +20,40 @@ export const tours = sqliteTable('tours', {
 export type Tour = typeof tours.$inferSelect;
 export type NewTour = typeof tours.$inferInsert;
 
+// ─── Tour Highlights ────────────────────────────────────────────────────────
+
+export const tourHighlights = sqliteTable('tour_highlights', {
+  id: text('id').primaryKey(), // UUID
+  tourId: text('tour_id')
+    .notNull()
+    .references(() => tours.id),
+  highlightText: text('highlight_text').notNull(),
+  sortOrder: integer('sort_order').default(0),
+});
+
+export type TourHighlight = typeof tourHighlights.$inferSelect;
+export type NewTourHighlight = typeof tourHighlights.$inferInsert;
+
+// ─── Tour Itinerary ─────────────────────────────────────────────────────────
+
+export const tourItinerary = sqliteTable('tour_itinerary', {
+  id: text('id').primaryKey(), // UUID
+  tourId: text('tour_id')
+    .notNull()
+    .references(() => tours.id),
+  dayNumber: integer('day_number').notNull(),
+  title: text('title'),
+  activities: text('activities'), // JSON array of strings for a single day
+});
+
+export type TourItinerary = typeof tourItinerary.$inferSelect;
+export type NewTourItinerary = typeof tourItinerary.$inferInsert;
+
 // ─── Tour Bookings ──────────────────────────────────────────────────────────
 
 export const tourBookings = sqliteTable('tour_bookings', {
   id: text('id').primaryKey(), // UUID
   tourId: text('tour_id'),
-  tourName: text('tour_name'),
-  image: text('image'),
   guestName: text('guest_name'),
   guestPhone: text('guest_phone'),
   guestEmail: text('guest_email'),
@@ -54,7 +78,6 @@ export type NewTourBooking = typeof tourBookings.$inferInsert;
 export const groupTours = sqliteTable('group_tours', {
   id: text('id').primaryKey(), // UUID
   tourId: text('tour_id'),
-  tourName: text('tour_name'),
   creatorName: text('creator_name'),
   creatorEmail: text('creator_email'),
   currentMembers: integer('current_members').default(0),
