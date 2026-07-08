@@ -6,25 +6,25 @@ import { bookings } from './bookings-schema';
 // ─── Reviews ─────────────────────────────────────────────────────────────────
 
 export const reviews = sqliteTable('reviews', {
-  id: text('id').primaryKey(), // UUID
-  propertyId: text('property_id')
+  reviewsId: text('reviews_id').primaryKey(), // UUID
+  reviewsPropertyId: text('reviews_property_id')
     .notNull()
-    .references(() => properties.id),
-  bookingId: text('booking_id')
+    .references(() => properties.propertiesId),
+  reviewsBookingId: text('reviews_booking_id')
     .notNull()
-    .references(() => bookings.id),
-  guestId: text('guest_id')
+    .references(() => bookings.bookingsId),
+  reviewsGuestId: text('reviews_guest_id')
     .notNull()
-    .references(() => users.id),
-  partnerId: text('partner_id')
+    .references(() => users.usersId),
+  reviewsPartnerId: text('reviews_partner_id')
     .notNull()
-    .references(() => users.id),
-  rating: integer('rating').notNull(), // 1-5
-  comment: text('comment'),
-  partnerReply: text('partner_reply'), // partner's response to the review
-  partnerRepliedAt: text('partner_replied_at'),
-  createdAt: text('created_at').notNull().default(''),
-  updatedAt: text('updated_at').notNull().default(''),
+    .references(() => users.usersId),
+  reviewsRating: integer('reviews_rating').notNull(), // 1-5
+  reviewsComment: text('reviews_comment'),
+  reviewsPartnerReply: text('reviews_partner_reply'), // partner's response to the review
+  reviewsPartnerRepliedAt: text('reviews_partner_replied_at'),
+  reviewsCreatedAt: text('reviews_created_at').notNull().default(''),
+  reviewsUpdatedAt: text('reviews_updated_at').notNull().default(''),
 });
 
 export type Review = typeof reviews.$inferSelect;

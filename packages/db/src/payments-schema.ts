@@ -5,23 +5,23 @@ import { bookings } from './bookings-schema';
 // ─── Payments ────────────────────────────────────────────────────────────────
 
 export const payments = sqliteTable('payments', {
-  id: text('id').primaryKey(), // UUID
-  bookingId: text('booking_id')
+  paymentsId: text('payments_id').primaryKey(), // UUID
+  paymentsBookingId: text('payments_booking_id')
     .notNull()
-    .references(() => bookings.id),
-  partnerId: text('partner_id')
+    .references(() => bookings.bookingsId),
+  paymentsPartnerId: text('payments_partner_id')
     .notNull()
-    .references(() => users.id),
-  amount: real('amount').notNull(),
-  currency: text('currency').notNull().default('USD'),
-  status: text('status').notNull().default('pending'), // 'pending' | 'completed' | 'failed' | 'refunded'
-  paymentMethod: text('payment_method'), // 'credit_card' | 'paypal' | 'bank_transfer'
-  transactionId: text('transaction_id'), // external payment provider ID
-  metadata: text('metadata'), // JSON string with additional payment info
-  paidAt: text('paid_at'),
-  refundedAt: text('refunded_at'),
-  createdAt: text('created_at').notNull().default(''),
-  updatedAt: text('updated_at').notNull().default(''),
+    .references(() => users.usersId),
+  paymentsAmount: real('payments_amount').notNull(),
+  paymentsCurrency: text('payments_currency').notNull().default('USD'),
+  paymentsStatus: text('payments_status').notNull().default('pending'), // 'pending' | 'completed' | 'failed' | 'refunded'
+  paymentsPaymentMethod: text('payments_payment_method'), // 'credit_card' | 'paypal' | 'bank_transfer'
+  paymentsTransactionId: text('payments_transaction_id'), // external payment provider ID
+  paymentsMetadata: text('payments_metadata'), // JSON string with additional payment info
+  paymentsPaidAt: text('payments_paid_at'),
+  paymentsRefundedAt: text('payments_refunded_at'),
+  paymentsCreatedAt: text('payments_created_at').notNull().default(''),
+  paymentsUpdatedAt: text('payments_updated_at').notNull().default(''),
 });
 
 export type Payment = typeof payments.$inferSelect;
