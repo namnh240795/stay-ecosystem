@@ -1,6 +1,7 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { AnimatePresence } from 'motion/react';
+import { useAuth0 } from '@auth0/auth0-react';
 import { Branch, SearchQuery, Apartment, UserSim } from './types';
 import { MOCK_USERS } from './mockUsers';
 import Header from './components/Header';
@@ -19,6 +20,8 @@ const LoginPortal = lazy(() => import('./components/LoginPortal'));
 const AuthCallback = lazy(() => import('./components/AuthCallback'));
 
 export default function App() {
+  const { user, isAuthenticated } = useAuth0();
+
   // Set default dates based on metadata: current time is 2026-07-01
   const [searchQuery, setSearchQuery] = useState<SearchQuery>({
     location: 'All Locations',
@@ -98,6 +101,21 @@ export default function App() {
   });
 
   const [currentUser, setCurrentUser] = useState<UserSim>(() => {
+    // If Auth0 is authenticated, use the real user
+    if (isAuthenticated && user) {
+      return {
+        id: user.sub || 'guest-1',
+        name: user.name || user.nickname || 'Guest',
+        email: user.email || '',
+        phone: '',
+        role: 'guest',
+        roleName: 'Khách Hàng',
+        avatarInitials: (user.name || 'G').split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase(),
+        tier: 'Silver',
+        loyaltyPoints: 0,
+      };
+    }
+    // Fallback to localStorage or mock
     const savedActive = localStorage.getItem('gs_active_user');
     if (savedActive) {
       try {

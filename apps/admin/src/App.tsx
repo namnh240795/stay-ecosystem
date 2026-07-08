@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useState, Suspense, lazy } from "react";
+import { useAuth0 } from "@auth0/auth0-react";
 import AuthProvider from "./auth/provider";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -9,10 +10,10 @@ import { MOCK_BRANCHES, MOCK_APARTMENTS } from "./data/mockData";
 import { MOCK_USERS } from "./mockUsers";
 import { Branch, Apartment, UserSim } from "./types";
 
-// Lazy load the admin portal (large component)
 const AdminPortal = lazy(() => import("./components/AdminPortal"));
 
-const defaultUser: UserSim = {
+// Mock user for when Auth0 is not configured
+const mockUser: UserSim = {
   id: 'admin-1',
   name: 'Nguyễn Văn Quyết',
   email: 'quyet.nv@grandstay.com',
@@ -36,16 +37,31 @@ function LoadingFallback() {
 }
 
 function AdminView() {
-  const [branches, setBranches] = useState<Branch[]>(MOCK_BRANCHES);
+  const { user, isAuthenticated, isLoading } = useAuth0();
+  const [branches] = useState<Branch[]>(MOCK_BRANCHES);
   const [apartments, setApartments] = useState<Apartment[]>(MOCK_APARTMENTS);
-  const [currentUser] = useState<UserSim>(defaultUser);
+
+  // Map Auth0 user to UserSim or use mock
+  const currentUser: UserSim = isAuthenticated && user ? {
+    id: user.sub || 'admin-1',
+    name: user.name || user.nickname || 'Admin',
+    email: user.email || '',
+    phone: '',
+    role: 'admin',
+    roleName: 'Quản Trị Viên',
+    avatarInitials: (user.name || 'A').split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase(),
+    tier: 'Root Admin',
+    loyaltyPoints: 0,
+  } : mockUser;
+
+  if (isLoading) return <LoadingFallback />;
 
   return (
     <ErrorBoundary>
       <Suspense fallback={<LoadingFallback />}>
         <AdminPortal
           branches={branches}
-          setBranches={setBranches}
+          setBranches={() => {}}
           apartments={apartments}
           setApartments={setApartments}
           currentUser={currentUser}
@@ -57,9 +73,21 @@ function AdminView() {
 }
 
 function Layout() {
-  const [currentUser, setCurrentUser] = useState<UserSim>(defaultUser);
+  const { user, isAuthenticated, loginWithRedirect } = useAuth0();
   const [usersList] = useState<UserSim[]>(MOCK_USERS);
   const [bookedList] = useState<Branch[]>([]);
+
+  const currentUser: UserSim = isAuthenticated && user ? {
+    id: user.sub || 'admin-1',
+    name: user.name || user.nickname || 'Admin',
+    email: user.email || '',
+    phone: '',
+    role: 'admin',
+    roleName: 'Quản Trị Viên',
+    avatarInitials: (user.name || 'A').split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase(),
+    tier: 'Root Admin',
+    loyaltyPoints: 0,
+  } : mockUser;
 
   const handleSetCurrentView = (view: 'home' | 'member' | 'admin') => {};
 
@@ -72,9 +100,13 @@ function Layout() {
         currentView="admin"
         setCurrentView={handleSetCurrentView}
         currentUser={currentUser}
-        setCurrentUser={setCurrentUser}
+        setCurrentUser={() => {}}
         usersList={usersList}
-        onOpenLogin={() => {}}
+        onOpenLogin={() => {
+          if (!isAuthenticated) {
+            loginWithRedirect();
+          }
+        }}
       />
 
       <main className="flex-grow">
