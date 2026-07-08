@@ -18,16 +18,16 @@ interface PaginatedResponse<T> {
 // Raw interface matching the API response with prefixed field names
 interface RawContract {
   contracts_id: string;
-  contracts_apartmentId: string;
-  contracts_tenantId: string;
-  contracts_startDate: string;
-  contracts_endDate: string;
-  contracts_monthlyRent: number;
+  contracts_apartment_id: string;
+  contracts_tenant_id: string;
+  contracts_start_date: string;
+  contracts_end_date: string;
+  contracts_monthly_rent: number;
   contracts_deposit: number;
   contracts_status: string;
   contracts_terms: string;
-  contracts_createdAt: string;
-  contracts_updatedAt: string;
+  contracts_created_at: string;
+  contracts_updated_at: string;
 }
 
 // Component-facing interface with unprefixed field names
@@ -48,16 +48,16 @@ export interface Contract {
 function mapContract(raw: RawContract): Contract {
   return {
     id: raw.contracts_id,
-    apartmentId: raw.contracts_apartmentId,
-    tenantId: raw.contracts_tenantId,
-    startDate: raw.contracts_startDate,
-    endDate: raw.contracts_endDate,
-    monthlyRent: raw.contracts_monthlyRent,
+    apartmentId: raw.contracts_apartment_id,
+    tenantId: raw.contracts_tenant_id,
+    startDate: raw.contracts_start_date,
+    endDate: raw.contracts_end_date,
+    monthlyRent: raw.contracts_monthly_rent,
     deposit: raw.contracts_deposit,
     status: raw.contracts_status,
     terms: raw.contracts_terms,
-    createdAt: raw.contracts_createdAt,
-    updatedAt: raw.contracts_updatedAt,
+    createdAt: raw.contracts_created_at,
+    updatedAt: raw.contracts_updated_at,
   };
 }
 

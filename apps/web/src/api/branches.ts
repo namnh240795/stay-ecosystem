@@ -8,11 +8,11 @@ interface RawBranch {
   branches_city: string;
   branches_phone?: string;
   branches_description?: string;
-  branches_imageUrl?: string;
+  branches_image_url?: string;
   branches_latitude?: number;
   branches_longitude?: number;
-  branches_createdAt: string;
-  branches_updatedAt: string;
+  branches_created_at: string;
+  branches_updated_at: string;
 }
 
 // Component-facing interface with unprefixed field names
@@ -38,11 +38,11 @@ function mapBranch(raw: RawBranch): Branch {
     city: raw.branches_city,
     phone: raw.branches_phone,
     description: raw.branches_description,
-    imageUrl: raw.branches_imageUrl,
+    imageUrl: raw.branches_image_url,
     latitude: raw.branches_latitude,
     longitude: raw.branches_longitude,
-    createdAt: raw.branches_createdAt,
-    updatedAt: raw.branches_updatedAt,
+    createdAt: raw.branches_created_at,
+    updatedAt: raw.branches_updated_at,
   };
 }
 

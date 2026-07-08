@@ -3,12 +3,12 @@ import { apiFetch } from './client';
 // Raw interface matching the API response with prefixed field names
 interface RawReview {
   reviews_id: string;
-  reviews_apartmentId?: string;
-  reviews_tourId?: string;
-  reviews_customerName: string;
+  reviews_apartment_id?: string;
+  reviews_tour_id?: string;
+  reviews_customer_name: string;
   reviews_rating: number;
   reviews_comment?: string;
-  reviews_createdAt: string;
+  reviews_created_at: string;
 }
 
 // Component-facing interface with unprefixed field names
@@ -25,12 +25,12 @@ export interface Review {
 function mapReview(raw: RawReview): Review {
   return {
     id: raw.reviews_id,
-    apartmentId: raw.reviews_apartmentId,
-    tourId: raw.reviews_tourId,
-    customerName: raw.reviews_customerName,
+    apartmentId: raw.reviews_apartment_id,
+    tourId: raw.reviews_tour_id,
+    customerName: raw.reviews_customer_name,
     rating: raw.reviews_rating,
     comment: raw.reviews_comment,
-    createdAt: raw.reviews_createdAt,
+    createdAt: raw.reviews_created_at,
   };
 }
 

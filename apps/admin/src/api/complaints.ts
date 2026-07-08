@@ -18,15 +18,15 @@ interface PaginatedResponse<T> {
 // Raw interface matching the API response with prefixed field names
 interface RawComplaint {
   complaints_id: string;
-  complaints_apartmentId: string;
-  complaints_guestId: string;
+  complaints_apartment_id: string;
+  complaints_guest_id: string;
   complaints_title: string;
   complaints_description: string;
   complaints_severity: string;
   complaints_status: string;
   complaints_resolution: string | null;
-  complaints_createdAt: string;
-  complaints_updatedAt: string;
+  complaints_created_at: string;
+  complaints_updated_at: string;
 }
 
 // Component-facing interface with unprefixed field names
@@ -46,15 +46,15 @@ export interface Complaint {
 function mapComplaint(raw: RawComplaint): Complaint {
   return {
     id: raw.complaints_id,
-    apartmentId: raw.complaints_apartmentId,
-    guestId: raw.complaints_guestId,
+    apartmentId: raw.complaints_apartment_id,
+    guestId: raw.complaints_guest_id,
     title: raw.complaints_title,
     description: raw.complaints_description,
     severity: raw.complaints_severity,
     status: raw.complaints_status,
     resolution: raw.complaints_resolution,
-    createdAt: raw.complaints_createdAt,
-    updatedAt: raw.complaints_updatedAt,
+    createdAt: raw.complaints_created_at,
+    updatedAt: raw.complaints_updated_at,
   };
 }
 

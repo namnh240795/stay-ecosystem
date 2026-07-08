@@ -5,29 +5,29 @@ interface RawTour {
   tours_id: string;
   tours_name: string;
   tours_description?: string;
-  tours_branchId?: string;
-  tours_imageUrl?: string;
+  tours_branch_id?: string;
+  tours_image_url?: string;
   tours_price: number;
   tours_duration: string;
-  tours_maxParticipants: number;
-  tours_availableDates?: string[];
+  tours_max_participants: number;
+  tours_available_dates?: string[];
   tours_status: string;
-  tours_createdAt: string;
-  tours_updatedAt: string;
+  tours_created_at: string;
+  tours_updated_at: string;
 }
 
 interface RawTourBooking {
-  tourBookings_id: string;
-  tourBookings_tourId: string;
-  tourBookings_tourName: string;
-  tourBookings_customerName: string;
-  tourBookings_customerEmail: string;
-  tourBookings_customerPhone?: string;
-  tourBookings_date: string;
-  tourBookings_participants: number;
-  tourBookings_totalPrice: number;
-  tourBookings_status: string;
-  tourBookings_createdAt: string;
+  tour_bookings_id: string;
+  tour_bookings_tour_id: string;
+  tour_bookings_tour_name: string;
+  tour_bookings_customer_name: string;
+  tour_bookings_customer_email: string;
+  tour_bookings_customer_phone?: string;
+  tour_bookings_date: string;
+  tour_bookings_participants: number;
+  tour_bookings_total_price: number;
+  tour_bookings_status: string;
+  tour_bookings_created_at: string;
 }
 
 // Component-facing interfaces with unprefixed field names
@@ -65,31 +65,31 @@ function mapTour(raw: RawTour): Tour {
     id: raw.tours_id,
     name: raw.tours_name,
     description: raw.tours_description,
-    branchId: raw.tours_branchId,
-    imageUrl: raw.tours_imageUrl,
+    branchId: raw.tours_branch_id,
+    imageUrl: raw.tours_image_url,
     price: raw.tours_price,
     duration: raw.tours_duration,
-    maxParticipants: raw.tours_maxParticipants,
-    availableDates: raw.tours_availableDates,
+    maxParticipants: raw.tours_max_participants,
+    availableDates: raw.tours_available_dates,
     status: raw.tours_status,
-    createdAt: raw.tours_createdAt,
-    updatedAt: raw.tours_updatedAt,
+    createdAt: raw.tours_created_at,
+    updatedAt: raw.tours_updated_at,
   };
 }
 
 function mapTourBooking(raw: RawTourBooking): TourBooking {
   return {
-    id: raw.tourBookings_id,
-    tourId: raw.tourBookings_tourId,
-    tourName: raw.tourBookings_tourName,
-    customerName: raw.tourBookings_customerName,
-    customerEmail: raw.tourBookings_customerEmail,
-    customerPhone: raw.tourBookings_customerPhone,
-    date: raw.tourBookings_date,
-    participants: raw.tourBookings_participants,
-    totalPrice: raw.tourBookings_totalPrice,
-    status: raw.tourBookings_status,
-    createdAt: raw.tourBookings_createdAt,
+    id: raw.tour_bookings_id,
+    tourId: raw.tour_bookings_tour_id,
+    tourName: raw.tour_bookings_tour_name,
+    customerName: raw.tour_bookings_customer_name,
+    customerEmail: raw.tour_bookings_customer_email,
+    customerPhone: raw.tour_bookings_customer_phone,
+    date: raw.tour_bookings_date,
+    participants: raw.tour_bookings_participants,
+    totalPrice: raw.tour_bookings_total_price,
+    status: raw.tour_bookings_status,
+    createdAt: raw.tour_bookings_created_at,
   };
 }
 

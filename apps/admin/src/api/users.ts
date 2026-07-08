@@ -20,9 +20,9 @@ interface RawUser {
   users_email: string;
   users_name: string;
   users_role: string;
-  users_auth0Id: string;
-  users_createdAt: string;
-  users_updatedAt: string;
+  users_auth0_id: string;
+  users_created_at: string;
+  users_updated_at: string;
 }
 
 // Component-facing interface with unprefixed field names
@@ -42,9 +42,9 @@ function mapUser(raw: RawUser): User {
     email: raw.users_email,
     name: raw.users_name,
     role: raw.users_role,
-    auth0Id: raw.users_auth0Id,
-    createdAt: raw.users_createdAt,
-    updatedAt: raw.users_updatedAt,
+    auth0Id: raw.users_auth0_id,
+    createdAt: raw.users_created_at,
+    updatedAt: raw.users_updated_at,
   };
 }
 

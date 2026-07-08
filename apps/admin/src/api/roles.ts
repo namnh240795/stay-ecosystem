@@ -6,8 +6,8 @@ interface RawRole {
   roles_name: string;
   roles_permissions: string[];
   roles_description: string;
-  roles_createdAt: string;
-  roles_updatedAt: string;
+  roles_created_at: string;
+  roles_updated_at: string;
 }
 
 // Component-facing interface with unprefixed field names
@@ -26,8 +26,8 @@ function mapRole(raw: RawRole): Role {
     name: raw.roles_name,
     permissions: raw.roles_permissions,
     description: raw.roles_description,
-    createdAt: raw.roles_createdAt,
-    updatedAt: raw.roles_updatedAt,
+    createdAt: raw.roles_created_at,
+    updatedAt: raw.roles_updated_at,
   };
 }
 

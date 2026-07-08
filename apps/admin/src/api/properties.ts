@@ -29,8 +29,8 @@ interface RawProperty {
   properties_images: string[];
   properties_amenities: string[];
   properties_status: string;
-  properties_createdAt: string;
-  properties_updatedAt: string;
+  properties_created_at: string;
+  properties_updated_at: string;
 }
 
 // Component-facing interface with unprefixed field names
@@ -65,8 +65,8 @@ function mapProperty(raw: RawProperty): Property {
     images: raw.properties_images,
     amenities: raw.properties_amenities,
     status: raw.properties_status,
-    createdAt: raw.properties_createdAt,
-    updatedAt: raw.properties_updatedAt,
+    createdAt: raw.properties_created_at,
+    updatedAt: raw.properties_updated_at,
   };
 }
 

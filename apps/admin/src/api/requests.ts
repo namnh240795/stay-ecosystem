@@ -18,16 +18,16 @@ interface PaginatedResponse<T> {
 // Raw interface matching the API response with prefixed field names
 interface RawServiceRequest {
   requests_id: string;
-  requests_apartmentId: string;
-  requests_guestId: string;
+  requests_apartment_id: string;
+  requests_guest_id: string;
   requests_type: string;
   requests_title: string;
   requests_description: string;
   requests_priority: string;
   requests_status: string;
-  requests_assignedTo: string | null;
-  requests_createdAt: string;
-  requests_updatedAt: string;
+  requests_assigned_to: string | null;
+  requests_created_at: string;
+  requests_updated_at: string;
 }
 
 // Component-facing interface with unprefixed field names
@@ -48,16 +48,16 @@ export interface ServiceRequest {
 function mapServiceRequest(raw: RawServiceRequest): ServiceRequest {
   return {
     id: raw.requests_id,
-    apartmentId: raw.requests_apartmentId,
-    guestId: raw.requests_guestId,
+    apartmentId: raw.requests_apartment_id,
+    guestId: raw.requests_guest_id,
     type: raw.requests_type,
     title: raw.requests_title,
     description: raw.requests_description,
     priority: raw.requests_priority,
     status: raw.requests_status,
-    assignedTo: raw.requests_assignedTo,
-    createdAt: raw.requests_createdAt,
-    updatedAt: raw.requests_updatedAt,
+    assignedTo: raw.requests_assigned_to,
+    createdAt: raw.requests_created_at,
+    updatedAt: raw.requests_updated_at,
   };
 }
 

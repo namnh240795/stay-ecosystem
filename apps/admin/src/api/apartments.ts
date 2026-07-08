@@ -18,17 +18,17 @@ interface PaginatedResponse<T> {
 // Raw interface matching the API response with prefixed field names
 interface RawApartment {
   apartments_id: string;
-  apartments_propertyId: string;
+  apartments_property_id: string;
   apartments_name: string;
-  apartments_unitNumber: string;
+  apartments_unit_number: string;
   apartments_floor: number;
   apartments_bedrooms: number;
   apartments_bathrooms: number;
   apartments_area: number;
   apartments_status: string;
-  apartments_monthlyRent: number;
-  apartments_createdAt: string;
-  apartments_updatedAt: string;
+  apartments_monthly_rent: number;
+  apartments_created_at: string;
+  apartments_updated_at: string;
 }
 
 // Component-facing interface with unprefixed field names
@@ -50,17 +50,17 @@ export interface Apartment {
 function mapApartment(raw: RawApartment): Apartment {
   return {
     id: raw.apartments_id,
-    propertyId: raw.apartments_propertyId,
+    propertyId: raw.apartments_property_id,
     name: raw.apartments_name,
-    unitNumber: raw.apartments_unitNumber,
+    unitNumber: raw.apartments_unit_number,
     floor: raw.apartments_floor,
     bedrooms: raw.apartments_bedrooms,
     bathrooms: raw.apartments_bathrooms,
     area: raw.apartments_area,
     status: raw.apartments_status,
-    monthlyRent: raw.apartments_monthlyRent,
-    createdAt: raw.apartments_createdAt,
-    updatedAt: raw.apartments_updatedAt,
+    monthlyRent: raw.apartments_monthly_rent,
+    createdAt: raw.apartments_created_at,
+    updatedAt: raw.apartments_updated_at,
   };
 }
 

@@ -17,16 +17,16 @@ interface PaginatedResponse<T> {
 
 // Raw interface matching the API response with prefixed field names
 interface RawDailyLog {
-  dailyLogs_id: string;
-  dailyLogs_apartmentId: string;
-  dailyLogs_staffId: string;
-  dailyLogs_date: string;
-  dailyLogs_notes: string;
-  dailyLogs_tasksCompleted: string[];
-  dailyLogs_issuesFound: string[];
-  dailyLogs_photos: string[];
-  dailyLogs_createdAt: string;
-  dailyLogs_updatedAt: string;
+  daily_logs_id: string;
+  daily_logs_apartment_id: string;
+  daily_logs_staff_id: string;
+  daily_logs_date: string;
+  daily_logs_notes: string;
+  daily_logs_tasks_completed: string[];
+  daily_logs_issues_found: string[];
+  daily_logs_photos: string[];
+  daily_logs_created_at: string;
+  daily_logs_updated_at: string;
 }
 
 // Component-facing interface with unprefixed field names
@@ -45,16 +45,16 @@ export interface DailyLog {
 
 function mapDailyLog(raw: RawDailyLog): DailyLog {
   return {
-    id: raw.dailyLogs_id,
-    apartmentId: raw.dailyLogs_apartmentId,
-    staffId: raw.dailyLogs_staffId,
-    date: raw.dailyLogs_date,
-    notes: raw.dailyLogs_notes,
-    tasksCompleted: raw.dailyLogs_tasksCompleted,
-    issuesFound: raw.dailyLogs_issuesFound,
-    photos: raw.dailyLogs_photos,
-    createdAt: raw.dailyLogs_createdAt,
-    updatedAt: raw.dailyLogs_updatedAt,
+    id: raw.daily_logs_id,
+    apartmentId: raw.daily_logs_apartment_id,
+    staffId: raw.daily_logs_staff_id,
+    date: raw.daily_logs_date,
+    notes: raw.daily_logs_notes,
+    tasksCompleted: raw.daily_logs_tasks_completed,
+    issuesFound: raw.daily_logs_issues_found,
+    photos: raw.daily_logs_photos,
+    createdAt: raw.daily_logs_created_at,
+    updatedAt: raw.daily_logs_updated_at,
   };
 }
 

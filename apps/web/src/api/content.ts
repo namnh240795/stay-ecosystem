@@ -2,33 +2,33 @@ import { apiFetch } from './client';
 
 // Raw interfaces matching the API response with prefixed field names
 interface RawLongtermContent {
-  longtermContent_id?: string;
-  longtermContent_title: string;
-  longtermContent_content: string;
-  longtermContent_benefits?: string[];
-  longtermContent_pricing?: Record<string, unknown>;
-  longtermContent_updatedAt?: string;
+  longterm_content_id?: string;
+  longterm_content_title: string;
+  longterm_content_content: string;
+  longterm_content_benefits?: string[];
+  longterm_content_pricing?: Record<string, unknown>;
+  longterm_content_updated_at?: string;
 }
 
 interface RawRefundPolicy {
-  refundPolicies_id?: string;
-  refundPolicies_title: string;
-  refundPolicies_content: string;
-  refundPolicies_rules?: string[];
-  refundPolicies_updatedAt?: string;
+  refund_policies_id?: string;
+  refund_policies_title: string;
+  refund_policies_content: string;
+  refund_policies_rules?: string[];
+  refund_policies_updated_at?: string;
 }
 
 interface RawVoucher {
   vouchers_id: string;
   vouchers_code: string;
   vouchers_description?: string;
-  vouchers_discountPercent?: number;
-  vouchers_discountAmount?: number;
-  vouchers_validFrom: string;
-  vouchers_validUntil: string;
-  vouchers_minBookingAmount?: number;
-  vouchers_maxUses?: number;
-  vouchers_usedCount: number;
+  vouchers_discount_percent?: number;
+  vouchers_discount_amount?: number;
+  vouchers_valid_from: string;
+  vouchers_valid_until: string;
+  vouchers_min_booking_amount?: number;
+  vouchers_max_uses?: number;
+  vouchers_used_count: number;
   vouchers_status: string;
 }
 
@@ -66,22 +66,22 @@ export interface Voucher {
 
 function mapLongtermContent(raw: RawLongtermContent): LongtermContent {
   return {
-    id: raw.longtermContent_id,
-    title: raw.longtermContent_title,
-    content: raw.longtermContent_content,
-    benefits: raw.longtermContent_benefits,
-    pricing: raw.longtermContent_pricing,
-    updatedAt: raw.longtermContent_updatedAt,
+    id: raw.longterm_content_id,
+    title: raw.longterm_content_title,
+    content: raw.longterm_content_content,
+    benefits: raw.longterm_content_benefits,
+    pricing: raw.longterm_content_pricing,
+    updatedAt: raw.longterm_content_updated_at,
   };
 }
 
 function mapRefundPolicy(raw: RawRefundPolicy): RefundPolicy {
   return {
-    id: raw.refundPolicies_id,
-    title: raw.refundPolicies_title,
-    content: raw.refundPolicies_content,
-    rules: raw.refundPolicies_rules,
-    updatedAt: raw.refundPolicies_updatedAt,
+    id: raw.refund_policies_id,
+    title: raw.refund_policies_title,
+    content: raw.refund_policies_content,
+    rules: raw.refund_policies_rules,
+    updatedAt: raw.refund_policies_updated_at,
   };
 }
 
@@ -90,13 +90,13 @@ function mapVoucher(raw: RawVoucher): Voucher {
     id: raw.vouchers_id,
     code: raw.vouchers_code,
     description: raw.vouchers_description,
-    discountPercent: raw.vouchers_discountPercent,
-    discountAmount: raw.vouchers_discountAmount,
-    validFrom: raw.vouchers_validFrom,
-    validUntil: raw.vouchers_validUntil,
-    minBookingAmount: raw.vouchers_minBookingAmount,
-    maxUses: raw.vouchers_maxUses,
-    usedCount: raw.vouchers_usedCount,
+    discountPercent: raw.vouchers_discount_percent,
+    discountAmount: raw.vouchers_discount_amount,
+    validFrom: raw.vouchers_valid_from,
+    validUntil: raw.vouchers_valid_until,
+    minBookingAmount: raw.vouchers_min_booking_amount,
+    maxUses: raw.vouchers_max_uses,
+    usedCount: raw.vouchers_used_count,
     status: raw.vouchers_status,
   };
 }

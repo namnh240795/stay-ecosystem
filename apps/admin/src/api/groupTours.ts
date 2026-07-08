@@ -2,12 +2,12 @@ import { apiFetch } from './client';
 
 export interface GroupTour {
   id: string;
-  tourId: string;
-  tourName: string;
-  creatorName: string;
-  creatorEmail: string;
-  currentMembers: number;
-  requiredMembers: number;
+  tour_id: string;
+  tour_name: string;
+  creator_name: string;
+  creator_email: string;
+  current_members: number;
+  required_members: number;
   status: string;
   members: string;
   date: string;

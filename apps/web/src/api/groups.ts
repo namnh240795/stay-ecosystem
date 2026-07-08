@@ -5,15 +5,15 @@ interface RawGroup {
   groups_id: string;
   groups_name: string;
   groups_description?: string;
-  groups_tourId?: string;
-  groups_leaderName: string;
-  groups_leaderEmail: string;
-  groups_maxMembers: number;
-  groups_currentMembers: number;
+  groups_tour_id?: string;
+  groups_leader_name: string;
+  groups_leader_email: string;
+  groups_max_members: number;
+  groups_current_members: number;
   groups_status: string;
-  groups_departureDate?: string;
-  groups_createdAt: string;
-  groups_updatedAt: string;
+  groups_departure_date?: string;
+  groups_created_at: string;
+  groups_updated_at: string;
 }
 
 // Component-facing interface with unprefixed field names
@@ -37,15 +37,15 @@ function mapGroup(raw: RawGroup): Group {
     id: raw.groups_id,
     name: raw.groups_name,
     description: raw.groups_description,
-    tourId: raw.groups_tourId,
-    leaderName: raw.groups_leaderName,
-    leaderEmail: raw.groups_leaderEmail,
-    maxMembers: raw.groups_maxMembers,
-    currentMembers: raw.groups_currentMembers,
+    tourId: raw.groups_tour_id,
+    leaderName: raw.groups_leader_name,
+    leaderEmail: raw.groups_leader_email,
+    maxMembers: raw.groups_max_members,
+    currentMembers: raw.groups_current_members,
     status: raw.groups_status,
-    departureDate: raw.groups_departureDate,
-    createdAt: raw.groups_createdAt,
-    updatedAt: raw.groups_updatedAt,
+    departureDate: raw.groups_departure_date,
+    createdAt: raw.groups_created_at,
+    updatedAt: raw.groups_updated_at,
   };
 }
 

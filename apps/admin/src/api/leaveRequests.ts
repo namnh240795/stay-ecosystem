@@ -17,16 +17,16 @@ interface PaginatedResponse<T> {
 
 // Raw interface matching the API response with prefixed field names
 interface RawLeaveRequest {
-  leaveRequests_id: string;
-  leaveRequests_staffId: string;
-  leaveRequests_type: string;
-  leaveRequests_startDate: string;
-  leaveRequests_endDate: string;
-  leaveRequests_reason: string;
-  leaveRequests_status: string;
-  leaveRequests_approvedBy: string | null;
-  leaveRequests_createdAt: string;
-  leaveRequests_updatedAt: string;
+  leave_requests_id: string;
+  leave_requests_staff_id: string;
+  leave_requests_type: string;
+  leave_requests_start_date: string;
+  leave_requests_end_date: string;
+  leave_requests_reason: string;
+  leave_requests_status: string;
+  leave_requests_approved_by: string | null;
+  leave_requests_created_at: string;
+  leave_requests_updated_at: string;
 }
 
 // Component-facing interface with unprefixed field names
@@ -45,16 +45,16 @@ export interface LeaveRequest {
 
 function mapLeaveRequest(raw: RawLeaveRequest): LeaveRequest {
   return {
-    id: raw.leaveRequests_id,
-    staffId: raw.leaveRequests_staffId,
-    type: raw.leaveRequests_type,
-    startDate: raw.leaveRequests_startDate,
-    endDate: raw.leaveRequests_endDate,
-    reason: raw.leaveRequests_reason,
-    status: raw.leaveRequests_status,
-    approvedBy: raw.leaveRequests_approvedBy,
-    createdAt: raw.leaveRequests_createdAt,
-    updatedAt: raw.leaveRequests_updatedAt,
+    id: raw.leave_requests_id,
+    staffId: raw.leave_requests_staff_id,
+    type: raw.leave_requests_type,
+    startDate: raw.leave_requests_start_date,
+    endDate: raw.leave_requests_end_date,
+    reason: raw.leave_requests_reason,
+    status: raw.leave_requests_status,
+    approvedBy: raw.leave_requests_approved_by,
+    createdAt: raw.leave_requests_created_at,
+    updatedAt: raw.leave_requests_updated_at,
   };
 }
 

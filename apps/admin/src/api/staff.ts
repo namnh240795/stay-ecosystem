@@ -18,15 +18,15 @@ interface PaginatedResponse<T> {
 // Raw interface matching the API response with prefixed field names
 interface RawStaff {
   staff_id: string;
-  staff_userId: string;
+  staff_user_id: string;
   staff_name: string;
   staff_email: string;
   staff_phone: string;
   staff_role: string;
   staff_status: string;
-  staff_propertyIds: string[];
-  staff_createdAt: string;
-  staff_updatedAt: string;
+  staff_property_ids: string[];
+  staff_created_at: string;
+  staff_updated_at: string;
 }
 
 // Component-facing interface with unprefixed field names
@@ -46,15 +46,15 @@ export interface Staff {
 function mapStaff(raw: RawStaff): Staff {
   return {
     id: raw.staff_id,
-    userId: raw.staff_userId,
+    userId: raw.staff_user_id,
     name: raw.staff_name,
     email: raw.staff_email,
     phone: raw.staff_phone,
     role: raw.staff_role,
     status: raw.staff_status,
-    propertyIds: raw.staff_propertyIds,
-    createdAt: raw.staff_createdAt,
-    updatedAt: raw.staff_updatedAt,
+    propertyIds: raw.staff_property_ids,
+    createdAt: raw.staff_created_at,
+    updatedAt: raw.staff_updated_at,
   };
 }
 

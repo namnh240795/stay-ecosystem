@@ -17,15 +17,15 @@ interface PaginatedResponse<T> {
 // Raw interface matching the API response with prefixed field names
 interface RawBooking {
   bookings_id: string;
-  bookings_propertyId: string;
-  bookings_guestName: string;
-  bookings_guestEmail: string;
-  bookings_checkIn: string;
-  bookings_checkOut: string;
+  bookings_property_id: string;
+  bookings_guest_name: string;
+  bookings_guest_email: string;
+  bookings_check_in: string;
+  bookings_check_out: string;
   bookings_status: string;
-  bookings_totalPrice: number;
-  bookings_createdAt: string;
-  bookings_updatedAt: string;
+  bookings_total_price: number;
+  bookings_created_at: string;
+  bookings_updated_at: string;
 }
 
 // Component-facing interface with unprefixed field names
@@ -45,15 +45,15 @@ export interface Booking {
 function mapBooking(raw: RawBooking): Booking {
   return {
     id: raw.bookings_id,
-    propertyId: raw.bookings_propertyId,
-    guestName: raw.bookings_guestName,
-    guestEmail: raw.bookings_guestEmail,
-    checkIn: raw.bookings_checkIn,
-    checkOut: raw.bookings_checkOut,
+    propertyId: raw.bookings_property_id,
+    guestName: raw.bookings_guest_name,
+    guestEmail: raw.bookings_guest_email,
+    checkIn: raw.bookings_check_in,
+    checkOut: raw.bookings_check_out,
     status: raw.bookings_status,
-    totalPrice: raw.bookings_totalPrice,
-    createdAt: raw.bookings_createdAt,
-    updatedAt: raw.bookings_updatedAt,
+    totalPrice: raw.bookings_total_price,
+    createdAt: raw.bookings_created_at,
+    updatedAt: raw.bookings_updated_at,
   };
 }
 

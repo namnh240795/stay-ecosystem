@@ -18,30 +18,30 @@ interface PaginatedResponse<T> {
 // Raw interface matching the API response with prefixed field names
 interface RawTour {
   tours_id: string;
-  tours_propertyId: string;
+  tours_property_id: string;
   tours_title: string;
   tours_description: string;
   tours_date: string;
-  tours_startTime: string;
-  tours_endTime: string;
-  tours_maxParticipants: number;
+  tours_start_time: string;
+  tours_end_time: string;
+  tours_max_participants: number;
   tours_status: string;
-  tours_guideId: string | null;
-  tours_createdAt: string;
-  tours_updatedAt: string;
+  tours_guide_id: string | null;
+  tours_created_at: string;
+  tours_updated_at: string;
 }
 
 interface RawTourBooking {
-  tourBookings_id: string;
-  tourBookings_tourId: string;
-  tourBookings_guestName: string;
-  tourBookings_guestEmail: string;
-  tourBookings_guestPhone: string;
-  tourBookings_participants: number;
-  tourBookings_status: string;
-  tourBookings_notes: string;
-  tourBookings_createdAt: string;
-  tourBookings_updatedAt: string;
+  tour_bookings_id: string;
+  tour_bookings_tour_id: string;
+  tour_bookings_guest_name: string;
+  tour_bookings_guest_email: string;
+  tour_bookings_guest_phone: string;
+  tour_bookings_participants: number;
+  tour_bookings_status: string;
+  tour_bookings_notes: string;
+  tour_bookings_created_at: string;
+  tour_bookings_updated_at: string;
 }
 
 // Component-facing interfaces with unprefixed field names
@@ -76,32 +76,32 @@ export interface TourBooking {
 function mapTour(raw: RawTour): Tour {
   return {
     id: raw.tours_id,
-    propertyId: raw.tours_propertyId,
+    propertyId: raw.tours_property_id,
     title: raw.tours_title,
     description: raw.tours_description,
     date: raw.tours_date,
-    startTime: raw.tours_startTime,
-    endTime: raw.tours_endTime,
-    maxParticipants: raw.tours_maxParticipants,
+    startTime: raw.tours_start_time,
+    endTime: raw.tours_end_time,
+    maxParticipants: raw.tours_max_participants,
     status: raw.tours_status,
-    guideId: raw.tours_guideId,
-    createdAt: raw.tours_createdAt,
-    updatedAt: raw.tours_updatedAt,
+    guideId: raw.tours_guide_id,
+    createdAt: raw.tours_created_at,
+    updatedAt: raw.tours_updated_at,
   };
 }
 
 function mapTourBooking(raw: RawTourBooking): TourBooking {
   return {
-    id: raw.tourBookings_id,
-    tourId: raw.tourBookings_tourId,
-    guestName: raw.tourBookings_guestName,
-    guestEmail: raw.tourBookings_guestEmail,
-    guestPhone: raw.tourBookings_guestPhone,
-    participants: raw.tourBookings_participants,
-    status: raw.tourBookings_status,
-    notes: raw.tourBookings_notes,
-    createdAt: raw.tourBookings_createdAt,
-    updatedAt: raw.tourBookings_updatedAt,
+    id: raw.tour_bookings_id,
+    tourId: raw.tour_bookings_tour_id,
+    guestName: raw.tour_bookings_guest_name,
+    guestEmail: raw.tour_bookings_guest_email,
+    guestPhone: raw.tour_bookings_guest_phone,
+    participants: raw.tour_bookings_participants,
+    status: raw.tour_bookings_status,
+    notes: raw.tour_bookings_notes,
+    createdAt: raw.tour_bookings_created_at,
+    updatedAt: raw.tour_bookings_updated_at,
   };
 }
 

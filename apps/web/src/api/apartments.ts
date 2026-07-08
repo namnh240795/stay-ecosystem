@@ -3,17 +3,17 @@ import { apiFetch } from './client';
 // Raw interface matching the API response with prefixed field names
 interface RawApartment {
   apartments_id: string;
-  apartments_branchId: string;
+  apartments_branch_id: string;
   apartments_name: string;
   apartments_type: string;
   apartments_description?: string;
-  apartments_imageUrl?: string;
+  apartments_image_url?: string;
   apartments_capacity: number;
-  apartments_pricePerNight: number;
+  apartments_price_per_night: number;
   apartments_amenities?: string[];
   apartments_status: string;
-  apartments_createdAt: string;
-  apartments_updatedAt: string;
+  apartments_created_at: string;
+  apartments_updated_at: string;
 }
 
 // Component-facing interface with unprefixed field names
@@ -35,17 +35,17 @@ export interface Apartment {
 function mapApartment(raw: RawApartment): Apartment {
   return {
     id: raw.apartments_id,
-    branchId: raw.apartments_branchId,
+    branchId: raw.apartments_branch_id,
     name: raw.apartments_name,
     type: raw.apartments_type,
     description: raw.apartments_description,
-    imageUrl: raw.apartments_imageUrl,
+    imageUrl: raw.apartments_image_url,
     capacity: raw.apartments_capacity,
-    pricePerNight: raw.apartments_pricePerNight,
+    pricePerNight: raw.apartments_price_per_night,
     amenities: raw.apartments_amenities,
     status: raw.apartments_status,
-    createdAt: raw.apartments_createdAt,
-    updatedAt: raw.apartments_updatedAt,
+    createdAt: raw.apartments_created_at,
+    updatedAt: raw.apartments_updated_at,
   };
 }
 
