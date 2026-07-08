@@ -15,7 +15,8 @@ interface PaginatedResponse<T> {
   limit: number;
 }
 
-interface Apartment {
+// Raw interface matching the API response with prefixed field names
+interface RawApartment {
   apartments_id: string;
   apartments_propertyId: string;
   apartments_name: string;
@@ -30,6 +31,39 @@ interface Apartment {
   apartments_updatedAt: string;
 }
 
+// Component-facing interface with unprefixed field names
+export interface Apartment {
+  id: string;
+  propertyId: string;
+  name: string;
+  unitNumber: string;
+  floor: number;
+  bedrooms: number;
+  bathrooms: number;
+  area: number;
+  status: string;
+  monthlyRent: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+function mapApartment(raw: RawApartment): Apartment {
+  return {
+    id: raw.apartments_id,
+    propertyId: raw.apartments_propertyId,
+    name: raw.apartments_name,
+    unitNumber: raw.apartments_unitNumber,
+    floor: raw.apartments_floor,
+    bedrooms: raw.apartments_bedrooms,
+    bathrooms: raw.apartments_bathrooms,
+    area: raw.apartments_area,
+    status: raw.apartments_status,
+    monthlyRent: raw.apartments_monthlyRent,
+    createdAt: raw.apartments_createdAt,
+    updatedAt: raw.apartments_updatedAt,
+  };
+}
+
 export async function fetchApartments(
   params: PaginationParams = {}
 ): Promise<PaginatedResponse<Apartment>> {
@@ -40,28 +74,37 @@ export async function fetchApartments(
   if (params.propertyId) searchParams.set('propertyId', params.propertyId);
   if (params.search) searchParams.set('search', params.search);
   const query = searchParams.toString();
-  return apiFetch(`/api/admin/apartments${query ? `?${query}` : ''}`);
+  const result = await apiFetch<{ data: RawApartment[]; total: number; page: number; limit: number }>(
+    `/api/admin/apartments${query ? `?${query}` : ''}`
+  );
+  return {
+    ...result,
+    data: result.data.map(mapApartment),
+  };
 }
 
 export async function fetchApartment(id: string): Promise<Apartment> {
-  return apiFetch(`/api/admin/apartments/${id}`);
+  const raw = await apiFetch<RawApartment>(`/api/admin/apartments/${id}`);
+  return mapApartment(raw);
 }
 
 export async function createApartment(data: Partial<Apartment>): Promise<Apartment> {
-  return apiFetch('/api/admin/apartments', {
+  const raw = await apiFetch<RawApartment>('/api/admin/apartments', {
     method: 'POST',
     body: JSON.stringify(data),
   });
+  return mapApartment(raw);
 }
 
 export async function updateApartment(
   id: string,
   data: Partial<Apartment>
 ): Promise<Apartment> {
-  return apiFetch(`/api/admin/apartments/${id}`, {
+  const raw = await apiFetch<RawApartment>(`/api/admin/apartments/${id}`, {
     method: 'PUT',
     body: JSON.stringify(data),
   });
+  return mapApartment(raw);
 }
 
 export async function deleteApartment(id: string): Promise<{ success: boolean }> {

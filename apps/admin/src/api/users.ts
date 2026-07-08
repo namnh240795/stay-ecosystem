@@ -14,7 +14,8 @@ interface PaginatedResponse<T> {
   limit: number;
 }
 
-interface User {
+// Raw interface matching the API response with prefixed field names
+interface RawUser {
   users_id: string;
   users_email: string;
   users_name: string;
@@ -22,6 +23,29 @@ interface User {
   users_auth0Id: string;
   users_createdAt: string;
   users_updatedAt: string;
+}
+
+// Component-facing interface with unprefixed field names
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  auth0Id: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+function mapUser(raw: RawUser): User {
+  return {
+    id: raw.users_id,
+    email: raw.users_email,
+    name: raw.users_name,
+    role: raw.users_role,
+    auth0Id: raw.users_auth0Id,
+    createdAt: raw.users_createdAt,
+    updatedAt: raw.users_updatedAt,
+  };
 }
 
 export async function fetchUsers(
@@ -33,19 +57,27 @@ export async function fetchUsers(
   if (params.role) searchParams.set('role', params.role);
   if (params.search) searchParams.set('search', params.search);
   const query = searchParams.toString();
-  return apiFetch(`/api/admin/users${query ? `?${query}` : ''}`);
+  const result = await apiFetch<{ data: RawUser[]; total: number; page: number; limit: number }>(
+    `/api/admin/users${query ? `?${query}` : ''}`
+  );
+  return {
+    ...result,
+    data: result.data.map(mapUser),
+  };
 }
 
 export async function fetchUser(id: string): Promise<User> {
-  return apiFetch(`/api/admin/users/${id}`);
+  const raw = await apiFetch<RawUser>(`/api/admin/users/${id}`);
+  return mapUser(raw);
 }
 
 export async function updateUserRole(
   id: string,
   data: { role: string }
 ): Promise<User> {
-  return apiFetch(`/api/admin/users/${id}/role`, {
+  const raw = await apiFetch<RawUser>(`/api/admin/users/${id}/role`, {
     method: 'PUT',
     body: JSON.stringify(data),
   });
+  return mapUser(raw);
 }

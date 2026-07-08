@@ -13,3 +13,4 @@ export * as rolesApi from './roles';
 export * as leaveRequestsApi from './leaveRequests';
 export * as toursApi from './tours';
 export * as configApi from './config';
+export * as dashboardApi from './dashboard';

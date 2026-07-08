@@ -1,6 +1,7 @@
 import { apiFetch } from './client';
 
-export interface Tour {
+// Raw interfaces matching the API response with prefixed field names
+interface RawTour {
   tours_id: string;
   tours_name: string;
   tours_description?: string;
@@ -15,7 +16,7 @@ export interface Tour {
   tours_updatedAt: string;
 }
 
-export interface TourBooking {
+interface RawTourBooking {
   tourBookings_id: string;
   tourBookings_tourId: string;
   tourBookings_tourName: string;
@@ -27,6 +28,69 @@ export interface TourBooking {
   tourBookings_totalPrice: number;
   tourBookings_status: string;
   tourBookings_createdAt: string;
+}
+
+// Component-facing interfaces with unprefixed field names
+export interface Tour {
+  id: string;
+  name: string;
+  description?: string;
+  branchId?: string;
+  imageUrl?: string;
+  price: number;
+  duration: string;
+  maxParticipants: number;
+  availableDates?: string[];
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TourBooking {
+  id: string;
+  tourId: string;
+  tourName: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string;
+  date: string;
+  participants: number;
+  totalPrice: number;
+  status: string;
+  createdAt: string;
+}
+
+function mapTour(raw: RawTour): Tour {
+  return {
+    id: raw.tours_id,
+    name: raw.tours_name,
+    description: raw.tours_description,
+    branchId: raw.tours_branchId,
+    imageUrl: raw.tours_imageUrl,
+    price: raw.tours_price,
+    duration: raw.tours_duration,
+    maxParticipants: raw.tours_maxParticipants,
+    availableDates: raw.tours_availableDates,
+    status: raw.tours_status,
+    createdAt: raw.tours_createdAt,
+    updatedAt: raw.tours_updatedAt,
+  };
+}
+
+function mapTourBooking(raw: RawTourBooking): TourBooking {
+  return {
+    id: raw.tourBookings_id,
+    tourId: raw.tourBookings_tourId,
+    tourName: raw.tourBookings_tourName,
+    customerName: raw.tourBookings_customerName,
+    customerEmail: raw.tourBookings_customerEmail,
+    customerPhone: raw.tourBookings_customerPhone,
+    date: raw.tourBookings_date,
+    participants: raw.tourBookings_participants,
+    totalPrice: raw.tourBookings_totalPrice,
+    status: raw.tourBookings_status,
+    createdAt: raw.tourBookings_createdAt,
+  };
 }
 
 interface TourListParams {
@@ -61,11 +125,18 @@ export async function fetchTours(
   if (params.branchId) searchParams.set('branchId', params.branchId);
   if (params.search) searchParams.set('search', params.search);
   const query = searchParams.toString();
-  return apiFetch(`/api/tours${query ? `?${query}` : ''}`);
+  const result = await apiFetch<{ data: RawTour[]; total: number; page: number; limit: number }>(
+    `/api/tours${query ? `?${query}` : ''}`
+  );
+  return {
+    ...result,
+    data: result.data.map(mapTour),
+  };
 }
 
 export async function fetchTour(id: string): Promise<Tour> {
-  return apiFetch(`/api/tours/${id}`);
+  const raw = await apiFetch<RawTour>(`/api/tours/${id}`);
+  return mapTour(raw);
 }
 
 export async function bookTour(
@@ -78,10 +149,11 @@ export async function bookTour(
     participants: number;
   }
 ): Promise<TourBooking> {
-  return apiFetch(`/api/tours/${id}/book`, {
+  const raw = await apiFetch<RawTourBooking>(`/api/tours/${id}/book`, {
     method: 'POST',
     body: JSON.stringify(data),
   });
+  return mapTourBooking(raw);
 }
 
 export async function fetchTourBookings(
@@ -93,11 +165,18 @@ export async function fetchTourBookings(
   if (params.tourId) searchParams.set('tourId', params.tourId);
   if (params.status) searchParams.set('status', params.status);
   const query = searchParams.toString();
-  return apiFetch(`/api/tours/bookings${query ? `?${query}` : ''}`);
+  const result = await apiFetch<{ data: RawTourBooking[]; total: number; page: number; limit: number }>(
+    `/api/tours/bookings${query ? `?${query}` : ''}`
+  );
+  return {
+    ...result,
+    data: result.data.map(mapTourBooking),
+  };
 }
 
 export async function cancelTourBooking(id: string): Promise<TourBooking> {
-  return apiFetch(`/api/tours/bookings/${id}/cancel`, {
+  const raw = await apiFetch<RawTourBooking>(`/api/tours/bookings/${id}/cancel`, {
     method: 'PUT',
   });
+  return mapTourBooking(raw);
 }

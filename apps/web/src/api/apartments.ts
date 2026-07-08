@@ -1,6 +1,7 @@
 import { apiFetch } from './client';
 
-export interface Apartment {
+// Raw interface matching the API response with prefixed field names
+interface RawApartment {
   apartments_id: string;
   apartments_branchId: string;
   apartments_name: string;
@@ -13,6 +14,39 @@ export interface Apartment {
   apartments_status: string;
   apartments_createdAt: string;
   apartments_updatedAt: string;
+}
+
+// Component-facing interface with unprefixed field names
+export interface Apartment {
+  id: string;
+  branchId: string;
+  name: string;
+  type: string;
+  description?: string;
+  imageUrl?: string;
+  capacity: number;
+  pricePerNight: number;
+  amenities?: string[];
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+function mapApartment(raw: RawApartment): Apartment {
+  return {
+    id: raw.apartments_id,
+    branchId: raw.apartments_branchId,
+    name: raw.apartments_name,
+    type: raw.apartments_type,
+    description: raw.apartments_description,
+    imageUrl: raw.apartments_imageUrl,
+    capacity: raw.apartments_capacity,
+    pricePerNight: raw.apartments_pricePerNight,
+    amenities: raw.apartments_amenities,
+    status: raw.apartments_status,
+    createdAt: raw.apartments_createdAt,
+    updatedAt: raw.apartments_updatedAt,
+  };
 }
 
 interface ApartmentListParams {
@@ -44,9 +78,16 @@ export async function fetchApartments(
   if (params.available !== undefined) searchParams.set('available', String(params.available));
   if (params.search) searchParams.set('search', params.search);
   const query = searchParams.toString();
-  return apiFetch(`/api/apartments${query ? `?${query}` : ''}`);
+  const result = await apiFetch<{ data: RawApartment[]; total: number; page: number; limit: number }>(
+    `/api/apartments${query ? `?${query}` : ''}`
+  );
+  return {
+    ...result,
+    data: result.data.map(mapApartment),
+  };
 }
 
 export async function fetchApartment(id: string): Promise<Apartment> {
-  return apiFetch(`/api/apartments/${id}`);
+  const raw = await apiFetch<RawApartment>(`/api/apartments/${id}`);
+  return mapApartment(raw);
 }

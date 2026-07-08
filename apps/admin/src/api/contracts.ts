@@ -15,7 +15,8 @@ interface PaginatedResponse<T> {
   limit: number;
 }
 
-interface Contract {
+// Raw interface matching the API response with prefixed field names
+interface RawContract {
   contracts_id: string;
   contracts_apartmentId: string;
   contracts_tenantId: string;
@@ -29,6 +30,37 @@ interface Contract {
   contracts_updatedAt: string;
 }
 
+// Component-facing interface with unprefixed field names
+export interface Contract {
+  id: string;
+  apartmentId: string;
+  tenantId: string;
+  startDate: string;
+  endDate: string;
+  monthlyRent: number;
+  deposit: number;
+  status: string;
+  terms: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+function mapContract(raw: RawContract): Contract {
+  return {
+    id: raw.contracts_id,
+    apartmentId: raw.contracts_apartmentId,
+    tenantId: raw.contracts_tenantId,
+    startDate: raw.contracts_startDate,
+    endDate: raw.contracts_endDate,
+    monthlyRent: raw.contracts_monthlyRent,
+    deposit: raw.contracts_deposit,
+    status: raw.contracts_status,
+    terms: raw.contracts_terms,
+    createdAt: raw.contracts_createdAt,
+    updatedAt: raw.contracts_updatedAt,
+  };
+}
+
 export async function fetchContracts(
   params: PaginationParams = {}
 ): Promise<PaginatedResponse<Contract>> {
@@ -39,22 +71,30 @@ export async function fetchContracts(
   if (params.apartmentId) searchParams.set('apartmentId', params.apartmentId);
   if (params.tenantId) searchParams.set('tenantId', params.tenantId);
   const query = searchParams.toString();
-  return apiFetch(`/api/admin/contracts${query ? `?${query}` : ''}`);
+  const result = await apiFetch<{ data: RawContract[]; total: number; page: number; limit: number }>(
+    `/api/admin/contracts${query ? `?${query}` : ''}`
+  );
+  return {
+    ...result,
+    data: result.data.map(mapContract),
+  };
 }
 
 export async function createContract(data: Partial<Contract>): Promise<Contract> {
-  return apiFetch('/api/admin/contracts', {
+  const raw = await apiFetch<RawContract>('/api/admin/contracts', {
     method: 'POST',
     body: JSON.stringify(data),
   });
+  return mapContract(raw);
 }
 
 export async function updateContractStatus(
   id: string,
   data: { status: string }
 ): Promise<Contract> {
-  return apiFetch(`/api/admin/contracts/${id}/status`, {
+  const raw = await apiFetch<RawContract>(`/api/admin/contracts/${id}/status`, {
     method: 'PUT',
     body: JSON.stringify(data),
   });
+  return mapContract(raw);
 }

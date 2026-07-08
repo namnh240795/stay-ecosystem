@@ -1,6 +1,7 @@
 import { apiFetch } from './client';
 
-export interface Review {
+// Raw interface matching the API response with prefixed field names
+interface RawReview {
   reviews_id: string;
   reviews_apartmentId?: string;
   reviews_tourId?: string;
@@ -8,6 +9,29 @@ export interface Review {
   reviews_rating: number;
   reviews_comment?: string;
   reviews_createdAt: string;
+}
+
+// Component-facing interface with unprefixed field names
+export interface Review {
+  id: string;
+  apartmentId?: string;
+  tourId?: string;
+  customerName: string;
+  rating: number;
+  comment?: string;
+  createdAt: string;
+}
+
+function mapReview(raw: RawReview): Review {
+  return {
+    id: raw.reviews_id,
+    apartmentId: raw.reviews_apartmentId,
+    tourId: raw.reviews_tourId,
+    customerName: raw.reviews_customerName,
+    rating: raw.reviews_rating,
+    comment: raw.reviews_comment,
+    createdAt: raw.reviews_createdAt,
+  };
 }
 
 interface ReviewListParams {
@@ -33,7 +57,13 @@ export async function fetchReviews(
   if (params.apartmentId) searchParams.set('apartmentId', params.apartmentId);
   if (params.tourId) searchParams.set('tourId', params.tourId);
   const query = searchParams.toString();
-  return apiFetch(`/api/reviews${query ? `?${query}` : ''}`);
+  const result = await apiFetch<{ data: RawReview[]; total: number; page: number; limit: number }>(
+    `/api/reviews${query ? `?${query}` : ''}`
+  );
+  return {
+    ...result,
+    data: result.data.map(mapReview),
+  };
 }
 
 export async function createReview(data: {
@@ -43,8 +73,9 @@ export async function createReview(data: {
   rating: number;
   comment?: string;
 }): Promise<Review> {
-  return apiFetch('/api/reviews', {
+  const raw = await apiFetch<RawReview>('/api/reviews', {
     method: 'POST',
     body: JSON.stringify(data),
   });
+  return mapReview(raw);
 }

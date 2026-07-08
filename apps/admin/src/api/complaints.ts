@@ -15,7 +15,8 @@ interface PaginatedResponse<T> {
   limit: number;
 }
 
-interface Complaint {
+// Raw interface matching the API response with prefixed field names
+interface RawComplaint {
   complaints_id: string;
   complaints_apartmentId: string;
   complaints_guestId: string;
@@ -28,6 +29,35 @@ interface Complaint {
   complaints_updatedAt: string;
 }
 
+// Component-facing interface with unprefixed field names
+export interface Complaint {
+  id: string;
+  apartmentId: string;
+  guestId: string;
+  title: string;
+  description: string;
+  severity: string;
+  status: string;
+  resolution: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+function mapComplaint(raw: RawComplaint): Complaint {
+  return {
+    id: raw.complaints_id,
+    apartmentId: raw.complaints_apartmentId,
+    guestId: raw.complaints_guestId,
+    title: raw.complaints_title,
+    description: raw.complaints_description,
+    severity: raw.complaints_severity,
+    status: raw.complaints_status,
+    resolution: raw.complaints_resolution,
+    createdAt: raw.complaints_createdAt,
+    updatedAt: raw.complaints_updatedAt,
+  };
+}
+
 export async function fetchComplaints(
   params: PaginationParams = {}
 ): Promise<PaginatedResponse<Complaint>> {
@@ -38,24 +68,32 @@ export async function fetchComplaints(
   if (params.severity) searchParams.set('severity', params.severity);
   if (params.apartmentId) searchParams.set('apartmentId', params.apartmentId);
   const query = searchParams.toString();
-  return apiFetch(`/api/admin/complaints${query ? `?${query}` : ''}`);
+  const result = await apiFetch<{ data: RawComplaint[]; total: number; page: number; limit: number }>(
+    `/api/admin/complaints${query ? `?${query}` : ''}`
+  );
+  return {
+    ...result,
+    data: result.data.map(mapComplaint),
+  };
 }
 
 export async function createComplaint(
   data: Partial<Complaint>
 ): Promise<Complaint> {
-  return apiFetch('/api/admin/complaints', {
+  const raw = await apiFetch<RawComplaint>('/api/admin/complaints', {
     method: 'POST',
     body: JSON.stringify(data),
   });
+  return mapComplaint(raw);
 }
 
 export async function updateComplaintStatus(
   id: string,
   data: { status: string; resolution?: string }
 ): Promise<Complaint> {
-  return apiFetch(`/api/admin/complaints/${id}/status`, {
+  const raw = await apiFetch<RawComplaint>(`/api/admin/complaints/${id}/status`, {
     method: 'PUT',
     body: JSON.stringify(data),
   });
+  return mapComplaint(raw);
 }
