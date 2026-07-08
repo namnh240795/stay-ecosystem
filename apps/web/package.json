@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@booking/shared": "workspace:*",
+    "@tanstack/react-query": "^5.101.2",
     "@auth0/auth0-react": "^2.2.4",
     "jspdf": "^4.2.1",
     "leaflet": "^1.9.4",

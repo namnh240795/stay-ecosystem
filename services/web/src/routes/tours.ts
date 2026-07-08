@@ -12,21 +12,7 @@ const app = new Hono<{ Bindings: Env }>();
 // --- Helpers ---
 
 async function ensureTourTables(db: D1Database) {
-  await db.prepare(`
-    CREATE TABLE IF NOT EXISTS tours (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      description TEXT,
-      region TEXT,
-      type TEXT,
-      price_per_slot REAL NOT NULL,
-      total_slots INTEGER NOT NULL DEFAULT 0,
-      booked_slots INTEGER NOT NULL DEFAULT 0,
-      dates TEXT,
-      itinerary TEXT,
-      created_at TEXT NOT NULL DEFAULT (datetime('now')),
-      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
+  await db.prepare(`CREATE TABLE IF NOT EXISTS tours (id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT, region TEXT, image_url TEXT, price_per_slot REAL NOT NULL, max_slots INTEGER NOT NULL DEFAULT 10, booked_slots INTEGER NOT NULL DEFAULT 0, duration TEXT, rating REAL DEFAULT 5.0, highlights TEXT, tour_type TEXT, itinerary TEXT, created_at TEXT, updated_at TEXT)`).run();
 
     CREATE TABLE IF NOT EXISTS tour_bookings (
       id TEXT PRIMARY KEY,
@@ -112,6 +98,18 @@ app.get("/", async (c) => {
     page,
     limit,
   });
+});
+
+// POST /api/tours - Create a new tour
+app.post("/", async (c) => {
+  const db = c.env.BOOKINGS_DB;
+  await ensureTourTables(db);
+  const data = await c.req.json();
+  const id = crypto.randomUUID();
+  const now = new Date().toISOString();
+  await db.prepare("INSERT INTO tours (id, name, region, image_url, price_per_slot, max_slots, booked_slots, duration, rating, description, highlights, tour_type, itinerary, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 0, ?, 5.0, ?, ?, ?, ?, ?, ?)").bind(id, data.name, data.region || null, data.image || null, data.pricePerSlot || 0, data.maxSlots || 10, data.duration || null, data.description || null, JSON.stringify(data.highlights || []), data.tourType || 'day', JSON.stringify(data.itinerary || []), now, now).run();
+  const tour = await db.prepare("SELECT * FROM tours WHERE id = ?").bind(id).first();
+  return c.json(tour, 201);
 });
 
 // GET /api/tours/:id - Get tour detail with itinerary
