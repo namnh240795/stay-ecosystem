@@ -1,18 +1,18 @@
 import { apiFetch } from './client';
 
 export interface Apartment {
-  id: string;
-  branchId: string;
-  name: string;
-  type: string;
-  description?: string;
-  imageUrl?: string;
-  capacity: number;
-  pricePerNight: number;
-  amenities?: string[];
-  status: string;
-  createdAt: string;
-  updatedAt: string;
+  apartments_id: string;
+  apartments_branchId: string;
+  apartments_name: string;
+  apartments_type: string;
+  apartments_description?: string;
+  apartments_imageUrl?: string;
+  apartments_capacity: number;
+  apartments_pricePerNight: number;
+  apartments_amenities?: string[];
+  apartments_status: string;
+  apartments_createdAt: string;
+  apartments_updatedAt: string;
 }
 
 interface ApartmentListParams {

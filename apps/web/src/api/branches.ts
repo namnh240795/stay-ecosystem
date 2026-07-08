@@ -1,17 +1,17 @@
 import { apiFetch } from './client';
 
 export interface Branch {
-  id: string;
-  name: string;
-  address: string;
-  city: string;
-  phone?: string;
-  description?: string;
-  imageUrl?: string;
-  latitude?: number;
-  longitude?: number;
-  createdAt: string;
-  updatedAt: string;
+  branches_id: string;
+  branches_name: string;
+  branches_address: string;
+  branches_city: string;
+  branches_phone?: string;
+  branches_description?: string;
+  branches_imageUrl?: string;
+  branches_latitude?: number;
+  branches_longitude?: number;
+  branches_createdAt: string;
+  branches_updatedAt: string;
 }
 
 interface BranchListParams {

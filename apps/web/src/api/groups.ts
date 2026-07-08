@@ -1,18 +1,18 @@
 import { apiFetch } from './client';
 
 export interface Group {
-  id: string;
-  name: string;
-  description?: string;
-  tourId?: string;
-  leaderName: string;
-  leaderEmail: string;
-  maxMembers: number;
-  currentMembers: number;
-  status: string;
-  departureDate?: string;
-  createdAt: string;
-  updatedAt: string;
+  groups_id: string;
+  groups_name: string;
+  groups_description?: string;
+  groups_tourId?: string;
+  groups_leaderName: string;
+  groups_leaderEmail: string;
+  groups_maxMembers: number;
+  groups_currentMembers: number;
+  groups_status: string;
+  groups_departureDate?: string;
+  groups_createdAt: string;
+  groups_updatedAt: string;
 }
 
 interface GroupListParams {

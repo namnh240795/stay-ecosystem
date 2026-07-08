@@ -16,16 +16,16 @@ interface PaginatedResponse<T> {
 }
 
 interface LeaveRequest {
-  id: string;
-  staffId: string;
-  type: string;
-  startDate: string;
-  endDate: string;
-  reason: string;
-  status: string;
-  approvedBy: string | null;
-  createdAt: string;
-  updatedAt: string;
+  leaveRequests_id: string;
+  leaveRequests_staffId: string;
+  leaveRequests_type: string;
+  leaveRequests_startDate: string;
+  leaveRequests_endDate: string;
+  leaveRequests_reason: string;
+  leaveRequests_status: string;
+  leaveRequests_approvedBy: string | null;
+  leaveRequests_createdAt: string;
+  leaveRequests_updatedAt: string;
 }
 
 export async function fetchLeaveRequests(

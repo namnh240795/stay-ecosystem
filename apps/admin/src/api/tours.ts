@@ -16,31 +16,31 @@ interface PaginatedResponse<T> {
 }
 
 interface Tour {
-  id: string;
-  propertyId: string;
-  title: string;
-  description: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  maxParticipants: number;
-  status: string;
-  guideId: string | null;
-  createdAt: string;
-  updatedAt: string;
+  tours_id: string;
+  tours_propertyId: string;
+  tours_title: string;
+  tours_description: string;
+  tours_date: string;
+  tours_startTime: string;
+  tours_endTime: string;
+  tours_maxParticipants: number;
+  tours_status: string;
+  tours_guideId: string | null;
+  tours_createdAt: string;
+  tours_updatedAt: string;
 }
 
 interface TourBooking {
-  id: string;
-  tourId: string;
-  guestName: string;
-  guestEmail: string;
-  guestPhone: string;
-  participants: number;
-  status: string;
-  notes: string;
-  createdAt: string;
-  updatedAt: string;
+  tourBookings_id: string;
+  tourBookings_tourId: string;
+  tourBookings_guestName: string;
+  tourBookings_guestEmail: string;
+  tourBookings_guestPhone: string;
+  tourBookings_participants: number;
+  tourBookings_status: string;
+  tourBookings_notes: string;
+  tourBookings_createdAt: string;
+  tourBookings_updatedAt: string;
 }
 
 export async function fetchTours(

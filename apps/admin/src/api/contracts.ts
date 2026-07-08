@@ -16,17 +16,17 @@ interface PaginatedResponse<T> {
 }
 
 interface Contract {
-  id: string;
-  apartmentId: string;
-  tenantId: string;
-  startDate: string;
-  endDate: string;
-  monthlyRent: number;
-  deposit: number;
-  status: string;
-  terms: string;
-  createdAt: string;
-  updatedAt: string;
+  contracts_id: string;
+  contracts_apartmentId: string;
+  contracts_tenantId: string;
+  contracts_startDate: string;
+  contracts_endDate: string;
+  contracts_monthlyRent: number;
+  contracts_deposit: number;
+  contracts_status: string;
+  contracts_terms: string;
+  contracts_createdAt: string;
+  contracts_updatedAt: string;
 }
 
 export async function fetchContracts(

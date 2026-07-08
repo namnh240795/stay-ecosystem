@@ -16,18 +16,18 @@ interface PaginatedResponse<T> {
 }
 
 interface Apartment {
-  id: string;
-  propertyId: string;
-  name: string;
-  unitNumber: string;
-  floor: number;
-  bedrooms: number;
-  bathrooms: number;
-  area: number;
-  status: string;
-  monthlyRent: number;
-  createdAt: string;
-  updatedAt: string;
+  apartments_id: string;
+  apartments_propertyId: string;
+  apartments_name: string;
+  apartments_unitNumber: string;
+  apartments_floor: number;
+  apartments_bedrooms: number;
+  apartments_bathrooms: number;
+  apartments_area: number;
+  apartments_status: string;
+  apartments_monthlyRent: number;
+  apartments_createdAt: string;
+  apartments_updatedAt: string;
 }
 
 export async function fetchApartments(

@@ -1,32 +1,32 @@
 import { apiFetch } from './client';
 
 export interface Tour {
-  id: string;
-  name: string;
-  description?: string;
-  branchId?: string;
-  imageUrl?: string;
-  price: number;
-  duration: string;
-  maxParticipants: number;
-  availableDates?: string[];
-  status: string;
-  createdAt: string;
-  updatedAt: string;
+  tours_id: string;
+  tours_name: string;
+  tours_description?: string;
+  tours_branchId?: string;
+  tours_imageUrl?: string;
+  tours_price: number;
+  tours_duration: string;
+  tours_maxParticipants: number;
+  tours_availableDates?: string[];
+  tours_status: string;
+  tours_createdAt: string;
+  tours_updatedAt: string;
 }
 
 export interface TourBooking {
-  id: string;
-  tourId: string;
-  tourName: string;
-  customerName: string;
-  customerEmail: string;
-  customerPhone?: string;
-  date: string;
-  participants: number;
-  totalPrice: number;
-  status: string;
-  createdAt: string;
+  tourBookings_id: string;
+  tourBookings_tourId: string;
+  tourBookings_tourName: string;
+  tourBookings_customerName: string;
+  tourBookings_customerEmail: string;
+  tourBookings_customerPhone?: string;
+  tourBookings_date: string;
+  tourBookings_participants: number;
+  tourBookings_totalPrice: number;
+  tourBookings_status: string;
+  tourBookings_createdAt: string;
 }
 
 interface TourListParams {

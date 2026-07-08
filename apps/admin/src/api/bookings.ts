@@ -15,16 +15,16 @@ interface PaginatedResponse<T> {
 }
 
 interface Booking {
-  id: string;
-  propertyId: string;
-  guestName: string;
-  guestEmail: string;
-  checkIn: string;
-  checkOut: string;
-  status: string;
-  totalPrice: number;
-  createdAt: string;
-  updatedAt: string;
+  bookings_id: string;
+  bookings_propertyId: string;
+  bookings_guestName: string;
+  bookings_guestEmail: string;
+  bookings_checkIn: string;
+  bookings_checkOut: string;
+  bookings_status: string;
+  bookings_totalPrice: number;
+  bookings_createdAt: string;
+  bookings_updatedAt: string;
 }
 
 export async function fetchBookings(

@@ -16,16 +16,16 @@ interface PaginatedResponse<T> {
 }
 
 interface DailyLog {
-  id: string;
-  apartmentId: string;
-  staffId: string;
-  date: string;
-  notes: string;
-  tasksCompleted: string[];
-  issuesFound: string[];
-  photos: string[];
-  createdAt: string;
-  updatedAt: string;
+  dailyLogs_id: string;
+  dailyLogs_apartmentId: string;
+  dailyLogs_staffId: string;
+  dailyLogs_date: string;
+  dailyLogs_notes: string;
+  dailyLogs_tasksCompleted: string[];
+  dailyLogs_issuesFound: string[];
+  dailyLogs_photos: string[];
+  dailyLogs_createdAt: string;
+  dailyLogs_updatedAt: string;
 }
 
 export async function fetchDailyLogs(

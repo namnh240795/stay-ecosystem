@@ -1,20 +1,20 @@
 import { apiFetch } from './client';
 
 export interface Booking {
-  id: string;
-  apartmentId: string;
-  branchId: string;
-  customerName: string;
-  customerEmail: string;
-  customerPhone?: string;
-  checkIn: string;
-  checkOut: string;
-  guests: number;
-  totalPrice: number;
-  status: string;
-  notes?: string;
-  createdAt: string;
-  updatedAt: string;
+  bookings_id: string;
+  bookings_apartmentId: string;
+  bookings_branchId: string;
+  bookings_customerName: string;
+  bookings_customerEmail: string;
+  bookings_customerPhone?: string;
+  bookings_checkIn: string;
+  bookings_checkOut: string;
+  bookings_guests: number;
+  bookings_totalPrice: number;
+  bookings_status: string;
+  bookings_notes?: string;
+  bookings_createdAt: string;
+  bookings_updatedAt: string;
 }
 
 interface BookingListParams {

@@ -1,34 +1,34 @@
 import { apiFetch } from './client';
 
 export interface LongtermContent {
-  id?: string;
-  title: string;
-  content: string;
-  benefits?: string[];
-  pricing?: Record<string, unknown>;
-  updatedAt?: string;
+  longtermContent_id?: string;
+  longtermContent_title: string;
+  longtermContent_content: string;
+  longtermContent_benefits?: string[];
+  longtermContent_pricing?: Record<string, unknown>;
+  longtermContent_updatedAt?: string;
 }
 
 export interface RefundPolicy {
-  id?: string;
-  title: string;
-  content: string;
-  rules?: string[];
-  updatedAt?: string;
+  refundPolicies_id?: string;
+  refundPolicies_title: string;
+  refundPolicies_content: string;
+  refundPolicies_rules?: string[];
+  refundPolicies_updatedAt?: string;
 }
 
 export interface Voucher {
-  id: string;
-  code: string;
-  description?: string;
-  discountPercent?: number;
-  discountAmount?: number;
-  validFrom: string;
-  validUntil: string;
-  minBookingAmount?: number;
-  maxUses?: number;
-  usedCount: number;
-  status: string;
+  vouchers_id: string;
+  vouchers_code: string;
+  vouchers_description?: string;
+  vouchers_discountPercent?: number;
+  vouchers_discountAmount?: number;
+  vouchers_validFrom: string;
+  vouchers_validUntil: string;
+  vouchers_minBookingAmount?: number;
+  vouchers_maxUses?: number;
+  vouchers_usedCount: number;
+  vouchers_status: string;
 }
 
 export async function fetchLongtermContent(): Promise<LongtermContent> {

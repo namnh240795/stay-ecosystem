@@ -16,16 +16,16 @@ interface PaginatedResponse<T> {
 }
 
 interface Complaint {
-  id: string;
-  apartmentId: string;
-  guestId: string;
-  title: string;
-  description: string;
-  severity: string;
-  status: string;
-  resolution: string | null;
-  createdAt: string;
-  updatedAt: string;
+  complaints_id: string;
+  complaints_apartmentId: string;
+  complaints_guestId: string;
+  complaints_title: string;
+  complaints_description: string;
+  complaints_severity: string;
+  complaints_status: string;
+  complaints_resolution: string | null;
+  complaints_createdAt: string;
+  complaints_updatedAt: string;
 }
 
 export async function fetchComplaints(

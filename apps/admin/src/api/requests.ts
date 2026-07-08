@@ -16,17 +16,17 @@ interface PaginatedResponse<T> {
 }
 
 interface ServiceRequest {
-  id: string;
-  apartmentId: string;
-  guestId: string;
-  type: string;
-  title: string;
-  description: string;
-  priority: string;
-  status: string;
-  assignedTo: string | null;
-  createdAt: string;
-  updatedAt: string;
+  requests_id: string;
+  requests_apartmentId: string;
+  requests_guestId: string;
+  requests_type: string;
+  requests_title: string;
+  requests_description: string;
+  requests_priority: string;
+  requests_status: string;
+  requests_assignedTo: string | null;
+  requests_createdAt: string;
+  requests_updatedAt: string;
 }
 
 export async function fetchRequests(

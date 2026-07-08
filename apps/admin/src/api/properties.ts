@@ -16,20 +16,20 @@ interface PaginatedResponse<T> {
 }
 
 interface Property {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  address: string;
-  city: string;
-  country: string;
-  latitude: number;
-  longitude: number;
-  images: string[];
-  amenities: string[];
-  status: string;
-  createdAt: string;
-  updatedAt: string;
+  properties_id: string;
+  properties_name: string;
+  properties_slug: string;
+  properties_description: string;
+  properties_address: string;
+  properties_city: string;
+  properties_country: string;
+  properties_latitude: number;
+  properties_longitude: number;
+  properties_images: string[];
+  properties_amenities: string[];
+  properties_status: string;
+  properties_createdAt: string;
+  properties_updatedAt: string;
 }
 
 export async function fetchProperties(

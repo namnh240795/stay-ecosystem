@@ -1,13 +1,13 @@
 import { apiFetch } from './client';
 
 export interface Review {
-  id: string;
-  apartmentId?: string;
-  tourId?: string;
-  customerName: string;
-  rating: number;
-  comment?: string;
-  createdAt: string;
+  reviews_id: string;
+  reviews_apartmentId?: string;
+  reviews_tourId?: string;
+  reviews_customerName: string;
+  reviews_rating: number;
+  reviews_comment?: string;
+  reviews_createdAt: string;
 }
 
 interface ReviewListParams {

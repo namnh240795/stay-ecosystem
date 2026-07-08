@@ -15,13 +15,13 @@ interface PaginatedResponse<T> {
 }
 
 interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-  auth0Id: string;
-  createdAt: string;
-  updatedAt: string;
+  users_id: string;
+  users_email: string;
+  users_name: string;
+  users_role: string;
+  users_auth0Id: string;
+  users_createdAt: string;
+  users_updatedAt: string;
 }
 
 export async function fetchUsers(

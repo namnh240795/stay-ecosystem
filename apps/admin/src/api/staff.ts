@@ -16,16 +16,16 @@ interface PaginatedResponse<T> {
 }
 
 interface Staff {
-  id: string;
-  userId: string;
-  name: string;
-  email: string;
-  phone: string;
-  role: string;
-  status: string;
-  propertyIds: string[];
-  createdAt: string;
-  updatedAt: string;
+  staff_id: string;
+  staff_userId: string;
+  staff_name: string;
+  staff_email: string;
+  staff_phone: string;
+  staff_role: string;
+  staff_status: string;
+  staff_propertyIds: string[];
+  staff_createdAt: string;
+  staff_updatedAt: string;
 }
 
 export async function fetchStaff(
