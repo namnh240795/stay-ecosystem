@@ -1,28 +1,28 @@
 import { apiFetch } from './client';
 
-// Raw interface matching the API response with prefixed field names
+// Raw interface matching the API response (camelCase from handler)
 interface RawDashboardStats {
-  dashboard_total_revenue: number;
-  dashboard_hotel_revenue: number;
-  dashboard_apt_revenue: number;
-  dashboard_total_bookings: number;
-  dashboard_active_bookings: number;
-  dashboard_total_properties: number;
-  dashboard_active_properties: number;
-  dashboard_occupancy_rate: number;
-  dashboard_pending_contracts: number;
-  dashboard_total_users: number;
-  dashboard_sepay_total_count: number;
-  dashboard_sepay_total_amount: number;
-  dashboard_stripe_total_count: number;
-  dashboard_stripe_total_amount: number;
+  totalRevenue: number;
+  hotelRevenue: number;
+  aptRevenue: number;
+  totalBookings: number;
+  activeBookings: number;
+  totalProperties: number;
+  activeProperties: number;
+  occupancyRate: number;
+  pendingContracts: number;
+  totalUsers: number;
+  sepayTotalCount: number;
+  sepayTotalAmount: number;
+  stripeTotalCount: number;
+  stripeTotalAmount: number;
 }
 
 interface RawRevenueData {
-  dashboard_label: string;
-  dashboard_hotel: number;
-  dashboard_apt: number;
-  dashboard_total: number;
+  label: string;
+  hotel: number;
+  apt: number;
+  total: number;
 }
 
 // Component-facing interfaces with unprefixed field names
@@ -52,29 +52,29 @@ export interface RevenueData {
 
 function mapDashboardStats(raw: RawDashboardStats): DashboardStats {
   return {
-    totalRevenue: raw.dashboard_total_revenue,
-    hotelRevenue: raw.dashboard_hotel_revenue,
-    aptRevenue: raw.dashboard_apt_revenue,
-    totalBookings: raw.dashboard_total_bookings,
-    activeBookings: raw.dashboard_active_bookings,
-    totalProperties: raw.dashboard_total_properties,
-    activeProperties: raw.dashboard_active_properties,
-    occupancyRate: raw.dashboard_occupancy_rate,
-    pendingContracts: raw.dashboard_pending_contracts,
-    totalUsers: raw.dashboard_total_users,
-    sepayTotalCount: raw.dashboard_sepay_total_count,
-    sepayTotalAmount: raw.dashboard_sepay_total_amount,
-    stripeTotalCount: raw.dashboard_stripe_total_count,
-    stripeTotalAmount: raw.dashboard_stripe_total_amount,
+    totalRevenue: raw.totalRevenue,
+    hotelRevenue: raw.hotelRevenue,
+    aptRevenue: raw.aptRevenue,
+    totalBookings: raw.totalBookings,
+    activeBookings: raw.activeBookings,
+    totalProperties: raw.totalProperties,
+    activeProperties: raw.activeProperties,
+    occupancyRate: raw.occupancyRate,
+    pendingContracts: raw.pendingContracts,
+    totalUsers: raw.totalUsers,
+    sepayTotalCount: raw.sepayTotalCount,
+    sepayTotalAmount: raw.sepayTotalAmount,
+    stripeTotalCount: raw.stripeTotalCount,
+    stripeTotalAmount: raw.stripeTotalAmount,
   };
 }
 
 function mapRevenueData(raw: RawRevenueData): RevenueData {
   return {
-    label: raw.dashboard_label,
-    hotel: raw.dashboard_hotel,
-    apt: raw.dashboard_apt,
-    total: raw.dashboard_total,
+    label: raw.label,
+    hotel: raw.hotel,
+    apt: raw.apt,
+    total: raw.total,
   };
 }
 
