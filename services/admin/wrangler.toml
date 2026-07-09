@@ -34,19 +34,19 @@ name = "admin-service-sit"
 [[env.sit.d1_databases]]
 binding = "USERS_DB"
 database_name = "users-db-sit"
-database_id = "9d0bce6c-bd8d-4223-9ceb-c79557ce66b9"
+database_id = "a401117d-461e-4530-8904-bd8edfc62602"
 [[env.sit.d1_databases]]
 binding = "PROPERTIES_DB"
 database_name = "properties-db-sit"
-database_id = ""
+database_id = "f57f28d4-bde7-4f2a-b1a4-c9326f0bd015"
 [[env.sit.d1_databases]]
 binding = "BOOKINGS_DB"
 database_name = "bookings-db-sit"
-database_id = ""
+database_id = "d6b7d0a6-5109-4db8-9c91-9a446e2b36ce"
 [[env.sit.d1_databases]]
 binding = "PAYMENTS_DB"
 database_name = "payments-db-sit"
-database_id = ""
+database_id = "4e901aea-2483-4770-919e-58cb80762586"
 
 [env.uat]
 name = "admin-service-uat"
